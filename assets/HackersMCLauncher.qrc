@@ -1,0 +1,17 @@
+<RCC>
+  <qresource prefix="/hck">
+    <file>icons/cross.svg</file>
+    <file>icons/edit.svg</file>
+    <file>icons/plus.svg</file>
+    <file>cogs.svg</file>
+    <file>user.svg</file>
+    <file>logo.png</file>
+    <file>cap.png</file>
+    <file>cap_close.svg</file>
+    <file>cap_maximize.svg</file>
+    <file>cap_minimize.svg</file>
+    <file>cap_restore.svg</file>
+    <file>style.css</file>
+    <file>icons/save.svg</file>
+  </qresource>
+</RCC>
