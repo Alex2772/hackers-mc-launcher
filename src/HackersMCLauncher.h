@@ -2,6 +2,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_HackersMCLauncher.h"
+#include "Model/UsersListModel.h"
 
 class HackersMCLauncher : public QMainWindow
 {
@@ -20,6 +21,8 @@ public:
 private:
 	Ui::HackersMCLauncherClass ui;
 	int mUiScale = 1;
+
+	UsersListModel mUsers;
 
 private slots:
 	void screenScaleChanged();

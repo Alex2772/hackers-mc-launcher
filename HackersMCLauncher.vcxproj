@@ -59,6 +59,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <AdditionalIncludeDirectories>.\src\Form;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -72,6 +73,7 @@
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <AdditionalIncludeDirectories>.\src\Form;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -80,6 +82,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Form\Form.cpp" />
+    <ClCompile Include="src\Form\SettingsForm.cpp" />
+    <ClCompile Include="src\Form\UserForm.cpp" />
     <ClCompile Include="src\HackersMCLauncher.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Model\User.cpp" />
@@ -90,12 +95,17 @@
     <QtMoc Include="src\HackersMCLauncher.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\SettingsForm.ui" />
+    <QtUic Include="ui\UserForm.ui" />
     <QtUic Include="ui\HackersMCLauncher.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="assets\HackersMCLauncher.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="src\Form\UserForm.h" />
+    <QtMoc Include="src\Form\Form.h" />
+    <QtMoc Include="src\Form\SettingsForm.h" />
     <ClInclude Include="src\Model\User.h" />
     <QtMoc Include="src\Model\UsersListModel.h" />
     <ClInclude Include="src\Util\UIHelper.h" />

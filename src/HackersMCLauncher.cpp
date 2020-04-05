@@ -4,6 +4,8 @@
 #include <QScreen>
 #include <QMouseEvent>
 #include "Model/UsersListModel.h"
+#include "UserForm.h"
+#include "SettingsForm.h"
 
 HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	: QMainWindow(parent)
@@ -18,7 +20,28 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	screenScaleChanged();
 	connect(QGuiApplication::primaryScreen(), &QScreen::logicalDotsPerInchChanged, this, &HackersMCLauncher::screenScaleChanged);
 
-	ui.usersList->setModel(new UsersListModel);
+	connect(ui.usersList, &QListView::clicked, this, [&](const QModelIndex& index)
+	{
+		if (index.row() == index.model()->rowCount() - 1)
+		{
+			mUsers.insertRow(mUsers.rowCount({}) - 1);
+			(new UserForm(&mUsers, index, this))->show();
+		}
+	});
+	connect(ui.usersList, &QListView::doubleClicked, this, [&](const QModelIndex& index)
+	{
+		if (index.row() < index.model()->rowCount() - 1)
+		{
+			(new UserForm(&mUsers, index, this))->show();
+		}
+	});
+
+	connect(ui.settings, &QAbstractButton::clicked, this, [&]()
+	{
+		(new SettingsForm(this))->show();
+	});
+	
+	ui.usersList->setModel(&mUsers);
 }
 bool HackersMCLauncher::nativeEvent(const QByteArray& eventType, void* message, long* result)
 {
