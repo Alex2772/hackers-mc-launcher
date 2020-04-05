@@ -59,10 +59,10 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>.\src\Form;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
@@ -73,7 +73,7 @@
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>.\src\Form;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -83,18 +83,28 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Form\Form.cpp" />
+    <ClCompile Include="src\Form\ProfileForm.cpp" />
     <ClCompile Include="src\Form\SettingsForm.cpp" />
     <ClCompile Include="src\Form\UserForm.cpp" />
+    <ClCompile Include="src\Form\VersionChooserForm.cpp" />
     <ClCompile Include="src\HackersMCLauncher.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Model\FilterProxyModel.cpp" />
+    <ClCompile Include="src\Model\Profile.cpp" />
+    <ClCompile Include="src\Model\ProfilesListModel.cpp" />
+    <ClCompile Include="src\Model\RepositoriesModel.cpp" />
+    <ClCompile Include="src\Model\Repository.cpp" />
     <ClCompile Include="src\Model\User.cpp" />
     <ClCompile Include="src\Model\UsersListModel.cpp" />
+    <ClCompile Include="src\Model\VersionTreeModel.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\HackersMCLauncher.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\VersionChooserForm.ui" />
+    <QtUic Include="ui\ProfileForm.ui" />
     <QtUic Include="ui\SettingsForm.ui" />
     <QtUic Include="ui\UserForm.ui" />
     <QtUic Include="ui\HackersMCLauncher.ui" />
@@ -106,9 +116,20 @@
     <QtMoc Include="src\Form\UserForm.h" />
     <QtMoc Include="src\Form\Form.h" />
     <QtMoc Include="src\Form\SettingsForm.h" />
+    <QtMoc Include="src\Model\RepositoriesModel.h" />
+    <QtMoc Include="src\Model\ProfilesListModel.h" />
+    <QtMoc Include="src\Form\ProfileForm.h" />
+    <QtMoc Include="src\Form\VersionChooserForm.h" />
+    <QtMoc Include="src\Model\FilterProxyModel.h" />
+    <ClInclude Include="src\Model\Profile.h" />
+    <ClInclude Include="src\Model\Repository.h" />
     <ClInclude Include="src\Model\User.h" />
     <QtMoc Include="src\Model\UsersListModel.h" />
+    <QtMoc Include="src\Model\VersionTreeModel.h" />
     <ClInclude Include="src\Util\UIHelper.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="translations\hackersmclauncher_ru_RU.ts" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

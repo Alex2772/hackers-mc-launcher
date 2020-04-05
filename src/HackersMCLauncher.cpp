@@ -4,8 +4,10 @@
 #include <QScreen>
 #include <QMouseEvent>
 #include "Model/UsersListModel.h"
-#include "UserForm.h"
-#include "SettingsForm.h"
+#include "Form/VersionChooserForm.h"
+#include "Form/UserForm.h"
+#include "Form/ProfileForm.h"
+#include "Form/SettingsForm.h"
 
 HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	: QMainWindow(parent)
@@ -17,9 +19,12 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 		setStyleSheet(f.readAll());
 	}
 
+	mRepos.setToDefault();
+	
 	screenScaleChanged();
 	connect(QGuiApplication::primaryScreen(), &QScreen::logicalDotsPerInchChanged, this, &HackersMCLauncher::screenScaleChanged);
 
+	// Users
 	connect(ui.usersList, &QListView::clicked, this, [&](const QModelIndex& index)
 	{
 		if (index.row() == index.model()->rowCount() - 1)
@@ -36,12 +41,31 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 		}
 	});
 
+	// Profiles
+	connect(ui.profilesList, &QListView::clicked, this, [&](const QModelIndex& index)
+	{
+		if (index.row() == index.model()->rowCount() - 1)
+		{
+			mProfiles.insertRow(mProfiles.rowCount({}) - 1);
+			auto p = new VersionChooserForm(&mProfiles, index, this);
+			p->show();
+		}
+	});
+	connect(ui.profilesList, &QListView::doubleClicked, this, [&](const QModelIndex& index)
+	{
+		if (index.row() < index.model()->rowCount() - 1)
+		{
+			(new ProfileForm(&mProfiles, index, this))->show();
+		}
+	});
+
 	connect(ui.settings, &QAbstractButton::clicked, this, [&]()
 	{
 		(new SettingsForm(this))->show();
 	});
 	
 	ui.usersList->setModel(&mUsers);
+	ui.profilesList->setModel(&mProfiles);
 }
 bool HackersMCLauncher::nativeEvent(const QByteArray& eventType, void* message, long* result)
 {
@@ -81,6 +105,11 @@ void HackersMCLauncher::updateMiddleButton()
 		ui.middle->setPixmap(QIcon{ ":/hck/cap_maximize.svg" }.pixmap(QSize(10, 10) * mUiScale));
 		ui.mfix->setContentsMargins(0, 0, 0, 0);
 	}
+}
+
+RepositoriesModel* HackersMCLauncher::getRepositories()
+{
+	return &mRepos;
 }
 
 void HackersMCLauncher::screenScaleChanged()

@@ -3,6 +3,8 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_HackersMCLauncher.h"
 #include "Model/UsersListModel.h"
+#include "Model/RepositoriesModel.h"
+#include "Model/ProfilesListModel.h"
 
 class HackersMCLauncher : public QMainWindow
 {
@@ -17,13 +19,16 @@ public:
 	void mouseReleaseEvent(QMouseEvent* e) override;
 	
 	void updateMiddleButton();
-
+	RepositoriesModel* getRepositories();
+	
 private:
 	Ui::HackersMCLauncherClass ui;
 	int mUiScale = 1;
 
 	UsersListModel mUsers;
-
+	ProfilesListModel mProfiles;
+	
+	RepositoriesModel mRepos;
 private slots:
 	void screenScaleChanged();
 };
