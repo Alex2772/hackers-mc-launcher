@@ -76,3 +76,11 @@ bool ProfilesListModel::removeRows(int row, int count, const QModelIndex& parent
 
 	return true;
 }
+
+QModelIndex ProfilesListModel::push_back(Profile profile)
+{
+	mProfiles << profile;
+	
+	emit dataChanged(index(mProfiles.size() - 2, 0), index(mProfiles.size() - 1, 1));
+	return index(mProfiles.size() - 1, 0);
+}

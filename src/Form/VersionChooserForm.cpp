@@ -6,10 +6,12 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QCheckBox>
+#include "ProfileForm.h"
 
 
-VersionChooserForm::VersionChooserForm(QAbstractItemModel* profiles, const QModelIndex& index, HackersMCLauncher* launcher)
-	: Form(launcher)
+VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
+	: Form(launcher),
+	mLauncher(launcher)
 {
 	ui.setupUi(this);
 
@@ -19,6 +21,19 @@ VersionChooserForm::VersionChooserForm(QAbstractItemModel* profiles, const QMode
 	ui.treeView->setModel(mFilter);
 
 	ui.treeView->setColumnWidth(0, 220);
+
+	ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+
+	connect(ui.treeView, &QTreeView::clicked, this, [&](const QModelIndex& index)
+	{
+		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter->mapToSource(index).internalPointer());		
+		ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(item->parent() != nullptr && item->parent()->parent() != nullptr);
+	});
+	connect(ui.treeView, &QTreeView::doubleClicked, this, &VersionChooserForm::onVersionSelected);
+	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, [&]()
+	{
+		onVersionSelected(ui.treeView->selectionModel()->currentIndex());
+	});
 	
 	for (auto& repo : launcher->getRepositories()->getItems())
 	{
@@ -41,6 +56,7 @@ VersionChooserForm::VersionChooserForm(QAbstractItemModel* profiles, const QMode
 			{
 				auto item = new VersionTreeModel::Item(version["id"].toString());
 				item->mType = version["type"].toString();
+				item->mUrl = version["url"].toString();
 				mTypes << item->mType;
 				item->mIsLatest = latest[item->mType].toString() == item->mName;
 				// 2019-08-22T12:06:21+00:00
@@ -77,6 +93,15 @@ void VersionChooserForm::decrementRequests()
 		}
 		mFilter->invalidate();
 		ui.filters->layout()->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
+	}
+}
+
+void VersionChooserForm::onVersionSelected(const QModelIndex& index)
+{
+	if (ui.buttonBox->button(QDialogButtonBox::Ok)->isEnabled()) {
+		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter->mapToSource(index).internalPointer());
+		(new ProfileForm(mLauncher->getProfiles().push_back({ item->mName, item->mUrl }), mLauncher))->show();
+		close();
 	}
 }
 

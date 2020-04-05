@@ -22,10 +22,7 @@ VersionTreeModel::VersionTreeModel(QObject* parent):
 
 VersionTreeModel::Item::~Item()
 {
-	for (auto& i : mChildren)
-	{
-		delete i;
-	}
+	qDeleteAll(mChildren);
 }
 
 void VersionTreeModel::Item::addChild(Item* item)

@@ -20,6 +20,7 @@ public:
 		QString mName;
 		QString mType;
 		QDateTime mReleaseDate;
+		QString mUrl;
 		bool mIsErrored = false;
 		bool mIsLatest = false;
 

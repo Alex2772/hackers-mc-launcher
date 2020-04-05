@@ -19,8 +19,10 @@ public:
 	void mouseReleaseEvent(QMouseEvent* e) override;
 	
 	void updateMiddleButton();
-	RepositoriesModel* getRepositories();
 	
+	RepositoriesModel* getRepositories();
+	ProfilesListModel& getProfiles();
+
 private:
 	Ui::HackersMCLauncherClass ui;
 	int mUiScale = 1;

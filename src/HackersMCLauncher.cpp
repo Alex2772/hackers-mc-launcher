@@ -30,14 +30,14 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 		if (index.row() == index.model()->rowCount() - 1)
 		{
 			mUsers.insertRow(mUsers.rowCount({}) - 1);
-			(new UserForm(&mUsers, index, this))->show();
+			(new UserForm(&mUsers, index, true, this))->show();
 		}
 	});
 	connect(ui.usersList, &QListView::doubleClicked, this, [&](const QModelIndex& index)
 	{
 		if (index.row() < index.model()->rowCount() - 1)
 		{
-			(new UserForm(&mUsers, index, this))->show();
+			(new UserForm(&mUsers, index, false, this))->show();
 		}
 	});
 
@@ -46,8 +46,7 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	{
 		if (index.row() == index.model()->rowCount() - 1)
 		{
-			mProfiles.insertRow(mProfiles.rowCount({}) - 1);
-			auto p = new VersionChooserForm(&mProfiles, index, this);
+			auto p = new VersionChooserForm(this);
 			p->show();
 		}
 	});
@@ -55,7 +54,7 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	{
 		if (index.row() < index.model()->rowCount() - 1)
 		{
-			(new ProfileForm(&mProfiles, index, this))->show();
+			(new ProfileForm(index, this))->show();
 		}
 	});
 
@@ -110,6 +109,11 @@ void HackersMCLauncher::updateMiddleButton()
 RepositoriesModel* HackersMCLauncher::getRepositories()
 {
 	return &mRepos;
+}
+
+ProfilesListModel& HackersMCLauncher::getProfiles()
+{
+	return mProfiles;
 }
 
 void HackersMCLauncher::screenScaleChanged()

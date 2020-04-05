@@ -5,4 +5,5 @@ class Profile
 {
 public:
 	QString mName;
+	QString mUrl;
 };

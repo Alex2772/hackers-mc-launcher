@@ -8,3 +8,8 @@ Form::Form(QWidget* parent):
 {
 	setModal(true);
 }
+
+void Form::closeEvent(QCloseEvent*)
+{
+	deleteLater();
+}

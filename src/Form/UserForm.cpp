@@ -2,8 +2,8 @@
 #include <QDataWidgetMapper>
 #include <qabstractitemmodel.h>
 
-UserForm::UserForm(QAbstractItemModel* model, const QModelIndex& index, QWidget *parent)
-	: Form(parent)
+UserForm::UserForm(QAbstractItemModel* model, const QModelIndex& index, bool newUser, QWidget* parent)
+	: Form(parent), mModel(model), mIndex(index), mPositiveResult(!newUser)
 {
 	ui.setupUi(this);
 
@@ -13,13 +13,13 @@ UserForm::UserForm(QAbstractItemModel* model, const QModelIndex& index, QWidget 
 
 	mapper->addMapping(ui.username, 0);
 	
-	connect(ui.buttonBox, &QDialogButtonBox::rejected, this, [&, model]()
+	connect(ui.buttonBox, &QDialogButtonBox::rejected, this, [&]()
 	{
-		model->removeRow(index.row());
 ;		close();
 	});
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, [&]()
 	{
+		mPositiveResult = true;
 		close();
 	});
 	mapper->setCurrentIndex(index.row());
@@ -27,4 +27,8 @@ UserForm::UserForm(QAbstractItemModel* model, const QModelIndex& index, QWidget 
 
 UserForm::~UserForm()
 {
+	if (!mPositiveResult)
+	{
+		mModel->removeRow(mIndex.row());
+	}
 }

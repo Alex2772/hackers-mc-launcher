@@ -13,8 +13,8 @@ class VersionChooserForm : public Form
 	Q_OBJECT
 
 public:
-	VersionChooserForm(QAbstractItemModel* profiles, const QModelIndex& index, HackersMCLauncher* launcher);
-	~VersionChooserForm();
+	VersionChooserForm(HackersMCLauncher* launcher);
+	~VersionChooserForm() override;
 
 private:
 	Ui::VersionChooserForm ui;
@@ -25,7 +25,10 @@ private:
 	QNetworkAccessManager mNet;
 	VersionTreeModel* mTree;
 	FilterProxyModel* mFilter;
+	HackersMCLauncher* mLauncher;
 
 	void decrementRequests();
 
+private slots:
+	void onVersionSelected(const QModelIndex& index);
 };

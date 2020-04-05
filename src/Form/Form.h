@@ -7,4 +7,7 @@ class Form: public QDialog
 public:
 	explicit Form(QWidget* parent);
 	~Form() override = default;
+
+protected:
+	void closeEvent(QCloseEvent*) override;
 };
