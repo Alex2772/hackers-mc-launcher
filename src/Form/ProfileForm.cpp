@@ -20,10 +20,8 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 	updateCaption();
 
 	// Java libs
-	ui.jl_table->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-	ui.jl_table->verticalHeader()->setDefaultSectionSize(20);
-	ui.jl_table->setColumnWidth(0, 200);
-	ui.jl_table->setModel(new JavaLibListModel(mItem->mJavaLibs, this));
+	ui.jl_tree->setColumnWidth(0, 200);
+	ui.jl_tree->setModel(new JavaLibModel(mItem->mJavaLibs, this));
 }
 
 void ProfileForm::updateCaption()

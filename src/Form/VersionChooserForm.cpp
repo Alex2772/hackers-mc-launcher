@@ -121,7 +121,12 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 			{
 				QString name = v["name"].toString();
 				auto splt = name.split(":");
-				p.mJavaLibs << JavaLib{splt[0], splt[1], v["downloads"]["artifact"]["url"].toString()};
+
+				auto url = v["downloads"]["artifact"]["url"].toString();
+				auto diff = url.size() - v["downloads"]["artifact"]["path"].toString().length();
+				if (diff < 512)
+					url.resize(diff);
+				p.mJavaLibs[url] << JavaLib{splt[0], splt[1], splt[2], v["downloads"]["artifact"]["sha1"].toString() };
 			}
 
 			(new ProfileForm(mLauncher->getProfiles().add(std::move(p)), mLauncher))->show();
