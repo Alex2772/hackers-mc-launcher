@@ -24,6 +24,7 @@ public:
 	
 	RepositoriesModel* getRepositories();
 	ProfilesListModel& getProfiles();
+	
 	Settings* getSettings() const;
 
 private:

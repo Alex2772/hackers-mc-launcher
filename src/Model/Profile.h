@@ -1,9 +1,11 @@
 ﻿#pragma once
 #include <QString>
+#include "JavaLibListModel.h"
 
 class Profile
 {
 public:
 	QString mName;
-	QString mUrl;
+
+	QList<JavaLib> mJavaLibs;
 };

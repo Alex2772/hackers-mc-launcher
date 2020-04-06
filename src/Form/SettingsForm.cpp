@@ -15,8 +15,8 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	auto mapper = new QDataWidgetMapper(this);
 	mapper->setModel(launcher->getSettings());
 	mapper->addMapping(ui.gameDir, launcher->getSettings()->sectionOf("game_dir"));
-	mapper->addMapping(ui.checkBox, launcher->getSettings()->sectionOf("hide_launcher"), "checked");
-	mapper->addMapping(ui.checkBox_2, launcher->getSettings()->sectionOf("close_launcher"), "checked");
+	mapper->addMapping(ui.hideLauncher, launcher->getSettings()->sectionOf("hide_launcher"));
+	mapper->addMapping(ui.closeLauncher, launcher->getSettings()->sectionOf("close_launcher"));
 
 	mapper->toFirst();
 

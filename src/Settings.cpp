@@ -20,6 +20,11 @@ void Settings::bindDefault(const QString& name, const QVariant& value)
 	mDefaults[name] = value;
 }
 
+int Settings::columnCount(const QModelIndex& parent) const
+{
+	return mMappings.size();
+}
+
 void Settings::resetToDefaults()
 {
 	clear();

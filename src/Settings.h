@@ -11,7 +11,9 @@ private:
 
 	
 	void bindDefault(const QString& name, const QVariant& value);
-	
+private:
+	int columnCount(const QModelIndex& parent) const override;
+
 public:
 	Settings(const QString& organization, const QString& application, QObject* parent);
 	QDir getGameDir();

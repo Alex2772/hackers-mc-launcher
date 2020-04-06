@@ -5,7 +5,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
-#include <QCheckBox>
+#include <QMessageBox>
 #include "ProfileForm.h"
 
 
@@ -99,9 +99,35 @@ void VersionChooserForm::decrementRequests()
 void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 {
 	if (ui.buttonBox->button(QDialogButtonBox::Ok)->isEnabled()) {
+		ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
+		ui.progressBar->setVisible(true);
 		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter->mapToSource(index).internalPointer());
-		(new ProfileForm(mLauncher->getProfiles().push_back({ item->mName, item->mUrl }), mLauncher))->show();
-		close();
+				
+		auto reply = mNet.get(QNetworkRequest(QUrl(item->mUrl)));
+
+		connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), this, [&]()
+		{
+			QMessageBox::critical(this, tr("Could not download file"), tr("Unknown error"));
+			ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(true);
+			ui.progressBar->setVisible(false);
+		});
+		connect(reply, &QNetworkReply::finished, this, [&, item, reply]()
+		{
+			Profile p;
+			p.mName = item->mName;
+			QJsonObject o = QJsonDocument::fromJson(reply->readAll()).object();
+
+			for (QJsonValue v : o["libraries"].toArray())
+			{
+				QString name = v["name"].toString();
+				auto splt = name.split(":");
+				p.mJavaLibs << JavaLib{splt[0], splt[1], v["downloads"]["artifact"]["url"].toString()};
+			}
+
+			(new ProfileForm(mLauncher->getProfiles().add(std::move(p)), mLauncher))->show();
+			close();
+		});
+		
 	}
 }
 

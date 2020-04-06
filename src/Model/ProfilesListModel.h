@@ -13,8 +13,10 @@ public:
 	bool insertRows(int row, int count, const QModelIndex& parent) override;
 	bool removeRows(int row, int count, const QModelIndex& parent) override;
 
-	QModelIndex push_back(Profile profile);
-	
+	QModelIndex add(Profile&& profile);
+
+
+	QList<Profile>& profiles();
 private:
 	QList<Profile> mProfiles;
 };

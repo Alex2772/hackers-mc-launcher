@@ -43,7 +43,7 @@
          </property>
          <layout class="QFormLayout" name="formLayout_2">
           <item row="0" column="1">
-           <widget class="QCheckBox" name="checkBox">
+           <widget class="QCheckBox" name="hideLauncher">
             <property name="text">
              <string>Hide launcher when game starts</string>
             </property>
@@ -53,7 +53,7 @@
            </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QCheckBox" name="checkBox_2">
+           <widget class="QCheckBox" name="closeLauncher">
             <property name="text">
              <string>Close launcher when game closes</string>
             </property>
@@ -93,7 +93,7 @@
          </property>
          <layout class="QFormLayout" name="formLayout_3">
           <item row="0" column="1">
-           <widget class="QCheckBox" name="checkBox_3">
+           <widget class="QCheckBox" name="showConsole">
             <property name="text">
              <string>Show console when game starts</string>
             </property>
