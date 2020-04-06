@@ -1,13 +1,34 @@
 ﻿#include "JavaLibModel.h"
+#include <QUrl>
 
-JavaLibModel::JavaLibModel(QMap<QString, QList<JavaLib>>& javaLibs, QObject* parent): QAbstractItemModel(parent),
-                                                                               mItems(javaLibs)
+JavaLibModel::JavaLibModel(QMap<QUrl, QList<JavaLib>>& javaLibs, QObject* parent): QAbstractItemModel(parent),                                                                              mItems(javaLibs)
+{
+	for (auto& j : javaLibs.keys())
+	{
+		auto d = new Item(new JavaLib({ j.toString() }));
+		for (auto& i : javaLibs[j])
+			d->addChild(new Item(&i));
+		mRoot.addChild(d);
+	}
+}
+
+JavaLibModel::~JavaLibModel()
 {
 }
 
 int JavaLibModel::rowCount(const QModelIndex& parent) const
 {
-	return mItems.size();
+	const Item* item;
+	if (parent.isValid())
+	{
+		item = static_cast<Item*>(parent.internalPointer());
+	}
+	else
+	{
+		item = &mRoot;
+	}
+
+	return item->children().size();
 }
 
 QVariant JavaLibModel::data(const QModelIndex& index, int role) const
@@ -19,15 +40,13 @@ QVariant JavaLibModel::data(const QModelIndex& index, int role) const
 		switch (index.column())
 		{
 		case 0:
-			return mItems[index.row()].mGroup;
+			return static_cast<Item*>(index.internalPointer())->mData->mGroup;
 		case 1:
-			return mItems[index.row()].mName;
+			return static_cast<Item*>(index.internalPointer())->mData->mName;
 		case 2:
-			return mItems[index.row()].mVersion;
+			return static_cast<Item*>(index.internalPointer())->mData->mVersion;
 		case 3:
-			return mItems[index.row()].mUrl;
-		case 4:
-			return mItems[index.row()].mHash;
+			return static_cast<Item*>(index.internalPointer())->mData->mHash;
 		}
 	}
 	return {};
@@ -42,19 +61,16 @@ bool JavaLibModel::setData(const QModelIndex& index, const QVariant& value, int 
 		switch (index.column())
 		{
 		case 0:
-			mItems[index.row()].mGroup = value.toString();
+			static_cast<Item*>(index.internalPointer())->mData->mGroup = value.toString();
 			break;
 		case 1:
-			mItems[index.row()].mName = value.toString();
+			static_cast<Item*>(index.internalPointer())->mData->mName = value.toString();
 			break;
 		case 2:
-			mItems[index.row()].mVersion = value.toString();
+			static_cast<Item*>(index.internalPointer())->mData->mVersion = value.toString();
 			break;
 		case 3:
-			mItems[index.row()].mUrl = value.toString();
-			break;
-		case 4:
-			mItems[index.row()].mHash = value.toString();
+			static_cast<Item*>(index.internalPointer())->mData->mHash = value.toString();
 			break;
 		default:
 			return false;
@@ -79,8 +95,6 @@ QVariant JavaLibModel::headerData(int section, Qt::Orientation orientation, int 
 			case 2:
 				return tr("Version");
 			case 3:
-				return tr("Url");
-			case 4:
 				return tr("SHA1");
 			}
 		}
@@ -90,28 +104,67 @@ QVariant JavaLibModel::headerData(int section, Qt::Orientation orientation, int 
 
 Qt::ItemFlags JavaLibModel::flags(const QModelIndex& index) const
 {
-	if (index.column() != 4)
+	if (static_cast<Item*>(index.internalPointer())->parent() != &mRoot || index.column() == 0)
 		return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 	return QAbstractItemModel::flags(index);
 }
 
 QModelIndex JavaLibModel::index(int row, int column, const QModelIndex& parent) const
 {
+	if (hasIndex(row, column, parent))
+	{
+		Item* parentItem;
+		if (parent.isValid())
+			parentItem = static_cast<Item*>(parent.internalPointer());
+		else
+			parentItem = &mRoot;
+
+		if (parentItem->children().size() > row)
+			return createIndex(row, column, parentItem->children()[row]);
+	}
+	return {};
 }
 
 QModelIndex JavaLibModel::parent(const QModelIndex& child) const
 {
 	if (child.isValid())
 	{
-		if (child.parent().isValid())
-		{
-			
+		auto item = static_cast<Item*>(child.internalPointer());
+		auto parent = item->parent();
+		if (parent != &mRoot) {
+			return createIndex(
+				parent->parent() ? parent->parent()->children().indexOf(parent) : 0,
+				child.column(), parent);
 		}
 	}
 	return {};
 }
 
+void JavaLibModel::add(QUrl url, const JavaLib& l)
+{
+	beginResetModel();
+	if (mItems.contains(url)) {
+		mItems[url] << l;
+		for (auto& c : mRoot.children())
+		{
+			if (c->mData->mGroup == url.toString())
+			{
+				c->addChild(new Item(&(mItems[url].back())));
+				break;
+			}
+		}
+	} else
+	{
+		mItems[url] << l;
+		auto c = new Item(new JavaLib{url.toString()});
+		c->addChild(new Item(&(mItems[url].front())));
+		mRoot.addChild(c);
+		emit dataChanged(index(0, 0, {}), index(mItems.size(), columnCount({}), {}));
+	}
+	endResetModel();
+}
+
 int JavaLibModel::columnCount(const QModelIndex& parent) const
 {
-	return 4;
+	return 3;
 }

@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QMessageBox>
 #include "ProfileForm.h"
+#include "Util/StringHelper.h"
 
 
 VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
@@ -126,6 +127,8 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 				auto diff = url.size() - v["downloads"]["artifact"]["path"].toString().length();
 				if (diff < 512)
 					url.resize(diff);
+
+				StringHelper::normalizeUrl(url);
 				p.mJavaLibs[url] << JavaLib{splt[0], splt[1], splt[2], v["downloads"]["artifact"]["sha1"].toString() };
 			}
 

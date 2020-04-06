@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <QString>
+#include <QUrl>
 #include "JavaLibModel.h"
 
 class Profile
@@ -7,5 +7,5 @@ class Profile
 public:
 	QString mName;
 
-	QMap<QString, QList<JavaLib>> mJavaLibs;
+	QMap<QUrl, QList<JavaLib>> mJavaLibs;
 };

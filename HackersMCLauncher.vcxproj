@@ -83,6 +83,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Form\Form.cpp" />
+    <ClCompile Include="src\Form\JavaLibForm.cpp" />
     <ClCompile Include="src\Form\ProfileForm.cpp" />
     <ClCompile Include="src\Form\SettingsForm.cpp" />
     <ClCompile Include="src\Form\UserForm.cpp" />
@@ -99,12 +100,14 @@
     <ClCompile Include="src\Model\UsersListModel.cpp" />
     <ClCompile Include="src\Model\VersionTreeModel.cpp" />
     <ClCompile Include="src\Settings.cpp" />
+    <ClCompile Include="src\Util\StringHelper.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\HackersMCLauncher.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\JavaLibForm.ui" />
     <QtUic Include="ui\VersionChooserForm.ui" />
     <QtUic Include="ui\ProfileForm.ui" />
     <QtUic Include="ui\SettingsForm.ui" />
@@ -124,12 +127,15 @@
     <QtMoc Include="src\Form\VersionChooserForm.h" />
     <QtMoc Include="src\Model\FilterProxyModel.h" />
     <QtMoc Include="src\Model\JavaLibModel.h" />
+    <QtMoc Include="src\Form\JavaLibForm.h" />
     <ClInclude Include="src\Model\Profile.h" />
     <ClInclude Include="src\Model\Repository.h" />
     <ClInclude Include="src\Model\User.h" />
     <QtMoc Include="src\Model\UsersListModel.h" />
     <QtMoc Include="src\Model\VersionTreeModel.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\Util\SimpleTreeItem.h" />
+    <ClInclude Include="src\Util\StringHelper.h" />
     <ClInclude Include="src\Util\UIHelper.h" />
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 #include "ProfileForm.h"
 #include <HackersMCLauncher.h>
 #include <QDataWidgetMapper>
+#include "JavaLibForm.h"
 
 
 ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
@@ -20,8 +21,16 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 	updateCaption();
 
 	// Java libs
+	auto javaLibs = new JavaLibModel(mItem->mJavaLibs, this);
+	ui.jl_tree->setModel(javaLibs);
 	ui.jl_tree->setColumnWidth(0, 200);
-	ui.jl_tree->setModel(new JavaLibModel(mItem->mJavaLibs, this));
+	ui.jl_tree->setColumnWidth(1, 150);
+	ui.jl_tree->setColumnWidth(2, 70);
+
+	connect(ui.jl_add, &QAbstractButton::clicked, this, [&, javaLibs]()
+	{
+		(new JavaLibForm(javaLibs, this))->show();
+	});
 }
 
 void ProfileForm::updateCaption()

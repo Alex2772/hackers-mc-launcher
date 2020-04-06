@@ -84,6 +84,12 @@
     <ClCompile Include="src\Model\JavaLibModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Form\JavaLibForm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\StringHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -99,6 +105,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\VersionChooserForm.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\JavaLibForm.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -144,6 +153,9 @@
     <QtMoc Include="src\Model\JavaLibModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="src\Form\JavaLibForm.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Util\UIHelper.h">
@@ -159,6 +171,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util\SimpleTreeItem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util\StringHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

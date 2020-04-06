@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <QAbstractListModel>
+#include "Util/SimpleTreeItem.h"
 
 class JavaLib
 {
@@ -7,7 +8,6 @@ public:
 	QString mGroup;
 	QString mName;
 	QString mVersion;
-	QString mUrl;
 	QString mHash;
 };
 
@@ -16,7 +16,8 @@ class JavaLibModel: public QAbstractItemModel
 	Q_OBJECT
 
 public:
-	JavaLibModel(QMap<QString, QList<JavaLib>>& javaLibs, QObject* parent);
+	JavaLibModel(QMap<QUrl, QList<JavaLib>>& javaLibs, QObject* parent);
+	virtual ~JavaLibModel();
 
 	int rowCount(const QModelIndex& parent) const override;
 	QVariant data(const QModelIndex& index, int role) const override;
@@ -28,8 +29,13 @@ public:
 
 	QModelIndex index(int row, int column, const QModelIndex& parent) const override;
 	QModelIndex parent(const QModelIndex& child) const override;
+
+	void add(QUrl url, const JavaLib& l);
+	
 private:
-	QMap<QString, QList<JavaLib>>& mItems;
+	QMap<QUrl, QList<JavaLib>>& mItems;
+	typedef SimpleTreeItem<JavaLib*> Item;
+	mutable Item mRoot;
 
 	int columnCount(const QModelIndex& parent) const override;
 };

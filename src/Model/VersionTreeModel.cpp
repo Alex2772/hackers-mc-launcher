@@ -57,7 +57,7 @@ QModelIndex VersionTreeModel::parent(const QModelIndex& child) const
 		if (parent != &mRoot) {
 			return createIndex(
 				parent->parent() ? parent->parent()->children().indexOf(parent) : 0,
-				child.column(), parent);
+				0, parent);
 		}
 	}
 	return {};
