@@ -6,6 +6,8 @@
 #include "Model/RepositoriesModel.h"
 #include "Model/ProfilesListModel.h"
 
+class Settings;
+
 class HackersMCLauncher : public QMainWindow
 {
 	Q_OBJECT
@@ -22,6 +24,7 @@ public:
 	
 	RepositoriesModel* getRepositories();
 	ProfilesListModel& getProfiles();
+	Settings* getSettings() const;
 
 private:
 	Ui::HackersMCLauncherClass ui;
@@ -29,8 +32,10 @@ private:
 
 	UsersListModel mUsers;
 	ProfilesListModel mProfiles;
-	
 	RepositoriesModel mRepos;
+
+	Settings* mSettings;
+
 private slots:
 	void screenScaleChanged();
 };

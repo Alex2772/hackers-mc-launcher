@@ -8,9 +8,11 @@
 #include "Form/UserForm.h"
 #include "Form/ProfileForm.h"
 #include "Form/SettingsForm.h"
+#include "Settings.h"
 
 HackersMCLauncher::HackersMCLauncher(QWidget *parent)
-	: QMainWindow(parent)
+	: QMainWindow(parent),
+	mSettings(new Settings("hackers-mc-launcher", "hackers-mc-launcher", this))
 {
 	ui.setupUi(this);
 	{
@@ -18,7 +20,7 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 		f.open(QIODevice::ReadOnly);
 		setStyleSheet(f.readAll());
 	}
-
+	
 	mRepos.setToDefault();
 	
 	screenScaleChanged();
@@ -114,6 +116,11 @@ RepositoriesModel* HackersMCLauncher::getRepositories()
 ProfilesListModel& HackersMCLauncher::getProfiles()
 {
 	return mProfiles;
+}
+
+Settings* HackersMCLauncher::getSettings() const
+{
+	return mSettings;
 }
 
 void HackersMCLauncher::screenScaleChanged()

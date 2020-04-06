@@ -1,6 +1,9 @@
 #include "SettingsForm.h"
 #include <QDialogButtonBox>
 #include "../HackersMCLauncher.h"
+#include <QDataWidgetMapper>
+#include <QFileDialog>
+#include <Settings.h>
 
 SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	: Form(launcher)
@@ -9,9 +12,29 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, &SettingsForm::close);
 
-	ui.repoList->setModel(launcher->getRepositories());
+	auto mapper = new QDataWidgetMapper(this);
+	mapper->setModel(launcher->getSettings());
+	mapper->addMapping(ui.gameDir, launcher->getSettings()->sectionOf("game_dir"));
+	mapper->addMapping(ui.checkBox, launcher->getSettings()->sectionOf("hide_launcher"), "checked");
+	mapper->addMapping(ui.checkBox_2, launcher->getSettings()->sectionOf("close_launcher"), "checked");
+
+	mapper->toFirst();
+
+	connect(ui.gameDirTT, &QAbstractButton::clicked, this, [&]()
+	{
+		QFileDialog d;
+		d.setFileMode(QFileDialog::DirectoryOnly);
+		d.setOption(QFileDialog::ShowDirsOnly, false);
+		d.exec();
+
+		if (!d.directory().absolutePath().isEmpty())
+		{
+			ui.gameDir->setText(d.directory().absolutePath());
+			ui.gameDir->setFocus();
+		}
+	});
 	
-	
+	ui.repoList->setModel(launcher->getRepositories());	
 	ui.logo->setPixmap(ui.logo->pixmap()->scaled(64, 64,
 		Qt::IgnoreAspectRatio, Qt::FastTransformation));
 }

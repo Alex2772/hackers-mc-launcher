@@ -97,6 +97,7 @@
     <ClCompile Include="src\Model\User.cpp" />
     <ClCompile Include="src\Model\UsersListModel.cpp" />
     <ClCompile Include="src\Model\VersionTreeModel.cpp" />
+    <ClCompile Include="src\Settings.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -126,6 +127,7 @@
     <ClInclude Include="src\Model\User.h" />
     <QtMoc Include="src\Model\UsersListModel.h" />
     <QtMoc Include="src\Model\VersionTreeModel.h" />
+    <ClInclude Include="src\Settings.h" />
     <ClInclude Include="src\Util\UIHelper.h" />
   </ItemGroup>
   <ItemGroup>
