@@ -231,7 +231,7 @@
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
-        <widget class="QListView" name="ja_list"/>
+        <widget class="QTableView" name="ja_table"/>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -281,7 +281,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="run">
        <property name="text">
         <string>Run</string>
        </property>

@@ -91,6 +91,7 @@
     <ClCompile Include="src\HackersMCLauncher.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Model\FilterProxyModel.cpp" />
+    <ClCompile Include="src\Model\JavaArgsListModel.cpp" />
     <ClCompile Include="src\Model\JavaLibModel.cpp" />
     <ClCompile Include="src\Model\Profile.cpp" />
     <ClCompile Include="src\Model\ProfilesListModel.cpp" />
@@ -129,6 +130,7 @@
     <QtMoc Include="src\Model\FilterProxyModel.h" />
     <QtMoc Include="src\Model\JavaLibModel.h" />
     <QtMoc Include="src\Form\JavaLibForm.h" />
+    <QtMoc Include="src\Model\JavaArgsListModel.h" />
     <ClInclude Include="src\Model\Profile.h" />
     <ClInclude Include="src\Model\Repository.h" />
     <QtMoc Include="src\Model\GameArgsListModel.h" />

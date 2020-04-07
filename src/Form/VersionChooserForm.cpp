@@ -12,7 +12,7 @@
 
 VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
 	: Form(launcher),
-	mLauncher(launcher)
+	  mLauncher(launcher)
 {
 	ui.setupUi(this);
 
@@ -22,20 +22,22 @@ VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
 	ui.treeView->setModel(mFilter);
 	ui.treeView->setColumnWidth(0, 220);
 	ui.treeView->expandAll();
-	
+
 	ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
 	connect(ui.treeView, &QTreeView::clicked, this, [&](const QModelIndex& index)
 	{
-		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter->mapToSource(index).internalPointer());		
-		ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(item->parent() != nullptr && item->parent()->parent() != nullptr);
+		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter
+		                                                                    ->mapToSource(index).internalPointer());
+		ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(
+			item->parent() != nullptr && item->parent()->parent() != nullptr);
 	});
 	connect(ui.treeView, &QTreeView::doubleClicked, this, &VersionChooserForm::onVersionSelected);
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, [&]()
 	{
 		onVersionSelected(ui.treeView->selectionModel()->currentIndex());
 	});
-	
+
 	for (auto& repo : launcher->getRepositories()->getItems())
 	{
 		auto i = new VersionTreeModel::Item(repo.mName);
@@ -48,11 +50,10 @@ VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
 		});
 		connect(reply, &QNetworkReply::finished, this, [&, reply, i]()
 		{
-
 			auto root = QJsonDocument::fromJson(reply->readAll()).object();
 
 			auto latest = root["latest"].toObject();
-			
+
 			for (QJsonValue version : root["versions"].toArray())
 			{
 				auto item = new VersionTreeModel::Item(version["id"].toString());
@@ -99,11 +100,13 @@ void VersionChooserForm::decrementRequests()
 
 void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 {
-	if (ui.buttonBox->button(QDialogButtonBox::Ok)->isEnabled()) {
+	if (ui.buttonBox->button(QDialogButtonBox::Ok)->isEnabled())
+	{
 		ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 		ui.progressBar->setVisible(true);
-		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter->mapToSource(index).internalPointer());
-				
+		VersionTreeModel::Item* item = static_cast<VersionTreeModel::Item*>(mFilter
+		                                                                    ->mapToSource(index).internalPointer());
+
 		auto reply = mNet.get(QNetworkRequest(QUrl(item->mUrl)));
 
 		connect(reply, QOverload<QNetworkReply::NetworkError>::of(&QNetworkReply::error), this, [&]()
@@ -118,6 +121,7 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 			p.mName = item->mName;
 			QJsonObject o = QJsonDocument::fromJson(reply->readAll()).object();
 
+			// Java libraries
 			for (QJsonValue v : o["libraries"].toArray())
 			{
 				QString name = v["name"].toString();
@@ -129,82 +133,136 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 					url.resize(diff);
 
 				StringHelper::normalizeUrl(url);
-				p.mJavaLibs[url] << JavaLib{splt[0], splt[1], splt[2], v["downloads"]["artifact"]["sha1"].toString() };
+				p.mJavaLibs[url] << JavaLib{splt[0], splt[1], splt[2], v["downloads"]["artifact"]["sha1"].toString()};
 			}
 
 			auto args = o["arguments"].toObject();
 
 			unsigned counter = 0;
 
-			Profile::GameArg arg;
-
-			for (QJsonValue a : args["game"].toArray())
+			auto parseConditions = [](QList<QPair<QString, QVariant>>& dst, const QJsonArray& in)
 			{
-				if (a.isString())
+				// find positive conditions
+
+				for (auto& r : in)
 				{
-					if (counter % 2 == 0)
+					auto rule = r.toObject();
+					if (rule["action"].toString() == "allow")
 					{
-						arg.mName = a.toString();
-					} else
-					{
-						arg.mValue = a.toString();
-						p.mGameArgs << arg;
-						arg = {};
+						for (auto& key : rule.keys()) {
+							if (key == "features") {
+								auto features = rule[key].toObject();
+								for (auto& featureName : features.keys())
+								{
+									dst << QPair<QString, QVariant>{featureName, features[featureName].toVariant()};
+								}
+							} else if (key != "action")
+							{
+								if (rule[key].isObject())
+								{
+									auto sub = rule[key].toObject();
+									for (auto& subKey : sub.keys())
+									{
+										dst << QPair<QString, QVariant>{key + '.' + subKey, sub[subKey].toVariant()};
+									}
+								} else
+								{
+									dst << QPair<QString, QVariant>{key, rule[key].toVariant()};
+								}
+							}
+						}
 					}
-					
-					counter += 1;
-				} else if (a.isObject())
+				}
+			};
+
+			// Game args
+			{
+				Profile::GameArg arg;
+				for (QJsonValue a : args["game"].toArray())
 				{
-					// flush last arg
-					if (counter % 2 == 1)
+					if (a.isString())
 					{
-						p.mGameArgs << arg;
-						arg = {};
+						if (counter % 2 == 0)
+						{
+							arg.mName = a.toString();
+						}
+						else
+						{
+							arg.mValue = a.toString();
+							p.mGameArgs << arg;
+							arg = {};
+						}
+
 						counter += 1;
 					}
-					
-					// find positive condition
-					for (auto& r : a["rules"].toArray())
+					else if (a.isObject())
 					{
-						auto rule = r.toObject();
-						if (rule["action"].toString() == "allow")
-						{
-							auto features = rule["features"].toObject();
-							for (auto& featureName : features.keys())
-							{
-								arg.mConditions << QPair<QString, QVariant>{featureName, features[featureName].toVariant()};
-							}
-						}
-					}
-
-					// Add arguments
-					if (a["value"].isArray())
-					{
-						for (auto value : a["value"].toArray())
-						{
-							if (counter % 2 == 0)
-							{
-								arg.mName = value.toString();
-							} else
-							{
-								arg.mValue = value.toString();
-								p.mGameArgs << arg;
-								arg.mName.clear();
-								arg.mValue.clear();
-							}
-							counter += 1;
-						}
+						// flush last arg
 						if (counter % 2 == 1)
 						{
 							p.mGameArgs << arg;
+							arg = {};
+							counter += 1;
 						}
-						
-						arg = {};
-					} else if (a["value"].isString())
+
+						parseConditions(arg.mConditions, a["rules"].toArray());
+
+						// Add arguments
+						if (a["value"].isArray())
+						{
+							for (auto value : a["value"].toArray())
+							{
+								if (counter % 2 == 0)
+								{
+									arg.mName = value.toString();
+								}
+								else
+								{
+									arg.mValue = value.toString();
+									p.mGameArgs << arg;
+									arg.mName.clear();
+									arg.mValue.clear();
+								}
+								counter += 1;
+							}
+							if (counter % 2 == 1)
+							{
+								p.mGameArgs << arg;
+							}
+
+							arg = {};
+						}
+						else if (a["value"].isString())
+						{
+							arg.mName = a["value"].toString();
+							p.mGameArgs << arg;
+							arg = {};
+						}
+					}
+				}
+			}
+
+			// JVM args
+			for (QJsonValue a : args["jvm"].toArray())
+			{
+				if (a.isString())
+				{
+					p.mJavaArgs << Profile::JavaArg{a.toString()};
+				}
+				else if (a.isObject())
+				{
+					QList<QPair<QString, QVariant>> conditions;
+					parseConditions(conditions, a["rules"].toArray());
+
+					if (a["value"].isString())
 					{
-						arg.mName = a["value"].toString();
-						p.mGameArgs << arg;
-						arg = {};
+						p.mJavaArgs << Profile::JavaArg{ a["value"].toString(), conditions };
+					} else if (a["value"].isArray())
+					{
+						for (auto& i : a["value"].toArray())
+						{
+							p.mJavaArgs << Profile::JavaArg{ i.toString(), conditions };
+						}
 					}
 				}
 			}
@@ -212,7 +270,6 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 			(new ProfileForm(mLauncher->getProfiles().add(std::move(p)), mLauncher))->show();
 			close();
 		});
-		
 	}
 }
 

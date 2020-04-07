@@ -27,6 +27,9 @@ public:
 	
 	Settings* getSettings() const;
 
+public slots:
+	void play();
+	
 private:
 	Ui::HackersMCLauncherClass ui;
 	int mUiScale = 1;

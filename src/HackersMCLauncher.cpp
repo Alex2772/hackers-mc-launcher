@@ -9,6 +9,7 @@
 #include "Form/ProfileForm.h"
 #include "Form/SettingsForm.h"
 #include "Settings.h"
+#include <QMessageBox>
 
 HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	: QMainWindow(parent),
@@ -67,6 +68,9 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	
 	ui.usersList->setModel(&mUsers);
 	ui.profilesList->setModel(&mProfiles);
+
+	// Play
+	connect(ui.play, &QAbstractButton::clicked, this, &HackersMCLauncher::play);
 }
 bool HackersMCLauncher::nativeEvent(const QByteArray& eventType, void* message, long* result)
 {
@@ -121,6 +125,25 @@ ProfilesListModel& HackersMCLauncher::getProfiles()
 Settings* HackersMCLauncher::getSettings() const
 {
 	return mSettings;
+}
+
+void HackersMCLauncher::play()
+{
+	const QString errorTitle = tr("Could not launch");
+	if (ui.play->isEnabled()) {
+		if (!ui.usersList->selectionModel()->currentIndex().isValid())
+		{
+			QMessageBox::critical(this, errorTitle, tr("Please select the user to play for"));
+			return;
+		}
+		if (!ui.profilesList->selectionModel()->currentIndex().isValid())
+		{
+			QMessageBox::critical(this, errorTitle, tr("Please select the profile to play with"));
+			return;
+		}
+		
+		ui.play->setEnabled(false);
+	}
 }
 
 void HackersMCLauncher::screenScaleChanged()

@@ -3,6 +3,7 @@
 #include <QDataWidgetMapper>
 #include "JavaLibForm.h"
 #include "Model/GameArgsListModel.h"
+#include "Model/JavaArgsListModel.h"
 
 
 ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
@@ -58,7 +59,30 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 		auto index = ui.ga_table->selectionModel()->currentIndex();
 		gameArgs->removeRow(index.row(), index.parent());
 	});
-	
+	// Java args
+	auto javaArgs = new JavaArgsListModel(mItem, this);
+	ui.ja_table->setModel(javaArgs);
+	ui.ja_table->setColumnWidth(0, 300);
+	ui.ja_table->setColumnWidth(1, 220);
+
+	connect(ui.ja_add, &QAbstractButton::clicked, this, [&, javaArgs]()
+	{
+		ui.ja_table->setFocus();
+		ui.ja_table->setCurrentIndex(javaArgs->insertRow());
+	});
+	connect(ui.ja_delete, &QAbstractButton::clicked, this, [&, javaArgs]()
+	{
+
+		auto index = ui.ja_table->selectionModel()->currentIndex();
+		javaArgs->removeRow(index.row(), index.parent());
+	});
+
+
+	connect(ui.run, &QAbstractButton::clicked, this, [&, parent]()
+	{
+		parent->play();
+		close();
+	});
 }
 
 void ProfileForm::updateCaption()

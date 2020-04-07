@@ -464,7 +464,7 @@ QLabel[pressed=&quot;true&quot;] {background: rgb(225,60,40);}</string>
             <number>1</number>
            </property>
            <item>
-            <widget class="QPushButton" name="pushButton_2">
+            <widget class="QPushButton" name="play">
              <property name="text">
               <string>Play</string>
              </property>
