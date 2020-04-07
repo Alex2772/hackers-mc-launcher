@@ -16,6 +16,9 @@ public:
 
 	SimpleTreeItem<T>* parent() const;
 	const QList<SimpleTreeItem<T>*>& children() const;
+	void removeChildren(int index, int count);
+	void removeChild(SimpleTreeItem<T>* item);
+	void removeChild(int item);
 };
 
 template <typename T>
@@ -35,10 +38,6 @@ SimpleTreeItem<T>::SimpleTreeItem()
 template <typename T>
 SimpleTreeItem<T>::~SimpleTreeItem()
 {
-	if (std::is_pointer_v<T>)
-	{
-		delete mData;
-	}
 	qDeleteAll(mChildren);
 }
 
@@ -59,4 +58,26 @@ template <typename T>
 const QList<SimpleTreeItem<T>*>& SimpleTreeItem<T>::children() const
 {
 	return mChildren;
+}
+
+template <typename T>
+void SimpleTreeItem<T>::removeChildren(int index, int count)
+{
+	for (int i = 0; i < count; ++i)
+	{
+		delete mChildren[i];
+		mChildren.removeAt(index);
+	}
+}
+
+template <typename T>
+void SimpleTreeItem<T>::removeChild(SimpleTreeItem<T>* item)
+{
+	mChildren.removeAll(item);
+}
+
+template <typename T>
+void SimpleTreeItem<T>::removeChild(int item)
+{
+	mChildren.removeAt(item);
 }

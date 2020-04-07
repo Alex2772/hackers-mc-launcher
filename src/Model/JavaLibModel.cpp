@@ -109,6 +109,37 @@ Qt::ItemFlags JavaLibModel::flags(const QModelIndex& index) const
 	return QAbstractItemModel::flags(index);
 }
 
+bool JavaLibModel::removeRows(int row, int count, const QModelIndex& parent)
+{
+	if (row < 0)
+		return false;
+	auto item = static_cast<Item*>(parent.internalPointer());
+	beginRemoveRows(parent, row, row + count - 1);
+	for (int i = row; i < row + count; ++i)
+	{
+		auto lib = item->children()[i]->mData;
+		for (auto& k : mItems)
+		{
+			bool found = false;
+			for (auto it = k.begin(); it != k.end(); ++it)
+			{
+				if (&(*it) == lib)
+				{
+					found = true;
+					item->removeChild(i);
+					k.erase(it);
+					break;
+				}
+			}
+			if (found)
+				break;
+		}
+	}
+
+	endRemoveRows();
+	return true;
+}
+
 QModelIndex JavaLibModel::index(int row, int column, const QModelIndex& parent) const
 {
 	if (hasIndex(row, column, parent))
@@ -134,7 +165,7 @@ QModelIndex JavaLibModel::parent(const QModelIndex& child) const
 		if (parent != &mRoot) {
 			return createIndex(
 				parent->parent() ? parent->parent()->children().indexOf(parent) : 0,
-				child.column(), parent);
+				0, parent);
 		}
 	}
 	return {};
@@ -142,7 +173,6 @@ QModelIndex JavaLibModel::parent(const QModelIndex& child) const
 
 void JavaLibModel::add(QUrl url, const JavaLib& l)
 {
-	beginResetModel();
 	if (mItems.contains(url)) {
 		mItems[url] << l;
 		for (auto& c : mRoot.children())
@@ -150,6 +180,7 @@ void JavaLibModel::add(QUrl url, const JavaLib& l)
 			if (c->mData->mGroup == url.toString())
 			{
 				c->addChild(new Item(&(mItems[url].back())));
+				emit dataChanged(index(0, 0, {}), index(mRoot.children().size(), 0, {}));
 				break;
 			}
 		}
@@ -157,14 +188,13 @@ void JavaLibModel::add(QUrl url, const JavaLib& l)
 	{
 		mItems[url] << l;
 		auto c = new Item(new JavaLib{url.toString()});
-		c->addChild(new Item(&(mItems[url].front())));
 		mRoot.addChild(c);
-		emit dataChanged(index(0, 0, {}), index(mItems.size(), columnCount({}), {}));
+		c->addChild(new Item(&(mItems[url].back())));
+		emit dataChanged(index(0, 0, {}), index(mRoot.children().size(), 0, {}));
 	}
-	endResetModel();
 }
 
 int JavaLibModel::columnCount(const QModelIndex& parent) const
 {
-	return 3;
+	return 4;
 }

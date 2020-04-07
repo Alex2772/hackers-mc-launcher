@@ -20,9 +20,9 @@ VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
 	mFilter = new FilterProxyModel(1, this);
 	mFilter->setSourceModel(mTree);
 	ui.treeView->setModel(mFilter);
-
 	ui.treeView->setColumnWidth(0, 220);
-
+	ui.treeView->expandAll();
+	
 	ui.buttonBox->button(QDialogButtonBox::Ok)->setEnabled(false);
 
 	connect(ui.treeView, &QTreeView::clicked, this, [&](const QModelIndex& index)

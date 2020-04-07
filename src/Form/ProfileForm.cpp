@@ -26,10 +26,17 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 	ui.jl_tree->setColumnWidth(0, 200);
 	ui.jl_tree->setColumnWidth(1, 150);
 	ui.jl_tree->setColumnWidth(2, 70);
+	ui.jl_tree->expandAll();
 
 	connect(ui.jl_add, &QAbstractButton::clicked, this, [&, javaLibs]()
 	{
 		(new JavaLibForm(javaLibs, this))->show();
+	});
+	connect(ui.jl_delete, &QAbstractButton::clicked, this, [&, javaLibs]()
+	{
+
+		auto index = ui.jl_tree->selectionModel()->currentIndex();
+		javaLibs->removeRow(index.row(), index.parent());
 	});
 }
 

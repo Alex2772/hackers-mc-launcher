@@ -27,6 +27,7 @@ public:
 	Qt::ItemFlags flags(const QModelIndex& index) const override;
 
 
+	bool removeRows(int row, int count, const QModelIndex& parent) override;
 	QModelIndex index(int row, int column, const QModelIndex& parent) const override;
 	QModelIndex parent(const QModelIndex& child) const override;
 
