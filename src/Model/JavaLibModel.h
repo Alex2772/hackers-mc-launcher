@@ -39,4 +39,6 @@ private:
 	mutable Item mRoot;
 
 	int columnCount(const QModelIndex& parent) const override;
+	QModelIndex indexOfItem(Item* item);
 };
+

@@ -90,6 +90,9 @@
     <ClCompile Include="src\Util\StringHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Model\GameArgsListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -154,6 +157,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="src\Form\JavaLibForm.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Model\GameArgsListModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

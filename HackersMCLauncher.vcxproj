@@ -43,7 +43,7 @@
   </ImportGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <QtInstall>5.14</QtInstall>
-    <QtModules>core;gui;network;widgets</QtModules>
+    <QtModules>core;network;widgets;gui</QtModules>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <QtInstall>5.14</QtInstall>
@@ -96,6 +96,7 @@
     <ClCompile Include="src\Model\ProfilesListModel.cpp" />
     <ClCompile Include="src\Model\RepositoriesModel.cpp" />
     <ClCompile Include="src\Model\Repository.cpp" />
+    <ClCompile Include="src\Model\GameArgsListModel.cpp" />
     <ClCompile Include="src\Model\User.cpp" />
     <ClCompile Include="src\Model\UsersListModel.cpp" />
     <ClCompile Include="src\Model\VersionTreeModel.cpp" />
@@ -130,6 +131,7 @@
     <QtMoc Include="src\Form\JavaLibForm.h" />
     <ClInclude Include="src\Model\Profile.h" />
     <ClInclude Include="src\Model\Repository.h" />
+    <QtMoc Include="src\Model\GameArgsListModel.h" />
     <ClInclude Include="src\Model\User.h" />
     <QtMoc Include="src\Model\UsersListModel.h" />
     <QtMoc Include="src\Model\VersionTreeModel.h" />

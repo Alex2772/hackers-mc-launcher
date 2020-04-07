@@ -170,7 +170,12 @@ QModelIndex JavaLibModel::parent(const QModelIndex& child) const
 	}
 	return {};
 }
-
+QModelIndex JavaLibModel::indexOfItem(Item* item)
+{
+	if (item->parent() == nullptr)
+		return {};
+	return index(item->parent()->children().indexOf(item), 0, indexOfItem(item->parent()));
+}
 void JavaLibModel::add(QUrl url, const JavaLib& l)
 {
 	if (mItems.contains(url)) {
@@ -179,8 +184,9 @@ void JavaLibModel::add(QUrl url, const JavaLib& l)
 		{
 			if (c->mData->mGroup == url.toString())
 			{
+				beginInsertRows(indexOfItem(c), c->children().size(), c->children().size() + 1);
 				c->addChild(new Item(&(mItems[url].back())));
-				emit dataChanged(index(0, 0, {}), index(mRoot.children().size(), 0, {}));
+				endInsertRows();
 				break;
 			}
 		}
@@ -188,9 +194,10 @@ void JavaLibModel::add(QUrl url, const JavaLib& l)
 	{
 		mItems[url] << l;
 		auto c = new Item(new JavaLib{url.toString()});
+		beginInsertRows({}, mRoot.children().size(), mRoot.children().size() + 1);
 		mRoot.addChild(c);
 		c->addChild(new Item(&(mItems[url].back())));
-		emit dataChanged(index(0, 0, {}), index(mRoot.children().size(), 0, {}));
+		endInsertRows();
 	}
 }
 

@@ -56,6 +56,7 @@ bool UsersListModel::setData(const QModelIndex& index, const QVariant& value, in
 
 bool UsersListModel::insertRows(int row, int count, const QModelIndex& parent)
 {
+	// TODO maybe should be rewritten for beginInsertRows/endInsertRows api
 	for (int i = 0; i < count; ++i)
 		mUsers.insert(row, {});
 
@@ -69,6 +70,7 @@ bool UsersListModel::insertRows(int row, int count, const QModelIndex& parent)
 
 bool UsersListModel::removeRows(int row, int count, const QModelIndex& parent)
 {
+	// TODO maybe should be rewritten for beginRemoveRows/endRemoveRows api
 	for (int i = 0; i < count; ++i)
 		mUsers.removeAt(row);
 

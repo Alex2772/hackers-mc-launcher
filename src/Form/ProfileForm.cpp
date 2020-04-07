@@ -2,6 +2,7 @@
 #include <HackersMCLauncher.h>
 #include <QDataWidgetMapper>
 #include "JavaLibForm.h"
+#include "Model/GameArgsListModel.h"
 
 
 ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
@@ -38,6 +39,26 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 		auto index = ui.jl_tree->selectionModel()->currentIndex();
 		javaLibs->removeRow(index.row(), index.parent());
 	});
+
+	// Game args
+	auto gameArgs = new GameArgsListModel(mItem, this);
+	ui.ga_table->setModel(gameArgs);
+	ui.ga_table->setColumnWidth(0, 110);
+	ui.ga_table->setColumnWidth(1, 200);
+	ui.ga_table->setColumnWidth(2, 200);
+
+	connect(ui.ga_add, &QAbstractButton::clicked, this, [&, gameArgs]()
+	{
+		ui.ga_table->setFocus();
+		ui.ga_table->setCurrentIndex(gameArgs->insertRow());
+	});
+	connect(ui.ga_delete, &QAbstractButton::clicked, this, [&, gameArgs]()
+	{
+
+		auto index = ui.ga_table->selectionModel()->currentIndex();
+		gameArgs->removeRow(index.row(), index.parent());
+	});
+	
 }
 
 void ProfileForm::updateCaption()

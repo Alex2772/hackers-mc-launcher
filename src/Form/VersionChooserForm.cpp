@@ -132,6 +132,83 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 				p.mJavaLibs[url] << JavaLib{splt[0], splt[1], splt[2], v["downloads"]["artifact"]["sha1"].toString() };
 			}
 
+			auto args = o["arguments"].toObject();
+
+			unsigned counter = 0;
+
+			Profile::GameArg arg;
+
+			for (QJsonValue a : args["game"].toArray())
+			{
+				if (a.isString())
+				{
+					if (counter % 2 == 0)
+					{
+						arg.mName = a.toString();
+					} else
+					{
+						arg.mValue = a.toString();
+						p.mGameArgs << arg;
+						arg = {};
+					}
+					
+					counter += 1;
+				} else if (a.isObject())
+				{
+					// flush last arg
+					if (counter % 2 == 1)
+					{
+						p.mGameArgs << arg;
+						arg = {};
+						counter += 1;
+					}
+					
+					// find positive condition
+					for (auto& r : a["rules"].toArray())
+					{
+						auto rule = r.toObject();
+						if (rule["action"].toString() == "allow")
+						{
+							auto features = rule["features"].toObject();
+							for (auto& featureName : features.keys())
+							{
+								arg.mConditions << QPair<QString, QVariant>{featureName, features[featureName].toVariant()};
+							}
+						}
+					}
+
+					// Add arguments
+					if (a["value"].isArray())
+					{
+						for (auto value : a["value"].toArray())
+						{
+							if (counter % 2 == 0)
+							{
+								arg.mName = value.toString();
+							} else
+							{
+								arg.mValue = value.toString();
+								p.mGameArgs << arg;
+								arg.mName.clear();
+								arg.mValue.clear();
+							}
+							counter += 1;
+						}
+						if (counter % 2 == 1)
+						{
+							p.mGameArgs << arg;
+						}
+						
+						arg = {};
+					} else if (a["value"].isString())
+					{
+						arg.mName = a["value"].toString();
+						p.mGameArgs << arg;
+						arg = {};
+					}
+				}
+			}
+
 			(new ProfileForm(mLauncher->getProfiles().add(std::move(p)), mLauncher))->show();
 			close();
 		});

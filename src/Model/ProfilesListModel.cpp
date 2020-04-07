@@ -56,6 +56,7 @@ bool ProfilesListModel::setData(const QModelIndex& index, const QVariant& value,
 
 bool ProfilesListModel::insertRows(int row, int count, const QModelIndex& parent)
 {
+	// TODO maybe should be rewritten for beginInsertRows/endInsertRows api
 	for (int i = 0; i < count; ++i)
 		mProfiles.insert(row, {});
 
@@ -69,6 +70,7 @@ bool ProfilesListModel::insertRows(int row, int count, const QModelIndex& parent
 
 bool ProfilesListModel::removeRows(int row, int count, const QModelIndex& parent)
 {
+	// TODO maybe should be rewritten for beginRemoveRows/endRemoveRows api
 	for (int i = 0; i < count; ++i)
 		mProfiles.removeAt(row);
 
