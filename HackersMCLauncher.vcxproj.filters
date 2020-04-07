@@ -99,6 +99,9 @@
     <ClCompile Include="src\Layout\StackedLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Util\UIThread.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -174,6 +177,9 @@
     <QtMoc Include="src\Layout\StackedLayout.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="src\Util\UIThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Util\UIHelper.h">
@@ -195,6 +201,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Util\StringHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util\LambdaTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

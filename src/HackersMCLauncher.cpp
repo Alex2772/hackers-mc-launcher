@@ -10,7 +10,9 @@
 #include "Form/SettingsForm.h"
 #include "Settings.h"
 #include <QMessageBox>
+#include <QThreadPool>
 #include "Layout/StackedLayout.h"
+#include "Util/LambdaTask.h"
 
 HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	: QMainWindow(parent),
@@ -143,8 +145,20 @@ void HackersMCLauncher::play()
 			QMessageBox::critical(this, errorTitle, tr("Please select the profile to play with"));
 			return;
 		}
-
+		ui.progressBar->setMaximum(0);
+		ui.downloaded->setText("-");
+		ui.total->setText("-");
+		ui.speed->setText("-");
+		ui.eta->setText("-");
 		setDownloadMode(true);
+
+		auto& profile = mProfiles.profiles().at(ui.profilesList->selectionModel()->currentIndex().row());
+		auto& user = mUsers.users().at(ui.usersList->selectionModel()->currentIndex().row());
+		
+		QThreadPool::globalInstance()->start(lambda([&]()
+		{
+			profile->m
+		}));
 	}
 }
 
