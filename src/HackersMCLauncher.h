@@ -42,4 +42,5 @@ private:
 
 private slots:
 	void screenScaleChanged();
+	void setDownloadMode(bool m);
 };

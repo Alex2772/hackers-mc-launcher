@@ -96,6 +96,9 @@
     <ClCompile Include="src\Model\JavaArgsListModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Layout\StackedLayout.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -166,6 +169,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="src\Model\JavaArgsListModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Layout\StackedLayout.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

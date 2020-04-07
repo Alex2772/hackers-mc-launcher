@@ -10,17 +10,17 @@
 #include "Form/SettingsForm.h"
 #include "Settings.h"
 #include <QMessageBox>
+#include "Layout/StackedLayout.h"
 
 HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 	: QMainWindow(parent),
 	mSettings(new Settings("hackers-mc-launcher", "hackers-mc-launcher", this))
 {
 	ui.setupUi(this);
-	{
-		QFile f(":/hck/style.css");
-		f.open(QIODevice::ReadOnly);
-		setStyleSheet(f.readAll());
-	}
+
+	ui.content->setLayout(new StackedLayout(ui.content));
+	ui.content->layout()->addWidget(ui.label);
+	ui.content->layout()->addWidget(ui.frame);
 	
 	mRepos.setToDefault();
 	
@@ -71,6 +71,8 @@ HackersMCLauncher::HackersMCLauncher(QWidget *parent)
 
 	// Play
 	connect(ui.play, &QAbstractButton::clicked, this, &HackersMCLauncher::play);
+
+	setDownloadMode(false);
 }
 bool HackersMCLauncher::nativeEvent(const QByteArray& eventType, void* message, long* result)
 {
@@ -141,8 +143,8 @@ void HackersMCLauncher::play()
 			QMessageBox::critical(this, errorTitle, tr("Please select the profile to play with"));
 			return;
 		}
-		
-		ui.play->setEnabled(false);
+
+		setDownloadMode(true);
 	}
 }
 
@@ -185,6 +187,13 @@ void HackersMCLauncher::screenScaleChanged()
 			w->setContentsMargins(w->contentsMargins() * factor);
 		}
 	}
+}
+
+void HackersMCLauncher::setDownloadMode(bool m)
+{
+	ui.play->setEnabled(!m);
+	ui.listsSplitter->setEnabled(!m);
+	ui.downloadPanel->setVisible(m);
 }
 
 void HackersMCLauncher::mousePressEvent(QMouseEvent* e)

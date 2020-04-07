@@ -89,6 +89,7 @@
     <ClCompile Include="src\Form\UserForm.cpp" />
     <ClCompile Include="src\Form\VersionChooserForm.cpp" />
     <ClCompile Include="src\HackersMCLauncher.cpp" />
+    <ClCompile Include="src\Layout\StackedLayout.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Model\FilterProxyModel.cpp" />
     <ClCompile Include="src\Model\JavaArgsListModel.cpp" />
@@ -131,6 +132,7 @@
     <QtMoc Include="src\Model\JavaLibModel.h" />
     <QtMoc Include="src\Form\JavaLibForm.h" />
     <QtMoc Include="src\Model\JavaArgsListModel.h" />
+    <QtMoc Include="src\Layout\StackedLayout.h" />
     <ClInclude Include="src\Model\Profile.h" />
     <ClInclude Include="src\Model\Repository.h" />
     <QtMoc Include="src\Model\GameArgsListModel.h" />
