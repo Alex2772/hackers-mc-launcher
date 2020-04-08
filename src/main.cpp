@@ -1,11 +1,15 @@
 #include "HackersMCLauncher.h"
 #include <QtWidgets/QApplication>
 #include <QTranslator>
+#include "Util/UIThread.h"
 
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
+	static QApplication a(argc, argv);
 
+	// running empty task to make sure it's internal object will be in main qt thread
+	UIThread::run([]() {});
+	
 	QApplication::setApplicationDisplayName("Hacker's MC Launcher");
 	QApplication::setApplicationName("Hackers-mc-launcher");
 	QApplication::setApplicationVersion("0.1-alpha");

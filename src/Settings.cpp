@@ -32,7 +32,8 @@ void Settings::resetToDefaults()
 
 QDir Settings::getGameDir()
 {
-	QDir d(value("game_dir", QStandardPaths::locate(QStandardPaths::AppDataLocation, "")).toString());
+	auto path = value("game_dir").toString();
+	QDir d(path);
 	if (!d.exists())
 		d.mkdir(".");
 
@@ -75,10 +76,13 @@ QVariant Settings::data(const QModelIndex& index, int role) const
 	case Qt::EditRole:
 		{
 			auto key = mMappings[index.column()];
-			if (contains(key))
-				return value(key);
-			return mDefaults[key];
+			return Settings::value(key);
 		}
 	}
 	return {};
+}
+
+QVariant Settings::value(const QString& key) const
+{
+	return QSettings::value(key, mDefaults[key]);
 }

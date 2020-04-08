@@ -28,7 +28,7 @@ public:
 	Settings* getSettings() const;
 
 public slots:
-	void play();
+	void play(bool withUpdate = false);
 	
 private:
 	Ui::HackersMCLauncherClass ui;

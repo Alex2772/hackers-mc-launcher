@@ -1,7 +1,21 @@
 ﻿#include "JavaLibModel.h"
 #include <QUrl>
 
-JavaLibModel::JavaLibModel(QMap<QUrl, QList<JavaLib>>& javaLibs, QObject* parent): QAbstractItemModel(parent),                                                                              mItems(javaLibs)
+QString JavaLib::jarName() const
+{
+	return mName + '-' + mVersion + ".jar";
+}
+
+QString JavaLib::path() const
+{
+	auto group = mGroup;
+	group.replace('.', '/');
+
+	return group + '/' + mName + '/' + mVersion + '/' + jarName();
+}
+
+JavaLibModel::JavaLibModel(QMap<QUrl, QList<JavaLib>>& javaLibs, QObject* parent):
+	QAbstractItemModel(parent), mItems(javaLibs)
 {
 	for (auto& j : javaLibs.keys())
 	{

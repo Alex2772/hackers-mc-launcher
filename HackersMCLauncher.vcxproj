@@ -103,6 +103,7 @@
     <ClCompile Include="src\Model\UsersListModel.cpp" />
     <ClCompile Include="src\Model\VersionTreeModel.cpp" />
     <ClCompile Include="src\Settings.cpp" />
+    <ClCompile Include="src\Util\Crypto.cpp" />
     <ClCompile Include="src\Util\StringHelper.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
     <ClCompile Include="src\Util\UIThread.cpp" />
@@ -142,6 +143,7 @@
     <QtMoc Include="src\Model\UsersListModel.h" />
     <QtMoc Include="src\Model\VersionTreeModel.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\Util\Crypto.h" />
     <ClInclude Include="src\Util\LambdaTask.h" />
     <ClInclude Include="src\Util\SimpleTreeItem.h" />
     <ClInclude Include="src\Util\StringHelper.h" />

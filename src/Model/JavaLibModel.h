@@ -9,6 +9,10 @@ public:
 	QString mName;
 	QString mVersion;
 	QString mHash;
+	quint64 mSize = 0;
+
+	QString jarName() const;
+	QString path() const;
 };
 
 class JavaLibModel: public QAbstractItemModel

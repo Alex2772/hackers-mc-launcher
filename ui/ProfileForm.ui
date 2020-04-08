@@ -29,7 +29,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -156,7 +156,7 @@
          <item>
           <widget class="QPushButton" name="jl_add">
            <property name="text">
-            <string>Add</string>
+            <string>Add...</string>
            </property>
           </widget>
          </item>
@@ -164,6 +164,13 @@
           <widget class="QPushButton" name="jl_delete">
            <property name="text">
             <string>Delete</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton">
+           <property name="text">
+            <string>Show in explorer</string>
            </property>
           </widget>
          </item>
@@ -284,6 +291,16 @@
       <widget class="QPushButton" name="run">
        <property name="text">
         <string>Run</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="text">
+        <string>Update and run</string>
        </property>
       </widget>
      </item>
