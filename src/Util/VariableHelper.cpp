@@ -126,7 +126,7 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 			"assets_index_name",
 			[launcher]() -> QVariant
 			{
-				return launcher->currentProfile().mName;
+				return launcher->currentProfile().mAssetsIndex;
 			}
 		},
 	};

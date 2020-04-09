@@ -1,6 +1,8 @@
 #pragma once
 #include <qrunnable.h>
 
+class Interrupted {};
+
 template <typename T>
 class LambdaTask: public QRunnable
 {
@@ -15,7 +17,9 @@ public:
 
 	void run() override
 	{
-		mData();
+		try {
+			mData();
+		} catch (Interrupted) {}
 	}
 };
 
@@ -27,4 +31,11 @@ template<typename T>
 static LambdaTask<T>* lambda(const T& data)
 {
 	return new LambdaTask<T>(data);
+}
+static void interruptionCheck()
+{
+	if (QThread::currentThread()->isInterruptionRequested())
+	{
+		throw Interrupted();
+	}
 }

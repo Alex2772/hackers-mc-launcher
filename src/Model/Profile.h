@@ -26,6 +26,7 @@ public:
 	
 	QString mName;
 	QString mMainClass;
+	QString mAssetsIndex;
 
 	QList<Download> mDownloads;
 	QList<GameArg> mGameArgs;

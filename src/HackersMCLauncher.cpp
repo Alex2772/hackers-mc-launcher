@@ -19,6 +19,8 @@
 #include <QNetworkReply>
 #include <QProcess>
 #include "Util/VariableHelper.h"
+#include <QJsonDocument>
+#include <QJsonObject>
 
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	: QMainWindow(parent),
@@ -191,133 +193,174 @@ void HackersMCLauncher::play(bool withUpdate)
 
 			// Determine download list and count total download size
 
-			quint64 totalDownloadSize = 0;
 			typedef QPair<QString, QUrl> D; // just for convenience
-			QList<D> downloads;
+			for (int i = 0; i < 2; ++i) {
+				QList<D> downloads;
+				quint64 totalDownloadSize = 0;
+				auto assetJsonPath = gameDir.absoluteFilePath("assets/indexes/" + profile.mAssetsIndex + ".json");
+				bool assetIndexExists = QFile(assetJsonPath).exists();
 
-			for (auto d : profile.mDownloads)
-			{
-				auto absPath = gameDir.absoluteFilePath(d.mLocalPath);
-				QFile local = absPath;
-				if (local.exists())
+				for (auto d : profile.mDownloads)
 				{
-					if (!withUpdate
-						|| d.mHash.isEmpty()
-						|| Crypto::sha1(local) == d.mHash // check file's sha1
-						)
+					auto absPath = gameDir.absoluteFilePath(d.mLocalPath);
+					QFile local = absPath;
+					if (local.exists())
 					{
-						continue;
+						if (!withUpdate
+							|| d.mHash.isEmpty()
+							|| Crypto::sha1(local) == d.mHash // check file's sha1
+							)
+						{
+							continue;
+						}
+					}
+
+					totalDownloadSize += d.mSize;
+					downloads << D{ absPath, QUrl(d.mUrl) };
+				}
+				if (assetIndexExists)
+				{
+					QFile f(assetJsonPath);
+					f.open(QIODevice::ReadOnly);
+					auto objects = QJsonDocument::fromJson(f.readAll()).object()["objects"].toObject();
+					f.close();
+					
+					QDir objectsDir = gameDir.absoluteFilePath("assets/objects");
+
+					for (QJsonValue object : objects)
+					{
+						auto hash = object["hash"].toString();
+						QString path = QString(hash.at(0)) + hash.at(1) + '/' + hash;
+						QFile local = objectsDir.absoluteFilePath(path);
+
+						if (local.exists())
+						{
+							if (!withUpdate
+								|| Crypto::sha1(local) == hash // check file's sha1
+								)
+							{
+								continue;
+							}
+						}
+
+						totalDownloadSize += object["size"].toInt();
+						downloads << D{ objectsDir.absoluteFilePath(path), QUrl("http://resources.download.minecraft.net/" + path) };
 					}
 				}
-
-				totalDownloadSize += d.mSize;
-				downloads << D{ absPath, QUrl(d.mUrl) };
-			}
-			if (!downloads.isEmpty())
-			{
-				setStatus(tr("Downloading..."));
-
-				UIThread::run([&, totalDownloadSize]()
+				if (!downloads.isEmpty())
 				{
-					ui.total->setText(StringHelper::prettySize(totalDownloadSize));
-					ui.downloaded->setText(StringHelper::prettySize(0));
-					ui.eta->setText(tr("Calculating..."));
-					ui.speed->setText(StringHelper::prettySize(0, true));
-					ui.progressBar->setMaximum(totalDownloadSize);
-					ui.progressBar->setValue(0);
-				});
-				QNetworkAccessManager network;
-				QEventLoop zaloop;
+					setStatus(tr("Downloading..."));
 
-				quint64 downloaded = 0;
-				unsigned downloadTasks = 0;
-
-				auto dummy = new QObject(&network);
-
-				for (auto& d : downloads)
-				{
-					auto reply = network.get(QNetworkRequest(d.second));
-					auto file = new QFile(d.first, &network);
-
-					connect(reply, &QNetworkReply::readyRead, dummy, [&, reply, file]()
+					UIThread::run([&, totalDownloadSize]()
 					{
-						if (!file->isOpen())
-						{
-							auto absDir = QFileInfo(*file).absoluteDir();
-							if (!absDir.exists())
-							{
-								absDir.mkpath(absDir.absolutePath());
-							}
-							if (!file->open(QIODevice::WriteOnly))
-							{
-								// try to delete existing file.
-								file->remove();
+						ui.total->setText(StringHelper::prettySize(totalDownloadSize));
+						ui.downloaded->setText(StringHelper::prettySize(0));
+						ui.eta->setText(tr("Calculating..."));
+						ui.speed->setText(StringHelper::prettySize(0, true));
+						ui.progressBar->setMaximum(1000);
+						ui.progressBar->setValue(0);
+					});
+					QNetworkAccessManager network;
+					QEventLoop zaloop;
 
+					quint64 downloaded = 0;
+					unsigned downloadTasks = 0;
+
+					auto dummy = new QObject(&network);
+
+					for (auto& d : downloads)
+					{
+						auto reply = network.get(QNetworkRequest(d.second));
+						auto file = new QFile(d.first, &network);
+
+						connect(reply, &QNetworkReply::readyRead, dummy, [&, reply, file]()
+						{
+							if (!file->isOpen())
+							{
+								auto absDir = QFileInfo(*file).absoluteDir();
+								if (!absDir.exists())
+								{
+									absDir.mkpath(absDir.absolutePath());
+								}
 								if (!file->open(QIODevice::WriteOnly))
 								{
-									qWarning("Could not open file: %s", file->fileName().toStdString().c_str());
-									reply->close();
-									return;
+									// try to delete existing file.
+									file->remove();
+
+									if (!file->open(QIODevice::WriteOnly))
+									{
+										qWarning("Could not open file: %s", file->fileName().toStdString().c_str());
+										reply->close();
+										return;
+									}
 								}
 							}
-						}
-						auto buf = reply->readAll();
-						downloaded += file->write(buf);
-					});
-					connect(reply, &QNetworkReply::finished, dummy, [&, reply, file]()
-					{
-						if (file->isOpen())
+							auto buf = reply->readAll();
+							downloaded += file->write(buf);
+						});
+						connect(reply, &QNetworkReply::finished, dummy, [&, reply, file]()
 						{
-							file->close();
-						}
-						downloadTasks -= 1;
-
-						if (downloadTasks == 0)
-						{
-							zaloop.exit();
-						}
-					});
-					downloadTasks += 1;
-				}
-
-				QTimer t;
-				unsigned counter = 0;
-				quint64 lastPeriodDownloaded = 0;
-				float averangeDelta = 0.f;
-				connect(&t, &QTimer::timeout, dummy, [&]()
-				{
-					unsigned delta = downloaded - lastPeriodDownloaded;
-					if (++counter % 10 == 0)
-					{
-						averangeDelta += (delta - averangeDelta) * 0.2f;
-						if (counter >= 50)
-						{
-							// it's time to show up the speed
-							float time = (totalDownloadSize - downloaded) / averangeDelta;
-							UIThread::run([&, time]()
+							if (file->isOpen())
 							{
-								auto k = QDateTime::fromMSecsSinceEpoch(time * 1000).toUTC().toString("HH:mm:ss");
-								ui.eta->setText(k);
-							});
-						}
+								file->close();
+							}
+							downloadTasks -= 1;
 
-						lastPeriodDownloaded = downloaded;
+							if (downloadTasks == 0)
+							{
+								zaloop.exit();
+							}
+						});
+						downloadTasks += 1;
 					}
 
-					// copy this value to prevent data racing
-					quint64 d = downloaded;
-					UIThread::run([&, d]()
+					QTimer t;
+					unsigned counter = 0;
+					quint64 lastPeriodDownloaded = 0;
+					float averangeDelta = 0.f;
+					connect(&t, &QTimer::timeout, dummy, [&]()
 					{
-						ui.downloaded->setText(StringHelper::prettySize(d));
-						ui.speed->setText(StringHelper::prettySize(averangeDelta, true));
-						ui.progressBar->setValue(d);;
-					});
-				});
-				t.setInterval(100);
-				t.start();
-				zaloop.exec();
-			}
 
+						if (QThread::currentThread()->isInterruptionRequested())
+						{
+							zaloop.exit();
+							return;
+						}
+						unsigned delta = downloaded - lastPeriodDownloaded;
+						if (++counter % 10 == 0)
+						{
+							averangeDelta += (delta - averangeDelta) * 0.2f;
+							if (counter >= 50)
+							{
+								// it's time to show up the speed
+								float time = (totalDownloadSize - downloaded) / averangeDelta;
+								UIThread::run([&, time]()
+								{
+									auto k = QDateTime::fromMSecsSinceEpoch(time * 1000).toUTC().toString("HH:mm:ss");
+									ui.eta->setText(k);
+								});
+							}
+
+							lastPeriodDownloaded = downloaded;
+						}
+
+						// copy this value to prevent data racing
+						quint64 d = downloaded;
+						UIThread::run([&, d]()
+						{
+							ui.downloaded->setText(StringHelper::prettySize(d));
+							ui.speed->setText(StringHelper::prettySize(averangeDelta, true));
+							ui.progressBar->setValue(d * 1000 / totalDownloadSize);
+						});
+					});
+					t.setInterval(100);
+					t.start();
+					interruptionCheck();
+					zaloop.exec();
+				}
+				if (assetIndexExists)
+					break;
+			}
 			UIThread::run([&]()
 			{
 				setDownloadMode(false);

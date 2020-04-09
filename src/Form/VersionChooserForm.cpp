@@ -130,6 +130,10 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 			QJsonObject o = QJsonDocument::fromJson(reply->readAll()).object();
 
 			p.mMainClass = o["mainClass"].toString();
+			p.mAssetsIndex = o["assets"].toString();
+
+			p.mDownloads << Download{ "assets/indexes/" + p.mAssetsIndex + ".json",
+				o["assetIndex"].toObject()["url"].toString(), quint64(o["assetIndex"].toObject()["totalSize"].toInt()), o["assetIndex"].toObject()["sha1"].toString() };
 			
 			// client jar
 			{
