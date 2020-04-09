@@ -104,6 +104,7 @@
     <ClCompile Include="src\Model\VersionTreeModel.cpp" />
     <ClCompile Include="src\Settings.cpp" />
     <ClCompile Include="src\Util\Crypto.cpp" />
+    <ClCompile Include="src\Util\DefaultValidator.cpp" />
     <ClCompile Include="src\Util\StringHelper.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
     <ClCompile Include="src\Util\UIThread.cpp" />
@@ -124,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\launcher_config.h" />
+    <ClInclude Include="src\Util\DefaultValidator.h" />
     <ClInclude Include="src\Util\VariableHelper.h" />
     <QtMoc Include="src\Util\UIThread.h" />
     <QtMoc Include="src\Form\UserForm.h" />

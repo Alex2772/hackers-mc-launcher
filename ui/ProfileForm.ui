@@ -271,7 +271,7 @@
           </widget>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="profilename_3"/>
+          <widget class="QLineEdit" name="mainClass"/>
          </item>
         </layout>
        </item>

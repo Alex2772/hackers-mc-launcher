@@ -302,6 +302,7 @@ void HackersMCLauncher::play(bool withUpdate)
 						{
 							if (file->isOpen())
 							{
+								file->deleteLater();
 								file->close();
 							}
 							downloadTasks -= 1;

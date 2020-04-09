@@ -8,14 +8,47 @@
 #include <QFileDialog>
 #include <QDesktopServices>
 #include "Settings.h"
+#include "Util/DefaultValidator.h"
+#include <QMessageBox>
 
 
 ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
-	: Form(parent), mItem(&parent->getProfiles().profiles()[index.row()])
+	: Form(parent), mItem(&parent->getProfiles().profiles()[index.row()]), mLastId(mItem->mName)
 {
 	ui.setupUi(this);
 	connect(ui.buttonBox, &QDialogButtonBox::clicked, this, &ProfileForm::close);
 	connect(&parent->getProfiles(), &QAbstractItemModel::dataChanged, this, &ProfileForm::updateCaption);
+	connect(&parent->getProfiles(), &QAbstractItemModel::dataChanged, this, [&, parent]()
+	{
+		// rename files  in versions/ dir
+		if (mLastId == ui.profilename->text())
+			return;
+		QDir versions = parent->getSettings()->getGameDir().absoluteFilePath("versions/");
+		if (versions.exists()) {
+			QDir oldVersion = versions.absoluteFilePath(mLastId);
+			QDir newVersion = versions.absoluteFilePath(ui.profilename->text());
+
+			if (newVersion.exists())
+			{
+				QMessageBox::critical(this, tr("Profile with this name already exists"), tr("Please try another name"));
+				ui.profilename->setText(mLastId);
+				return;
+			}
+			if (!oldVersion.exists())
+				return;
+
+			// rename files
+			for (auto ext : { ".jar", ".json", ".hck.json" })
+			{
+				QFile::rename(oldVersion.absoluteFilePath(mLastId + ext), oldVersion.absoluteFilePath(ui.profilename->text() + ext));
+			}
+
+			// rename whole dir
+			QFile::rename(oldVersion.absolutePath(), newVersion.absolutePath());
+		}
+		
+		mLastId = mItem->mName;
+	});
 	connect(ui.openGameDir, &QAbstractButton::clicked, this, [parent]()
 	{
 		QDesktopServices::openUrl(QUrl::fromLocalFile(parent->getSettings()->getGameDir().absolutePath()));
@@ -26,8 +59,11 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 	auto mapper = new QDataWidgetMapper(this);
 	mapper->setModel(&parent->getProfiles());
 	mapper->addMapping(ui.profilename, 0);
+	mapper->addMapping(ui.mainClass, 1);
 	mapper->setCurrentIndex(index.row());
 
+	ui.profilename->setValidator(new DefaultValidator(this));
+	
 	updateCaption();
 
 	// Downloads
@@ -128,4 +164,9 @@ void ProfileForm::updateCaption()
 }
 ProfileForm::~ProfileForm()
 {
+}
+
+void ProfileForm::closeEvent(QCloseEvent*)
+{
+	mItem->save(static_cast<HackersMCLauncher*>(parent()));
 }

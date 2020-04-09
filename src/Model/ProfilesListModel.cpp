@@ -30,7 +30,12 @@ QVariant ProfilesListModel::data(const QModelIndex& index, int role) const
 		{
 		case Qt::EditRole:
 		case Qt::DisplayRole:
-			return mProfiles[index.row()].mName;
+			switch (index.column()) {
+			case 0:
+				return mProfiles[index.row()].mName;
+			case 1:
+				return mProfiles[index.row()].mMainClass;
+			}
 		}
 	}
 	return {};
@@ -43,7 +48,14 @@ bool ProfilesListModel::setData(const QModelIndex& index, const QVariant& value,
 		switch (index.column())
 		{
 		case 0:
-			mProfiles[index.row()].mName = value.toString();
+			switch (index.column()) {
+			case 0:
+				mProfiles[index.row()].mName = value.toString();
+				break;
+			case 1:
+				mProfiles[index.row()].mMainClass = value.toString();
+				break;
+			}
 			break;
 		default:
 			return false;

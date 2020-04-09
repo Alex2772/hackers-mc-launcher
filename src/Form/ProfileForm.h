@@ -18,7 +18,12 @@ public:
 	ProfileForm(const QModelIndex& index, HackersMCLauncher* parent);
 	~ProfileForm();
 
+
+protected:
+	void closeEvent(QCloseEvent*) override;
 private:
 	Ui::ProfileForm ui;
 	Profile* mItem;
+
+	QString mLastId;
 };

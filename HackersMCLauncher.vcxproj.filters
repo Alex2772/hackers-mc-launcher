@@ -108,6 +108,9 @@
     <ClCompile Include="src\Util\VariableHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Util\DefaultValidator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -216,6 +219,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\launcher_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util\DefaultValidator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

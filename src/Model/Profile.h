@@ -3,6 +3,7 @@
 #include "DownloadsModel.h"
 #include "ClasspathListModel.h"
 
+class HackersMCLauncher;
 class Profile
 {
 public:
@@ -32,4 +33,8 @@ public:
 	QList<GameArg> mGameArgs;
 	QList<JavaArg> mJavaArgs;
 	QList<ClasspathEntry> mClasspath;
+	
+	static Profile fromJson(HackersMCLauncher* launcher, const QString& name, const QJsonObject& object);
+	QJsonObject toJson();
+	void save(HackersMCLauncher* launcher);
 };
