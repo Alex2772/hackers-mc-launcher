@@ -17,6 +17,8 @@
 #include "Util/Crypto.h"
 #include "Util/StringHelper.h"
 #include <QNetworkReply>
+#include <QProcess>
+#include "Util/VariableHelper.h"
 
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	: QMainWindow(parent),
@@ -137,6 +139,16 @@ Settings* HackersMCLauncher::getSettings() const
 	return mSettings;
 }
 
+const Profile& HackersMCLauncher::currentProfile()
+{
+	return mProfiles.profiles().at(ui.profilesList->selectionModel()->currentIndex().row());
+}
+
+const User& HackersMCLauncher::currentUser()
+{
+	return mUsers.users().at(ui.usersList->selectionModel()->currentIndex().row());
+}
+
 
 void HackersMCLauncher::play(bool withUpdate)
 {
@@ -160,8 +172,8 @@ void HackersMCLauncher::play(bool withUpdate)
 		ui.eta->setText("-");
 		setDownloadMode(true);
 
-		auto& profile = mProfiles.profiles().at(ui.profilesList->selectionModel()->currentIndex().row());
-		auto& user = mUsers.users().at(ui.usersList->selectionModel()->currentIndex().row());
+		auto& profile = currentProfile();
+		auto& user = currentUser();
 
 		QThreadPool::globalInstance()->start(lambda([&, withUpdate]()
 		{
@@ -305,6 +317,36 @@ void HackersMCLauncher::play(bool withUpdate)
 				t.start();
 				zaloop.exec();
 			}
+
+			UIThread::run([&]()
+			{
+				setDownloadMode(false);
+			});
+
+			// JVM args
+			QStringList args;
+			for (auto& a : profile.mJavaArgs)
+			{
+				if (VariableHelper::checkConditions(this, a.mConditions))
+					continue;
+				args << VariableHelper::replaceVariablesInString(this, a.mName);
+			}
+
+			// main class
+			args << profile.mMainClass;
+
+			// game args
+			for (auto& a : profile.mGameArgs)
+			{
+				if (VariableHelper::checkConditions(this, a.mConditions))
+					continue;
+				args << VariableHelper::replaceVariablesInString(this, a.mName);
+				if (!a.mValue.isEmpty())
+					args << VariableHelper::replaceVariablesInString(this, a.mValue);
+			}
+			
+			qDebug() << args;
+			QProcess::startDetached("java", args, getSettings()->getGameDir().absolutePath());
 		}));
 	}
 }

@@ -6,6 +6,7 @@
 #include "Model/JavaArgsListModel.h"
 #include "Model/ClasspathListModel.h"
 #include <QFileDialog>
+#include <QDesktopServices>
 #include "Settings.h"
 
 
@@ -15,6 +16,10 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 	ui.setupUi(this);
 	connect(ui.buttonBox, &QDialogButtonBox::clicked, this, &ProfileForm::close);
 	connect(&parent->getProfiles(), &QAbstractItemModel::dataChanged, this, &ProfileForm::updateCaption);
+	connect(ui.openGameDir, &QAbstractButton::clicked, this, [parent]()
+	{
+		QDesktopServices::openUrl(QUrl::fromLocalFile(parent->getSettings()->getGameDir().absolutePath()));
+	});
 
 	// Common
 	

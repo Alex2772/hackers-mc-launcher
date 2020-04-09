@@ -26,6 +26,8 @@ public:
 	ProfilesListModel& getProfiles();
 	
 	Settings* getSettings() const;
+	const Profile& currentProfile();
+	const User& currentUser();
 	
 public slots:
 	void play(bool withUpdate = false);

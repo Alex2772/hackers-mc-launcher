@@ -25,6 +25,7 @@ public:
 	};
 	
 	QString mName;
+	QString mMainClass;
 
 	QList<Download> mDownloads;
 	QList<GameArg> mGameArgs;

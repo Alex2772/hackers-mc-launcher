@@ -123,6 +123,7 @@
     <QtRcc Include="assets\HackersMCLauncher.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\launcher_config.h" />
     <ClInclude Include="src\Util\VariableHelper.h" />
     <QtMoc Include="src\Util\UIThread.h" />
     <QtMoc Include="src\Form\UserForm.h" />

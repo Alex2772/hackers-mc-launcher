@@ -34,6 +34,7 @@ VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
 			item->parent() != nullptr && item->parent()->parent() != nullptr);
 	});
 	connect(ui.treeView, &QTreeView::doubleClicked, this, &VersionChooserForm::onVersionSelected);
+	connect(ui.buttonBox, &QDialogButtonBox::rejected, this, &VersionChooserForm::close);
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, [&]()
 	{
 		onVersionSelected(ui.treeView->selectionModel()->currentIndex());
@@ -99,6 +100,12 @@ void VersionChooserForm::decrementRequests()
 	}
 }
 
+Download downloadFromJson(const QString& path, const QJsonObject& v)
+{
+	return Download{ path, v["url"].toString(),
+											quint64(v["size"].toInt()), v["sha1"].toString() };
+}
+
 void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 {
 	if (ui.buttonBox->button(QDialogButtonBox::Ok)->isEnabled())
@@ -122,6 +129,14 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 			p.mName = item->mName;
 			QJsonObject o = QJsonDocument::fromJson(reply->readAll()).object();
 
+			p.mMainClass = o["mainClass"].toString();
+			
+			// client jar
+			{
+				auto path = "versions/" + o["id"].toString() + '/' + o["id"].toString() + ".jar";
+				p.mDownloads << downloadFromJson(path, o["downloads"].toObject()["client"].toObject());
+				p.mClasspath << ClasspathEntry{ path };
+			}
 			// Java libraries
 			for (QJsonValue v : o["libraries"].toArray())
 			{
@@ -167,15 +182,20 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 				
 				QString name = v["name"].toString();
 
-				p.mDownloads << Download{ "libraries/" + v["downloads"]["artifact"]["path"].toString(), v["downloads"]["artifact"]["url"].toString(),
-											quint64(v["downloads"]["artifact"]["size"].toInt()), v["downloads"]["artifact"]["sha1"].toString() };
+				p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(), v["downloads"]["artifact"].toObject());
 				p.mClasspath << ClasspathEntry{ "libraries/" + v["downloads"]["artifact"]["path"].toString() };
 
-				if (v["classifiers"].isObject())
+				if (v["downloads"]["classifiers"].isObject())
 				{
-					
+					auto k = v["downloads"]["classifiers"]["natives-windows"];
+					if (k.isObject())
+					{
+						p.mDownloads << downloadFromJson("libraries/" + k["path"].toString(), k.toObject());
+						p.mClasspath << ClasspathEntry{ "libraries/" + k["path"].toString() };
+					}
 				}
 			}
+			
 
 			auto args = o["arguments"].toObject();
 

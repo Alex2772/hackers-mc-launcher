@@ -215,6 +215,9 @@
     <ClInclude Include="src\Util\VariableHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\launcher_config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="translations\hackersmclauncher_ru_RU.ts">

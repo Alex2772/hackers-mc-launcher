@@ -4,11 +4,14 @@
 #include <QDataWidgetMapper>
 #include <QFileDialog>
 #include <Settings.h>
+#include "launcher_config.h"
 
 SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	: Form(launcher)
 {
 	ui.setupUi(this);
+
+	ui.version->setText(tr("Version") + ": " + LAUNCHER_VERSION);
 
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, &SettingsForm::close);
 
