@@ -29,7 +29,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -100,29 +100,38 @@
        </item>
        <item row="1" column="1">
         <widget class="QGroupBox" name="groupBox_2">
+         <property name="maximumSize">
+          <size>
+           <width>200</width>
+           <height>16777215</height>
+          </size>
+         </property>
          <property name="title">
           <string>Additional flags</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="spacing">
+           <number>0</number>
+          </property>
           <item>
            <widget class="QCheckBox" name="flag_demo">
             <property name="text">
              <string>Demo mode</string>
             </property>
+            <property name="tristate">
+             <bool>false</bool>
+            </property>
            </widget>
           </item>
           <item>
-           <spacer name="verticalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
+           <widget class="QLabel" name="label_4">
+            <property name="text">
+             <string>(works only if the corresponding argument in game args exists)</string>
             </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
+            <property name="wordWrap">
+             <bool>true</bool>
             </property>
-           </spacer>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -145,23 +154,23 @@
      </widget>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
-       <string>Java libraries</string>
+       <string>Downloads</string>
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QTreeView" name="jl_tree"/>
+        <widget class="QTreeView" name="dl_tree"/>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QPushButton" name="jl_add">
+          <widget class="QPushButton" name="dl_add">
            <property name="text">
             <string>Add...</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="jl_delete">
+          <widget class="QPushButton" name="dl_delete">
            <property name="text">
             <string>Delete</string>
            </property>
@@ -169,6 +178,9 @@
          </item>
          <item>
           <widget class="QPushButton" name="pushButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>Show in explorer</string>
            </property>
@@ -191,32 +203,39 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab_3">
+     <widget class="QWidget" name="tab_5">
       <attribute name="title">
-       <string>Game args</string>
+       <string>Classpath</string>
       </attribute>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="horizontalLayout_6">
        <item>
-        <widget class="QTableView" name="ga_table"/>
+        <widget class="QListView" name="cp_list"/>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
-          <widget class="QPushButton" name="ga_add">
+          <widget class="QPushButton" name="cp_add">
            <property name="text">
             <string>Add</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="ga_delete">
+          <widget class="QPushButton" name="cp_choose">
+           <property name="text">
+            <string>Choose file...</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="cp_delete">
            <property name="text">
             <string>Delete</string>
            </property>
           </widget>
          </item>
          <item>
-          <spacer name="verticalSpacer_2">
+          <spacer name="verticalSpacer_6">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>
@@ -238,7 +257,7 @@
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_3">
        <item>
-        <widget class="QTableView" name="ja_table"/>
+        <widget class="QTreeView" name="ja_tree"/>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -258,6 +277,47 @@
          </item>
          <item>
           <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tab_3">
+      <attribute name="title">
+       <string>Game args</string>
+      </attribute>
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QTreeView" name="ga_tree"/>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QPushButton" name="ga_add">
+           <property name="text">
+            <string>Add</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="ga_delete">
+           <property name="text">
+            <string>Delete</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_2">
            <property name="orientation">
             <enum>Qt::Vertical</enum>
            </property>

@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include "ProfileForm.h"
 #include "Util/StringHelper.h"
+#include "Util/VariableHelper.h"
 
 
 VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
@@ -124,17 +125,51 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 			// Java libraries
 			for (QJsonValue v : o["libraries"].toArray())
 			{
+				if (v["rules"].isArray())
+				{
+					bool allowed = false;
+					for (auto& r : v["rules"].toArray())
+					{
+						auto rule = r.toObject();
+						bool rulePassed = true;
+						for (auto& k : rule.keys())
+						{
+							if (k != "action")
+							{
+								if (rule[k].isObject())
+								{
+									auto x = rule[k].toObject();
+									for (auto& v : x.keys())
+									{
+										if (VariableHelper::getVariableValue(mLauncher, k + '.' + v).toString() != x[v].toVariant().toString())
+										{
+											rulePassed = false;
+											break;
+										}
+									}
+								} else
+								{
+									if (VariableHelper::getVariableValue(mLauncher, k).toString() != rule[k].toVariant().toString())
+									{
+										rulePassed = false;
+									}
+								}
+								if (!rulePassed)
+									break;
+							}
+						}
+						if (rulePassed)
+							allowed = rule["action"] == "allow";
+					}
+					if (!allowed)
+						continue;
+				}
+				
 				QString name = v["name"].toString();
-				auto splt = name.split(":");
 
-				auto url = v["downloads"]["artifact"]["url"].toString();
-				auto diff = url.size() - v["downloads"]["artifact"]["path"].toString().length();
-				if (diff < 512)
-					url.resize(diff);
-
-				StringHelper::normalizeUrl(url);
-				p.mJavaLibs[url] << JavaLib{splt[0], splt[1], splt[2], v["downloads"]["artifact"]["sha1"].toString(),
-											quint64(v["downloads"]["artifact"]["size"].toInt())};
+				p.mDownloads << Download{ "libraries/" + v["downloads"]["artifact"]["path"].toString(), v["downloads"]["artifact"]["url"].toString(),
+											quint64(v["downloads"]["artifact"]["size"].toInt()), v["downloads"]["artifact"]["sha1"].toString() };
+				p.mClasspath << ClasspathEntry{ "libraries/" + v["downloads"]["artifact"]["path"].toString() };
 
 				if (v["classifiers"].isObject())
 				{

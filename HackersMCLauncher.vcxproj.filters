@@ -81,12 +81,6 @@
     <ClCompile Include="src\Settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Model\JavaLibModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Form\JavaLibForm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Util\StringHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -105,6 +99,15 @@
     <ClCompile Include="src\Util\Crypto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Model\DownloadsModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model\ClasspathListModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Util\VariableHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -120,9 +123,6 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\VersionChooserForm.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
-    <QtUic Include="ui\JavaLibForm.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -165,12 +165,6 @@
     <QtMoc Include="src\Model\FilterProxyModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="src\Model\JavaLibModel.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="src\Form\JavaLibForm.h">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="src\Model\GameArgsListModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -181,6 +175,12 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="src\Util\UIThread.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Model\DownloadsModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Model\ClasspathListModel.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
@@ -210,6 +210,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Util\Crypto.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Util\VariableHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

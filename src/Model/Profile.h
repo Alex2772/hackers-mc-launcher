@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <QUrl>
-#include "JavaLibModel.h"
+#include "DownloadsModel.h"
+#include "ClasspathListModel.h"
 
 class Profile
 {
@@ -25,7 +26,8 @@ public:
 	
 	QString mName;
 
-	QMap<QUrl, QList<JavaLib>> mJavaLibs;
+	QList<Download> mDownloads;
 	QList<GameArg> mGameArgs;
 	QList<JavaArg> mJavaArgs;
+	QList<ClasspathEntry> mClasspath;
 };

@@ -26,7 +26,7 @@ public:
 	ProfilesListModel& getProfiles();
 	
 	Settings* getSettings() const;
-
+	
 public slots:
 	void play(bool withUpdate = false);
 	

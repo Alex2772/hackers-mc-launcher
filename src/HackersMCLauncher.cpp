@@ -137,6 +137,7 @@ Settings* HackersMCLauncher::getSettings() const
 	return mSettings;
 }
 
+
 void HackersMCLauncher::play(bool withUpdate)
 {
 	const QString errorTitle = tr("Could not launch");
@@ -174,7 +175,7 @@ void HackersMCLauncher::play(bool withUpdate)
 
 			setStatus(tr("Searching files..."));
 
-			QDir dirLibraries = mSettings->getGameDir().absoluteFilePath("libraries");
+			QDir gameDir = mSettings->getGameDir();
 
 			// Determine download list and count total download size
 
@@ -182,136 +183,127 @@ void HackersMCLauncher::play(bool withUpdate)
 			typedef QPair<QString, QUrl> D; // just for convenience
 			QList<D> downloads;
 
-			for (auto repoUrl : profile.mJavaLibs.keys())
+			for (auto d : profile.mDownloads)
 			{
-				auto urlString = repoUrl.toString();
-				if (!urlString.endsWith("/"))
-					urlString += '/';
-
-				for (auto& lib : profile.mJavaLibs[repoUrl])
+				auto absPath = gameDir.absoluteFilePath(d.mLocalPath);
+				QFile local = absPath;
+				if (local.exists())
 				{
-					auto path = lib.path();
-					auto absPath = dirLibraries.absoluteFilePath(path);
-					QFile local = absPath;
-					if (local.exists())
-					{
-						if (!withUpdate
-							|| lib.mHash.isEmpty()
-							|| Crypto::sha1(local) == lib.mHash // check file's sha1
+					if (!withUpdate
+						|| d.mHash.isEmpty()
+						|| Crypto::sha1(local) == d.mHash // check file's sha1
 						)
-						{
-							continue;
-						}
+					{
+						continue;
 					}
-
-					totalDownloadSize += lib.mSize;
-					downloads << D{absPath, QUrl(urlString + path)};
 				}
 
-				if (!downloads.isEmpty())
+				totalDownloadSize += d.mSize;
+				downloads << D{ absPath, QUrl(d.mUrl) };
+			}
+			if (!downloads.isEmpty())
+			{
+				setStatus(tr("Downloading..."));
+
+				UIThread::run([&, totalDownloadSize]()
 				{
-					setStatus(tr("Downloading..."));
+					ui.total->setText(StringHelper::prettySize(totalDownloadSize));
+					ui.downloaded->setText(StringHelper::prettySize(0));
+					ui.eta->setText(tr("Calculating..."));
+					ui.speed->setText(StringHelper::prettySize(0, true));
+					ui.progressBar->setMaximum(totalDownloadSize);
+					ui.progressBar->setValue(0);
+				});
+				QNetworkAccessManager network;
+				QEventLoop zaloop;
 
-					UIThread::run([&, totalDownloadSize]()
+				quint64 downloaded = 0;
+				unsigned downloadTasks = 0;
+
+				auto dummy = new QObject(&network);
+
+				for (auto& d : downloads)
+				{
+					auto reply = network.get(QNetworkRequest(d.second));
+					auto file = new QFile(d.first, &network);
+
+					connect(reply, &QNetworkReply::readyRead, dummy, [&, reply, file]()
 					{
-						ui.total->setText(StringHelper::prettySize(totalDownloadSize));
-						ui.downloaded->setText(StringHelper::prettySize(0));
-						ui.eta->setText(tr("Calculating..."));
-						ui.speed->setText(StringHelper::prettySize(0, true));
-						ui.progressBar->setMaximum(totalDownloadSize);
-						ui.progressBar->setValue(0);
-					});
-					QNetworkAccessManager network;
-					QEventLoop zaloop;
-
-					quint64 downloaded = 0;
-					unsigned downloadTasks = 0;
-
-					auto dummy = new QObject(&network);
-
-					for (auto& d : downloads)
-					{
-						auto reply = network.get(QNetworkRequest(d.second));
-						auto file = new QFile(d.first, &network);
-
-						connect(reply, &QNetworkReply::readyRead, dummy, [&, reply, file]()
+						if (!file->isOpen())
 						{
-							if (!file->isOpen())
+							auto absDir = QFileInfo(*file).absoluteDir();
+							if (!absDir.exists())
 							{
-								auto absDir = QFileInfo(*file).absoluteDir();
-								if (!absDir.exists())
-								{
-									absDir.mkpath(absDir.absolutePath());
-								}
+								absDir.mkpath(absDir.absolutePath());
+							}
+							if (!file->open(QIODevice::WriteOnly))
+							{
+								// try to delete existing file.
+								file->remove();
+
 								if (!file->open(QIODevice::WriteOnly))
 								{
-									// try to delete existing file.
-									file->remove();
-
-									if (!file->open(QIODevice::WriteOnly))
-									{
-										qWarning("Could not open file: %s", file->fileName().toStdString().c_str());
-										reply->close();
-										return;
-									}
+									qWarning("Could not open file: %s", file->fileName().toStdString().c_str());
+									reply->close();
+									return;
 								}
 							}
-							auto buf = reply->readAll();
-							downloaded += file->write(buf);
-						});
-						connect(reply, &QNetworkReply::finished, dummy, [&, reply, file]()
-						{
-							if (file->isOpen())
-							{
-								file->close();
-							}
-							downloadTasks -= 1;
-
-							if (downloadTasks == 0)
-							{
-								zaloop.exit();
-							}
-						});
-						downloadTasks += 1;
-					}
-
-					QTimer t;
-					unsigned counter = 0;
-					quint64 lastPeriodDownloaded = 0;
-					float averangeDelta = 0.f;
-					connect(&t, &QTimer::timeout, dummy, [&]()
+						}
+						auto buf = reply->readAll();
+						downloaded += file->write(buf);
+					});
+					connect(reply, &QNetworkReply::finished, dummy, [&, reply, file]()
 					{
-						unsigned delta = downloaded - lastPeriodDownloaded;
-						if (++counter % 10 == 0)
+						if (file->isOpen())
 						{
-							averangeDelta += (delta - averangeDelta) * 0.2f;
-							if (counter >= 50)
-							{
-								// it's time to show up the speed
-								float time = (totalDownloadSize - downloaded) / averangeDelta;
-								UIThread::run([&, time]()
-								{
-									auto k = QDateTime::fromMSecsSinceEpoch(time * 1000).toUTC().toString("HH:mm:ss");
-									ui.eta->setText(k);
-								});
-							}
+							file->close();
+						}
+						downloadTasks -= 1;
 
-							lastPeriodDownloaded = downloaded;
+						if (downloadTasks == 0)
+						{
+							zaloop.exit();
+						}
+					});
+					downloadTasks += 1;
+				}
+
+				QTimer t;
+				unsigned counter = 0;
+				quint64 lastPeriodDownloaded = 0;
+				float averangeDelta = 0.f;
+				connect(&t, &QTimer::timeout, dummy, [&]()
+				{
+					unsigned delta = downloaded - lastPeriodDownloaded;
+					if (++counter % 10 == 0)
+					{
+						averangeDelta += (delta - averangeDelta) * 0.2f;
+						if (counter >= 50)
+						{
+							// it's time to show up the speed
+							float time = (totalDownloadSize - downloaded) / averangeDelta;
+							UIThread::run([&, time]()
+							{
+								auto k = QDateTime::fromMSecsSinceEpoch(time * 1000).toUTC().toString("HH:mm:ss");
+								ui.eta->setText(k);
+							});
 						}
 
-						// copy this value to prevent data racing
-						quint64 d = downloaded;
-						UIThread::run([&, d]()
-						{
-							ui.downloaded->setText(StringHelper::prettySize(d));
-							ui.speed->setText(StringHelper::prettySize(averangeDelta, true));
-							ui.progressBar->setValue(d);;
-						});
+						lastPeriodDownloaded = downloaded;
+					}
+
+					// copy this value to prevent data racing
+					quint64 d = downloaded;
+					UIThread::run([&, d]()
+					{
+						ui.downloaded->setText(StringHelper::prettySize(d));
+						ui.speed->setText(StringHelper::prettySize(averangeDelta, true));
+						ui.progressBar->setValue(d);;
 					});
-					t.setInterval(100);
-					t.start();
-					zaloop.exec();
-				}
+				});
+				t.setInterval(100);
+				t.start();
+				zaloop.exec();
 			}
 		}));
 	}

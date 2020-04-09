@@ -83,7 +83,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Form\Form.cpp" />
-    <ClCompile Include="src\Form\JavaLibForm.cpp" />
     <ClCompile Include="src\Form\ProfileForm.cpp" />
     <ClCompile Include="src\Form\SettingsForm.cpp" />
     <ClCompile Include="src\Form\UserForm.cpp" />
@@ -91,9 +90,10 @@
     <ClCompile Include="src\HackersMCLauncher.cpp" />
     <ClCompile Include="src\Layout\StackedLayout.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Model\ClasspathListModel.cpp" />
     <ClCompile Include="src\Model\FilterProxyModel.cpp" />
     <ClCompile Include="src\Model\JavaArgsListModel.cpp" />
-    <ClCompile Include="src\Model\JavaLibModel.cpp" />
+    <ClCompile Include="src\Model\DownloadsModel.cpp" />
     <ClCompile Include="src\Model\Profile.cpp" />
     <ClCompile Include="src\Model\ProfilesListModel.cpp" />
     <ClCompile Include="src\Model\RepositoriesModel.cpp" />
@@ -107,12 +107,12 @@
     <ClCompile Include="src\Util\StringHelper.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
     <ClCompile Include="src\Util\UIThread.cpp" />
+    <ClCompile Include="src\Util\VariableHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\HackersMCLauncher.h" />
   </ItemGroup>
   <ItemGroup>
-    <QtUic Include="ui\JavaLibForm.ui" />
     <QtUic Include="ui\VersionChooserForm.ui" />
     <QtUic Include="ui\ProfileForm.ui" />
     <QtUic Include="ui\SettingsForm.ui" />
@@ -123,6 +123,7 @@
     <QtRcc Include="assets\HackersMCLauncher.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Util\VariableHelper.h" />
     <QtMoc Include="src\Util\UIThread.h" />
     <QtMoc Include="src\Form\UserForm.h" />
     <QtMoc Include="src\Form\Form.h" />
@@ -132,10 +133,10 @@
     <QtMoc Include="src\Form\ProfileForm.h" />
     <QtMoc Include="src\Form\VersionChooserForm.h" />
     <QtMoc Include="src\Model\FilterProxyModel.h" />
-    <QtMoc Include="src\Model\JavaLibModel.h" />
-    <QtMoc Include="src\Form\JavaLibForm.h" />
+    <QtMoc Include="src\Model\DownloadsModel.h" />
     <QtMoc Include="src\Model\JavaArgsListModel.h" />
     <QtMoc Include="src\Layout\StackedLayout.h" />
+    <QtMoc Include="src\Model\ClasspathListModel.h" />
     <ClInclude Include="src\Model\Profile.h" />
     <ClInclude Include="src\Model\Repository.h" />
     <QtMoc Include="src\Model\GameArgsListModel.h" />
