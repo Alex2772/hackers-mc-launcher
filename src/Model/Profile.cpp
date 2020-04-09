@@ -246,16 +246,50 @@ QJsonObject Profile::toJson()
 	object["mainClass"] = mMainClass;
 	object["assets"] = mAssetsIndex;
 
-	// libraries
-
-	QJsonArray libraries;
-
-	for (auto& lib : mClasspath)
+	// Downloads
+	QJsonArray downloads;
+	for (auto& d : mDownloads)
 	{
-		
+		QJsonObject entry;
+		entry["local"] = d.mLocalPath;
+		entry["url"] = d.mUrl;
+		entry["size"] = int(d.mSize);
+		entry["hash"] = d.mHash;
+	}
+	object["downloads"] = downloads;
+	
+	// game args
+	QJsonArray gameArgs;
+	for (auto& d : mGameArgs)
+	{
+		QJsonObject entry;
+		entry["name"] = d.mName;
+		entry["value"] = d.mValue;
+
+		QJsonArray conditions;
+
+		for (auto& c : d.mConditions)
+		{
+			QJsonArray e;
+			e << c.first;
+			e << c.second.toJsonValue();
+			conditions << e;
+		}
+
+		entry["conditions"] = conditions;
 	}
 
-	object["libraries"] = libraries;
+	object["game_args"] = gameArgs;
+	
+	
+	// Classpath
+	QJsonArray classpath;
+	for (auto& lib : mClasspath)
+	{
+		classpath << lib.mPath;
+	}
+
+	object["classpath"] = classpath;
 
 	return object;
 }
