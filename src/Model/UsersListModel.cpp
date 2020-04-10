@@ -78,3 +78,11 @@ bool UsersListModel::removeRows(int row, int count, const QModelIndex& parent)
 
 	return true;
 }
+
+
+void UsersListModel::add(const User& u)
+{
+	mUsers << u;
+
+	emit dataChanged(index(mUsers.size() - 2, 0), index(mUsers.size() - 1, 1));
+}

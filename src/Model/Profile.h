@@ -37,4 +37,5 @@ public:
 	static Profile fromJson(HackersMCLauncher* launcher, const QString& name, const QJsonObject& object);
 	QJsonObject toJson();
 	void save(HackersMCLauncher* launcher);
+	QString id() const;
 };

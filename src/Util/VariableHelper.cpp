@@ -54,30 +54,43 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 			[launcher]() -> QVariant
 			{
 				QString cp;
-				for (auto& c : launcher->currentProfile().mClasspath)
-				{
-					if (!cp.isEmpty())
+				Profile p;
+				if (launcher->currentProfile(p)) {
+					for (auto& c : p.mClasspath)
 					{
-						// there's another divider for other OSes
-						cp += ';';
+						if (!cp.isEmpty())
+						{
+							// there's another divider for other OSes
+							cp += ';';
+						}
+						cp += c.mPath;
 					}
-					cp += c.mPath;
+					return cp;
 				}
-				return cp;
+				return {};
 			}
 		},
 		{
 			"auth_player_name",
 			[launcher]() -> QVariant
 			{
-				return launcher->currentUser().mUsername;
+				User u;
+				if (launcher->currentUser(u)) {
+					return u.mUsername;
+				}
+				return {};
 			}
 		},
 		{
 			"auth_uuid",
 			[launcher]() -> QVariant
 			{
-				return QUuid::fromString(launcher->currentUser().mUsername);
+				User u;
+				if (launcher->currentUser(u)) {
+					// TODO
+					return u.mUsername;
+				}
+				return {};
 			}
 		},
 		{
@@ -105,7 +118,11 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 			"version_name",
 			[launcher]() -> QVariant
 			{
-				return launcher->currentProfile().mName;
+				Profile u;
+				if (launcher->currentProfile(u)) {
+					return u.mName;
+				}
+				return {};
 			}
 		},
 		{
@@ -126,7 +143,11 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 			"assets_index_name",
 			[launcher]() -> QVariant
 			{
-				return launcher->currentProfile().mAssetsIndex;
+				Profile u;
+				if (launcher->currentProfile(u)) {
+					return u.mAssetsIndex;
+				}
+				return {};
 			}
 		},
 	};

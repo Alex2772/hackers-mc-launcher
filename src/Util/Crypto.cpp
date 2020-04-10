@@ -11,3 +11,11 @@ QString Crypto::sha1(QFile& file)
 
 	return hash.result().toHex();
 }
+
+QString Crypto::md5(const QString& from)
+{
+	QCryptographicHash hash(QCryptographicHash::Sha1);
+	hash.addData(from.toLatin1());
+
+	return hash.result().toHex();
+}

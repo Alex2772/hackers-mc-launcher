@@ -11,6 +11,8 @@ class Settings;
 class HackersMCLauncher : public QMainWindow
 {
 	Q_OBJECT
+protected:
+	void closeEvent(QCloseEvent* event) override;
 
 public:
 	HackersMCLauncher(QWidget *parent = Q_NULLPTR);
@@ -21,16 +23,19 @@ public:
 	void mouseReleaseEvent(QMouseEvent* e) override;
 	
 	void updateMiddleButton();
-	
+
+
 	RepositoriesModel* getRepositories();
 	ProfilesListModel& getProfiles();
 	
 	Settings* getSettings() const;
-	const Profile& currentProfile();
-	const User& currentUser();
+	bool currentProfile(Profile& p);
+	bool currentUser(User&);
 	
 public slots:
 	void play(bool withUpdate = false);
+	void loadProfiles();
+	void saveProfiles();
 	
 private:
 	Ui::HackersMCLauncherClass ui;
@@ -41,6 +46,7 @@ private:
 	RepositoriesModel mRepos;
 
 	Settings* mSettings;
+
 
 private slots:
 	void screenScaleChanged();

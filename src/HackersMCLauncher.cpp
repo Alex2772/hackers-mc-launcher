@@ -22,12 +22,13 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 
+
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	: QMainWindow(parent),
 	  mSettings(new Settings("hackers-mc-launcher", "hackers-mc-launcher", this))
 {
 	ui.setupUi(this);
-
+	
 	ui.content->setLayout(new StackedLayout(ui.content));
 	ui.content->layout()->addWidget(ui.label);
 	ui.content->layout()->addWidget(ui.frame);
@@ -84,6 +85,16 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	connect(ui.play, &QAbstractButton::clicked, this, &HackersMCLauncher::play);
 
 	setDownloadMode(false);
+
+	loadProfiles();
+
+	connect(&mUsers, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
+	connect(&mProfiles, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
+}
+
+void HackersMCLauncher::closeEvent(QCloseEvent* event)
+{
+	saveProfiles();
 }
 
 bool HackersMCLauncher::nativeEvent(const QByteArray& eventType, void* message, long* result)
@@ -141,14 +152,28 @@ Settings* HackersMCLauncher::getSettings() const
 	return mSettings;
 }
 
-const Profile& HackersMCLauncher::currentProfile()
+bool HackersMCLauncher::currentProfile(Profile& p)
 {
-	return mProfiles.profiles().at(ui.profilesList->selectionModel()->currentIndex().row());
+
+	int r = ui.profilesList->selectionModel()->currentIndex().row();
+	if (r < 0)
+	{
+		return false;
+	}
+	p = mProfiles.profiles().at(r);
+	return true;
 }
 
-const User& HackersMCLauncher::currentUser()
+bool HackersMCLauncher::currentUser(User& p)
 {
-	return mUsers.users().at(ui.usersList->selectionModel()->currentIndex().row());
+
+	int r = ui.usersList->selectionModel()->currentIndex().row();
+	if (r < 0)
+	{
+		return false;
+	}
+	p = mUsers.users().at(r);
+	return true;
 }
 
 
@@ -174,10 +199,13 @@ void HackersMCLauncher::play(bool withUpdate)
 		ui.eta->setText("-");
 		setDownloadMode(true);
 
-		auto& profile = currentProfile();
-		auto& user = currentUser();
+		Profile profile;
+		User user;
 
-		QThreadPool::globalInstance()->start(lambda([&, withUpdate]()
+		if (!currentProfile(profile) || !currentUser(user))
+			return;
+
+		QThreadPool::globalInstance()->start(lambda([&, profile, user, withUpdate]()
 		{
 			auto setStatus = [&](const QString& s)
 			{
@@ -393,6 +421,179 @@ void HackersMCLauncher::play(bool withUpdate)
 			QProcess::startDetached("java", args, getSettings()->getGameDir().absolutePath());
 		}));
 	}
+}
+
+void HackersMCLauncher::loadProfiles()
+{
+	QFile c = getSettings()->getGameDir().absoluteFilePath("launcher_profiles.json");
+	if (c.exists())
+	{
+		c.open(QIODevice::ReadOnly);
+		QJsonObject config = QJsonDocument::fromJson(c.readAll()).object();
+		c.close();
+
+		for (auto& key : config["authenticationDatabase"].toObject().keys())
+		{
+			auto user = config["authenticationDatabase"].toObject()[key].toObject();
+			
+			mUsers.add(User{ user["username"].toString() });
+		}
+		for (auto& key : config["profiles"].toObject().keys())
+		{
+			auto tryLoad = [&](Profile& dst, const QString& name) -> bool
+			{
+				for (auto extension : { ".hck.json", ".json" }) {
+					QFile file = mSettings->getGameDir()
+					.absoluteFilePath("versions/" + name + '/' + name + extension);
+					if (file.exists()) {
+						file.open(QIODevice::ReadOnly);
+						dst = Profile::fromJson(this, name, 
+							QJsonDocument::fromJson(file.readAll()).object());
+						file.close();
+						return true;
+					}
+				}
+				return false;
+			};
+			auto profile = config["profiles"].toObject()[key].toObject();
+			auto name = profile["name"].toString();
+			Profile dst;
+			if (name.isEmpty() || !tryLoad(dst, name))
+			{
+				name = profile["lastVersionId"].toString();
+				if (!tryLoad(dst, name))
+					continue;
+			}
+			
+			mProfiles.add(std::move(dst));
+		}
+
+		auto selectedUser = config["selectedUser"].toObject();
+		if (selectedUser["account"].isString())
+		{
+			unsigned counter = 0;
+			for (auto& u : mUsers.users())
+			{
+				if (u.id() == selectedUser["account"].toString())
+				{
+					ui.usersList->selectionModel()->setCurrentIndex(mUsers.index(counter, 0, {}), QItemSelectionModel::Select);
+					break;
+				}
+				++counter;
+			}
+		}
+		if (selectedUser["profile"].isString())
+		{
+			unsigned counter = 0;
+			for (auto& u : mProfiles.profiles())
+			{
+				if (u.id() == selectedUser["profile"].toString())
+				{
+					ui.profilesList->selectionModel()->setCurrentIndex(mProfiles.index(counter, 0, {}), QItemSelectionModel::Select);
+					break;
+				}
+				++counter;
+			}
+		}
+	}
+}
+
+/**
+ * \brief Saves users and profiles lists to launcher_profiles.json
+ *
+ *		  Partically compatible with legacy Minecraft launcher format, which
+ *		  is also compatible with mods installers (Forge, Optifine etc...)
+ */
+void HackersMCLauncher::saveProfiles()
+{
+	/*
+	 * {
+  "authenticationDatabase" : {
+    "e681e8fcde71f860219102687b158192" : {
+      "username" : "alex2772sc@gmail.com"
+    }
+  },
+  "clientToken" : "",
+  "launcherVersion" : {
+    "format" : 21,
+    "name" : "",
+    "profilesFormat" : 2
+  },
+  "profiles" : {
+    "20bad5e4ac74fef693ba34e5e840a2d2" : {
+      "created" : "2020-04-06T01:55:00.204Z",
+      "icon" : "Furnace",
+      "lastUsed" : "2020-04-06T01:55:04.528Z",
+      "lastVersionId" : "rd-132211",
+      "name" : "",
+      "type" : "custom"
+    },
+    ....
+  },
+  "selectedUser" : {
+    "account" : "e681e8fcde71f860219102687b158192",
+    "profile" : ""
+  },
+  "settings" : {
+	...
+  }
+}
+	 */
+
+	QJsonObject out;
+
+	// users
+	QJsonObject authDatabase;
+	for (auto& user : mUsers.users())
+	{
+		QJsonObject u;
+		u["username"] = user.mUsername;
+
+		authDatabase[user.id()] = u;
+	}
+	out["authenticationDatabase"] = authDatabase;
+
+	// unsupported.
+	out["clientToken"] = "";
+
+	// version
+	QJsonObject launcherVersion;
+	launcherVersion["format"] = 21;
+	launcherVersion["name"] = "";
+	launcherVersion["profilesFormat"] = 2;
+	out["launcherVersion"] = launcherVersion;
+
+	// profiles
+	QJsonObject profiles;
+	for (auto& profile : mProfiles.profiles())
+	{
+		QJsonObject p;
+
+		p["name"] = profile.mName;
+		p["lastVersionId"] = profile.mName;
+		
+		profiles[profile.id()] = p;
+	}
+	out["profiles"] = profiles;
+
+	// selected user
+	QJsonObject selectedUser;
+	User u;
+	if (currentUser(u))
+		selectedUser["account"] = u.id();
+
+	Profile p;
+	if (currentProfile(p))
+		selectedUser["profile"] = p.id();
+	out["selectedUser"] = selectedUser;
+	
+	// unused.
+	out["settings"] = QJsonObject();
+	
+	QFile f = mSettings->getGameDir().absoluteFilePath("launcher_profiles.json");
+	f.open(QIODevice::WriteOnly);
+	f.write(QJsonDocument(out).toJson());
+	f.close();
 }
 
 void HackersMCLauncher::screenScaleChanged()

@@ -6,4 +6,5 @@ class User
 public:
 
 	QString mUsername;
+	QString id() const;
 };

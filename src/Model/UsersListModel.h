@@ -11,7 +11,7 @@ public:
 	bool setData(const QModelIndex& index, const QVariant& value, int role) override;
 	bool insertRows(int row, int count, const QModelIndex& parent) override;
 	bool removeRows(int row, int count, const QModelIndex& parent) override;
-
+	void add(const User& u);
 
 	const QList<User>& users() const
 	{
