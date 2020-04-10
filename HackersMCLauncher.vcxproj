@@ -38,6 +38,7 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
@@ -46,7 +47,7 @@
     <QtModules>core;network;widgets;gui</QtModules>
   </PropertyGroup>
   <PropertyGroup Label="QtSettings" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <QtInstall>5.14</QtInstall>
+    <QtInstall>5.15</QtInstall>
     <QtModules>core;gui;network;widgets</QtModules>
   </PropertyGroup>
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.props')">
@@ -60,6 +61,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <AdditionalIncludeDirectories>.\src;.\src\Form;.\3rdparty\minizip;.\3rdparty\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>$(Qt_DEFINES_);%(PreprocessorDefinitions);_DEBUG</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -70,8 +72,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <DebugInformationFormat />
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <AdditionalIncludeDirectories>.\src;.\src\Form;.\3rdparty\minizip;.\3rdparty\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -79,6 +81,8 @@
       <SubSystem>Windows</SubSystem>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>D:\Qt\OpenSSL-Win64\lib\VC\static;$(SolutionDir)$(Platform)\$(Configuration)\;D:\Qt\Qt-5.15.0\plugins\imageformats;D:\Qt\Qt-5.15.0\plugins\platforms;$(QTDIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>qtmain.lib;Ws2_32.lib;imm32.lib;winmm.lib;qwindows.lib;qtharfbuzz.lib;qtpcre2.lib;qtlibpng.lib;qtfreetype.lib;Qt5FontDatabaseSupport.lib;Qt5WindowsUIAutomationSupport.lib;Qt5PlatformCompositorSupport.lib;Qt5DeviceDiscoverySupport.lib;Qt5EventDispatcherSupport.lib;Qt5AccessibilitySupport.lib;Qt5ThemeSupport.lib;dwmapi.lib;Wtsapi32.lib;Version.lib;Iphlpapi.lib;Netapi32.lib;Userenv.lib;qsvg.lib;crypt32.lib;ntdll.lib;Qt5Concurrent.lib;Qt5Core.lib;Qt5Gui.lib;Qt5Network.lib;Qt5Svg.lib;Qt5Widgets.lib;libssl64MT.lib;libcrypto64MT.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -161,6 +165,7 @@
     <ClInclude Include="3rdparty\zlib\zconf.h" />
     <ClInclude Include="3rdparty\zlib\zlib.h" />
     <ClInclude Include="3rdparty\zlib\zutil.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="src\launcher_config.h" />
     <ClInclude Include="src\Util\DefaultValidator.h" />
     <ClInclude Include="src\Util\VariableHelper.h" />
@@ -192,6 +197,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="translations\hackersmclauncher_ru_RU.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="assets\logo.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

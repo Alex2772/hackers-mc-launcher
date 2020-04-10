@@ -29,6 +29,8 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	  mSettings(new Settings("hackers-mc-launcher", "hackers-mc-launcher", this))
 {
 	ui.setupUi(this);
+
+	setWindowIcon(QIcon(":/hck/logo_256.png"));
 	
 	ui.content->setLayout(new StackedLayout(ui.content));
 	ui.content->layout()->addWidget(ui.label);
