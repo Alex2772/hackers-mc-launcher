@@ -21,6 +21,7 @@
 #include "Util/VariableHelper.h"
 #include <QJsonDocument>
 #include <QJsonObject>
+#include "unzip.h"
 
 
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
@@ -176,6 +177,15 @@ bool HackersMCLauncher::currentUser(User& p)
 	return true;
 }
 
+void HackersMCLauncher::resetDownloadIndicators()
+{
+	ui.progressBar->setMaximum(0);
+	ui.downloaded->setText("-");
+	ui.total->setText("-");
+	ui.speed->setText("-");
+	ui.eta->setText("-");
+}
+
 
 void HackersMCLauncher::play(bool withUpdate)
 {
@@ -192,11 +202,7 @@ void HackersMCLauncher::play(bool withUpdate)
 			QMessageBox::critical(this, errorTitle, tr("Please select the profile to play with"));
 			return;
 		}
-		ui.progressBar->setMaximum(0);
-		ui.downloaded->setText("-");
-		ui.total->setText("-");
-		ui.speed->setText("-");
-		ui.eta->setText("-");
+		resetDownloadIndicators();
 		setDownloadMode(true);
 
 		Profile profile;
@@ -392,6 +398,82 @@ void HackersMCLauncher::play(bool withUpdate)
 			}
 			UIThread::run([&]()
 			{
+				resetDownloadIndicators();
+			});
+			setStatus(tr("Preparing to launch..."));
+
+			// unpack necessary libraries
+			for (auto& lib : profile.mDownloads)
+			{
+				if (lib.mExtract)
+				{
+					std::string absoluteFilePath = gameDir.absoluteFilePath(lib.mLocalPath).toStdString();
+					QDir extractTo = gameDir.absoluteFilePath("bin/" + profile.id());
+					if (!extractTo.exists())
+						extractTo.mkpath(extractTo.absolutePath());
+
+					unzFile unz = unzOpen(absoluteFilePath.c_str());
+					if (unz)
+					{
+						unz_global_info info;
+						if (unzGetGlobalInfo(unz, &info) != UNZ_OK)
+							continue;
+						for (size_t i = 0; i < info.number_entry; ++i)
+						{
+							unz_file_info fileInfo;
+							char cFileName[512];
+							if (unzGetCurrentFileInfo(unz, &fileInfo, cFileName, sizeof(cFileName), nullptr, 0, nullptr, 0) != UNZ_OK)
+								break;
+
+							QString fileName = cFileName;
+							
+							// meta-inf folder is not needed
+							if (!fileName.startsWith("META-INF/"))
+							{
+								if (fileName.endsWith('/'))
+								{
+									// folder
+									extractTo.mkpath(extractTo.absoluteFilePath(fileName));
+								}
+								else {
+									// file
+									if (unzOpenCurrentFile(unz) != UNZ_OK)
+										break;
+
+
+									QFile dstFile = extractTo.absoluteFilePath(fileName);
+									auto containingDir = QFileInfo(dstFile).absoluteDir();
+									if (!containingDir.exists())
+										extractTo.mkpath(containingDir.absolutePath());
+
+									dstFile.open(QIODevice::WriteOnly);
+
+									char buf[0x1000];
+
+									for (int read; (read = unzReadCurrentFile(unz, buf, sizeof(buf))) > 0;)
+									{
+										dstFile.write(buf, read);
+									}
+
+									dstFile.close();
+									unzCloseCurrentFile(unz);
+								}
+							}
+							
+							
+							if ((i + 1) < info.number_entry)
+							{
+								if (unzGoToNextFile(unz) != UNZ_OK)
+									break;
+							}
+						}
+						
+						unzClose(unz);
+					}					
+				}
+			}
+			UIThread::run([&]()
+			{
 				setDownloadMode(false);
 			});
 
@@ -416,9 +498,25 @@ void HackersMCLauncher::play(bool withUpdate)
 				if (!a.mValue.isEmpty())
 					args << VariableHelper::replaceVariablesInString(this, a.mValue);
 			}
-			
-			qDebug() << args;
-			QProcess::startDetached("java", args, getSettings()->getGameDir().absolutePath());
+
+			UIThread::run([&, args]()
+			{
+				auto p = new QProcess(this);
+				connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [p](int status, QProcess::ExitStatus e)
+				{
+					p->deleteLater();
+				});
+				connect(p, &QProcess::readyReadStandardOutput, this, [p]()
+				{
+					qInfo() << p->readAllStandardOutput();
+					qInfo() << p->readAllStandardError();
+				});
+				p->setWorkingDirectory(getSettings()->getGameDir().absolutePath());
+				p->setProgram("java");
+				p->setArguments(args);
+				p->startDetached();
+			});
+
 		}));
 	}
 }

@@ -33,6 +33,7 @@ public:
 	bool currentUser(User&);
 	
 public slots:
+	void resetDownloadIndicators();
 	void play(bool withUpdate = false);
 	void loadProfiles();
 	void saveProfiles();

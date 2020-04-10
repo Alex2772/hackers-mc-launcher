@@ -32,7 +32,10 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 			"natives_directory",
 			[launcher]() -> QVariant
 			{
-				return launcher->getSettings()->getGameDir().absolutePath();
+				Profile profile;
+				if (launcher->currentProfile(profile))
+					return launcher->getSettings()->getGameDir().absoluteFilePath("bin/" + profile.id());
+				return {};
 			}
 		},
 		{

@@ -156,6 +156,11 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 		parent->play();
 		close();
 	});
+	connect(ui.updateAndRun, &QAbstractButton::clicked, this, [&, parent]()
+	{
+		parent->play(true);
+		close();
+	});
 	connect(ui.deleteProfile, &QAbstractButton::clicked, this, [&, parent, index]()
 	{
 		if (QMessageBox::question(this, tr("Remove profile?"), 
@@ -179,8 +184,9 @@ ProfileForm::~ProfileForm()
 {
 }
 
-void ProfileForm::closeEvent(QCloseEvent*)
+void ProfileForm::closeEvent(QCloseEvent* e)
 {
+	Form::closeEvent(e);
 	if (mItem)
 		mItem->save(static_cast<HackersMCLauncher*>(parent()));
 }

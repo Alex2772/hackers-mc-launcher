@@ -31,6 +31,8 @@ QVariant DownloadsModel::data(const QModelIndex& index, int role) const
 		case 2:
 			return mDownloads[index.row()].mSize;
 		case 3:
+			return mDownloads[index.row()].mExtract;
+		case 4:
 			return mDownloads[index.row()].mHash;
 		}
 	}
@@ -55,6 +57,9 @@ bool DownloadsModel::setData(const QModelIndex& index, const QVariant& value, in
 			mDownloads[index.row()].mSize = value.toUInt();
 			break;
 		case 3:
+			mDownloads[index.row()].mExtract = value.toBool();
+			break;
+		case 4:
 			mDownloads[index.row()].mHash = value.toString();
 			break;
 		default:
@@ -80,6 +85,8 @@ QVariant DownloadsModel::headerData(int section, Qt::Orientation orientation, in
 			case 2:
 				return tr("Size (bytes)");
 			case 3:
+				return tr("Extract");
+			case 4:
 				return tr("SHA1");
 			}
 		}
@@ -130,5 +137,5 @@ bool DownloadsModel::removeRows(int row, int count, const QModelIndex& parent)
 
 int DownloadsModel::columnCount(const QModelIndex& parent) const
 {
-	return 4;
+	return 5;
 }

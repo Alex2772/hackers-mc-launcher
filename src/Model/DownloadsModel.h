@@ -8,6 +8,7 @@ public:
 	QString mLocalPath;
 	QString mUrl;
 	quint64 mSize = 0;
+	bool mExtract = false;
 	QString mHash;
 };
 

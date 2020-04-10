@@ -494,10 +494,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_2">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
+      <widget class="QPushButton" name="updateAndRun">
        <property name="text">
         <string>Update and run</string>
        </property>

@@ -59,7 +59,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>.\src;.\src\Form;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\src;.\src\Form;.\3rdparty\minizip;.\3rdparty\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -73,7 +73,7 @@
       <DebugInformationFormat />
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <AdditionalIncludeDirectories>.\src;.\src\Form;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\src;.\src\Form;.\3rdparty\minizip;.\3rdparty\zlib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -82,6 +82,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="3rdparty\minizip\ioapi.c" />
+    <ClCompile Include="3rdparty\minizip\iowin32.c" />
+    <ClCompile Include="3rdparty\minizip\mztools.c" />
+    <ClCompile Include="3rdparty\minizip\unzip.c" />
+    <ClCompile Include="3rdparty\minizip\zip.c" />
+    <ClCompile Include="3rdparty\zlib\adler32.c" />
+    <ClCompile Include="3rdparty\zlib\compress.c" />
+    <ClCompile Include="3rdparty\zlib\crc32.c" />
+    <ClCompile Include="3rdparty\zlib\deflate.c" />
+    <ClCompile Include="3rdparty\zlib\gzclose.c" />
+    <ClCompile Include="3rdparty\zlib\gzlib.c" />
+    <ClCompile Include="3rdparty\zlib\gzread.c" />
+    <ClCompile Include="3rdparty\zlib\gzwrite.c" />
+    <ClCompile Include="3rdparty\zlib\infback.c" />
+    <ClCompile Include="3rdparty\zlib\inffast.c" />
+    <ClCompile Include="3rdparty\zlib\inflate.c" />
+    <ClCompile Include="3rdparty\zlib\inftrees.c" />
+    <ClCompile Include="3rdparty\zlib\trees.c" />
+    <ClCompile Include="3rdparty\zlib\uncompr.c" />
+    <ClCompile Include="3rdparty\zlib\zutil.c" />
     <ClCompile Include="src\Form\Form.cpp" />
     <ClCompile Include="src\Form\ProfileForm.cpp" />
     <ClCompile Include="src\Form\SettingsForm.cpp" />
@@ -124,6 +144,23 @@
     <QtRcc Include="assets\HackersMCLauncher.qrc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="3rdparty\minizip\crypt.h" />
+    <ClInclude Include="3rdparty\minizip\ioapi.h" />
+    <ClInclude Include="3rdparty\minizip\iowin32.h" />
+    <ClInclude Include="3rdparty\minizip\mztools.h" />
+    <ClInclude Include="3rdparty\minizip\unzip.h" />
+    <ClInclude Include="3rdparty\minizip\zip.h" />
+    <ClInclude Include="3rdparty\zlib\crc32.h" />
+    <ClInclude Include="3rdparty\zlib\deflate.h" />
+    <ClInclude Include="3rdparty\zlib\gzguts.h" />
+    <ClInclude Include="3rdparty\zlib\inffast.h" />
+    <ClInclude Include="3rdparty\zlib\inffixed.h" />
+    <ClInclude Include="3rdparty\zlib\inflate.h" />
+    <ClInclude Include="3rdparty\zlib\inftrees.h" />
+    <ClInclude Include="3rdparty\zlib\trees.h" />
+    <ClInclude Include="3rdparty\zlib\zconf.h" />
+    <ClInclude Include="3rdparty\zlib\zlib.h" />
+    <ClInclude Include="3rdparty\zlib\zutil.h" />
     <ClInclude Include="src\launcher_config.h" />
     <ClInclude Include="src\Util\DefaultValidator.h" />
     <ClInclude Include="src\Util\VariableHelper.h" />

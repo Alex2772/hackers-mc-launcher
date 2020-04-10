@@ -11,7 +11,7 @@ Download downloadFromJson(const QString& path, const QJsonObject& v)
 {
 	return Download{
 		path, v["url"].toString(),
-		quint64(v["size"].toInt()), v["sha1"].toString()
+		quint64(v["size"].toInt()), false, v["sha1"].toString()
 	};
 }
 
@@ -32,6 +32,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		{
 			auto o = d.toObject();
 			p.mDownloads << downloadFromJson(o["local"].toString(), o);
+			p.mDownloads.last().mExtract = o["extract"].toBool();
 		}
 
 		// game args
@@ -79,6 +80,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 			"assets/indexes/" + p.mAssetsIndex + ".json",
 			object["assetIndex"].toObject()["url"].toString(),
 			quint64(object["assetIndex"].toObject()["totalSize"].toInt()),
+			false,
 			object["assetIndex"].toObject()["sha1"].toString()
 		};
 
@@ -142,6 +144,10 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 
 			p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(),
 			                                 v["downloads"]["artifact"].toObject());
+
+			bool extract = v["extract"].isObject();
+			p.mDownloads.last().mExtract = extract;
+			
 			p.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].toString()};
 
 			if (v["downloads"]["classifiers"].isObject())
@@ -149,7 +155,9 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 				auto k = v["downloads"]["classifiers"]["natives-windows"];
 				if (k.isObject())
 				{
+					p.mDownloads.last().mExtract = false;
 					p.mDownloads << downloadFromJson("libraries/" + k["path"].toString(), k.toObject());
+					p.mDownloads.last().mExtract = extract;
 					p.mClasspath << ClasspathEntry{"libraries/" + k["path"].toString()};
 				}
 			}
@@ -311,6 +319,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		if (p.mJavaArgs.isEmpty())
 		{
 			// add some important Java args
+			p.mJavaArgs << JavaArg{ "-Djava.library.path=${natives_directory}" };
 			p.mJavaArgs << JavaArg{ "-cp" } << JavaArg{ "${classpath}" };
 		}
 	}
@@ -337,6 +346,7 @@ QJsonObject Profile::toJson()
 		entry["url"] = d.mUrl;
 		entry["size"] = int(d.mSize);
 		entry["sha1"] = d.mHash;
+		entry["extract"] = d.mExtract;
 
 		downloads << entry;
 	}
