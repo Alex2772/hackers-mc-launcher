@@ -156,11 +156,24 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 		parent->play();
 		close();
 	});
+	connect(ui.deleteProfile, &QAbstractButton::clicked, this, [&, parent, index]()
+	{
+		if (QMessageBox::question(this, tr("Remove profile?"), 
+			tr("Do you really want to remove this profile?")) == QMessageBox::Yes)
+		{
+			// to prevent access violation
+			mItem = nullptr;
+			
+			parent->getProfiles().removeRow(index.row(), {});
+			close();
+		}
+	});
 }
 
 void ProfileForm::updateCaption()
 {
-	setWindowTitle(mItem->mName);
+	if (mItem)
+		setWindowTitle(mItem->mName);
 }
 ProfileForm::~ProfileForm()
 {
@@ -168,5 +181,6 @@ ProfileForm::~ProfileForm()
 
 void ProfileForm::closeEvent(QCloseEvent*)
 {
-	mItem->save(static_cast<HackersMCLauncher*>(parent()));
+	if (mItem)
+		mItem->save(static_cast<HackersMCLauncher*>(parent()));
 }

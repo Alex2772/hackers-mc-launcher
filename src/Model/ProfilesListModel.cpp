@@ -3,6 +3,11 @@
 #include <QApplication>
 #include <qcolor.h>
 
+int ProfilesListModel::columnCount(const QModelIndex& parent) const
+{
+	return 2;
+}
+
 int ProfilesListModel::rowCount(const QModelIndex& parent) const
 {
 	// there's the last one phantom profile used as placeholder for new profile

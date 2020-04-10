@@ -473,6 +473,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="deleteProfile">
+       <property name="text">
+        <string>Delete profile</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="standardButtons">
         <set>QDialogButtonBox::Close</set>

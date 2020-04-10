@@ -23,7 +23,8 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 	p.mMainClass = object["mainClass"].toString();
 	p.mAssetsIndex = object["assets"].toString();
 
-	if (object["hackers-mc"].isBool()) {
+	if (object["hackers-mc"].isBool())
+	{
 		// hackers-mc format
 
 		// Downloads
@@ -68,10 +69,11 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		// classpath
 		for (auto& e : object["classpath"].toArray())
 		{
-			p.mClasspath << ClasspathEntry{ e.toString() };
+			p.mClasspath << ClasspathEntry{e.toString()};
 		}
 	}
-	else {
+	else
+	{
 		// legacy minecraft launcher format
 		p.mDownloads << Download{
 			"assets/indexes/" + p.mAssetsIndex + ".json",
@@ -84,7 +86,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		{
 			auto path = "versions/" + object["id"].toString() + '/' + object["id"].toString() + ".jar";
 			p.mDownloads << downloadFromJson(path, object["downloads"].toObject()["client"].toObject());
-			p.mClasspath << ClasspathEntry{ path };
+			p.mClasspath << ClasspathEntry{path};
 		}
 		// Java libraries
 		for (QJsonValue v : object["libraries"].toArray())
@@ -106,8 +108,11 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 								for (auto& v : x.keys())
 								{
 									if (VariableHelper::getVariableValue(launcher, k + '.' + v).toString() != x[v]
-										.toVariant().
-										toString())
+									                                                                          .
+									                                                                          toVariant()
+									                                                                          .
+									                                                                          toString()
+									)
 									{
 										rulePassed = false;
 										break;
@@ -117,7 +122,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 							else
 							{
 								if (VariableHelper::getVariableValue(launcher, k).toString() != rule[k]
-									.toVariant().toString())
+								                                                                .toVariant().toString())
 								{
 									rulePassed = false;
 								}
@@ -136,8 +141,8 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 			QString name = v["name"].toString();
 
 			p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(),
-				v["downloads"]["artifact"].toObject());
-			p.mClasspath << ClasspathEntry{ "libraries/" + v["downloads"]["artifact"]["path"].toString() };
+			                                 v["downloads"]["artifact"].toObject());
+			p.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].toString()};
 
 			if (v["downloads"]["classifiers"].isObject())
 			{
@@ -145,7 +150,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 				if (k.isObject())
 				{
 					p.mDownloads << downloadFromJson("libraries/" + k["path"].toString(), k.toObject());
-					p.mClasspath << ClasspathEntry{ "libraries/" + k["path"].toString() };
+					p.mClasspath << ClasspathEntry{"libraries/" + k["path"].toString()};
 				}
 			}
 		}
@@ -197,65 +202,81 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		// Game args
 		{
 			Profile::GameArg arg;
-			for (QJsonValue a : args["game"].toArray())
+
+			auto processStringObject = [&](const QString& value)
 			{
-				if (a.isString())
+				if (counter % 2 == 0)
 				{
-					if (counter % 2 == 0)
-					{
-						arg.mName = a.toString();
-					}
-					else
-					{
-						arg.mValue = a.toString();
-						p.mGameArgs << arg;
-						arg = {};
-					}
-
-					counter += 1;
+					arg.mName = value;
 				}
-				else if (a.isObject())
+				else
 				{
-					// flush last arg
-					if (counter % 2 == 1)
+					arg.mValue = value;
+					p.mGameArgs << arg;
+					arg = {};
+				}
+
+				counter += 1;
+			};
+			
+			if (object["minecraftArguments"].isString())
+			{
+				// old-style args
+				QStringList args = object["minecraftArguments"].toString().split(' ');
+				for (auto& s : args)
+					processStringObject(s);
+			}
+			else
+			{
+				for (QJsonValue a : args["game"].toArray())
+				{
+					if (a.isString())
 					{
-						p.mGameArgs << arg;
-						arg = {};
-						counter += 1;
+						processStringObject(a.toString());
 					}
-
-					parseConditions(arg.mConditions, a["rules"].toArray());
-
-					// Add arguments
-					if (a["value"].isArray())
+					else if (a.isObject())
 					{
-						for (auto value : a["value"].toArray())
-						{
-							if (counter % 2 == 0)
-							{
-								arg.mName = value.toString();
-							}
-							else
-							{
-								arg.mValue = value.toString();
-								p.mGameArgs << arg;
-								arg.mName.clear();
-								arg.mValue.clear();
-							}
-							counter += 1;
-						}
+						// flush last arg
 						if (counter % 2 == 1)
 						{
 							p.mGameArgs << arg;
+							arg = {};
+							counter += 1;
 						}
 
-						arg = {};
-					}
-					else if (a["value"].isString())
-					{
-						arg.mName = a["value"].toString();
-						p.mGameArgs << arg;
-						arg = {};
+						parseConditions(arg.mConditions, a["rules"].toArray());
+
+						// Add arguments
+						if (a["value"].isArray())
+						{
+							for (auto value : a["value"].toArray())
+							{
+								if (counter % 2 == 0)
+								{
+									arg.mName = value.toString();
+								}
+								else
+								{
+									arg.mValue = value.toString();
+									p.mGameArgs << arg;
+									arg.mName.clear();
+									arg.mValue.clear();
+								}
+								counter += 1;
+							}
+							if (counter % 2 == 1)
+							{
+								p.mGameArgs << arg;
+							}
+
+							arg = {};
+						}
+						else if (a["value"].isString())
+						{
+							arg.mName = a["value"].toString();
+							p.mGameArgs << arg;
+							arg = {};
+						}
 					}
 				}
 			}
@@ -266,7 +287,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		{
 			if (a.isString())
 			{
-				p.mJavaArgs << Profile::JavaArg{ a.toString() };
+				p.mJavaArgs << Profile::JavaArg{a.toString()};
 			}
 			else if (a.isObject())
 			{
@@ -275,16 +296,22 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 
 				if (a["value"].isString())
 				{
-					p.mJavaArgs << Profile::JavaArg{ a["value"].toString(), conditions };
+					p.mJavaArgs << Profile::JavaArg{a["value"].toString(), conditions};
 				}
 				else if (a["value"].isArray())
 				{
 					for (auto& i : a["value"].toArray())
 					{
-						p.mJavaArgs << Profile::JavaArg{ i.toString(), conditions };
+						p.mJavaArgs << Profile::JavaArg{i.toString(), conditions};
 					}
 				}
 			}
+		}
+
+		if (p.mJavaArgs.isEmpty())
+		{
+			// add some important Java args
+			p.mJavaArgs << JavaArg{ "-cp" } << JavaArg{ "${classpath}" };
 		}
 	}
 	return p;
@@ -314,7 +341,7 @@ QJsonObject Profile::toJson()
 		downloads << entry;
 	}
 	object["downloads"] = downloads;
-	
+
 	// game args
 	QJsonArray gameArgs;
 	for (auto& d : mGameArgs)
@@ -357,12 +384,12 @@ QJsonObject Profile::toJson()
 		}
 		if (!conditions.isEmpty())
 			entry["conditions"] = conditions;
-		
+
 		javaArgs << entry;
 	}
 	object["java_args"] = javaArgs;
-	
-	
+
+
 	// Classpath
 	QJsonArray classpath;
 	for (auto& lib : mClasspath)

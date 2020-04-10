@@ -6,6 +6,9 @@
 class ProfilesListModel : public QAbstractListModel
 {
 	Q_OBJECT
+private:
+	int columnCount(const QModelIndex& parent) const override;
+	
 public:
 	int rowCount(const QModelIndex& parent) const override;
 	QVariant data(const QModelIndex& index, int role) const override;
@@ -14,7 +17,6 @@ public:
 	bool removeRows(int row, int count, const QModelIndex& parent) override;
 
 	QModelIndex add(Profile&& profile);
-
 
 	QList<Profile>& profiles();
 private:

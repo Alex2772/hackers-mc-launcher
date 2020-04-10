@@ -156,7 +156,7 @@ bool HackersMCLauncher::currentProfile(Profile& p)
 {
 
 	int r = ui.profilesList->selectionModel()->currentIndex().row();
-	if (r < 0)
+	if (r < 0 || r >= mProfiles.profiles().size())
 	{
 		return false;
 	}
@@ -168,7 +168,7 @@ bool HackersMCLauncher::currentUser(User& p)
 {
 
 	int r = ui.usersList->selectionModel()->currentIndex().row();
-	if (r < 0)
+	if (r < 0 || r >= mUsers.users().size())
 	{
 		return false;
 	}
