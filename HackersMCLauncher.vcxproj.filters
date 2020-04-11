@@ -171,6 +171,9 @@
     <ClCompile Include="3rdparty\zlib\zutil.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Form\LicenseForm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -186,6 +189,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\VersionChooserForm.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\LicenseForm.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -244,6 +250,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="src\Model\ClasspathListModel.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Form\LicenseForm.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
