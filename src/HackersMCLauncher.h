@@ -35,6 +35,7 @@ public:
 	Settings* getSettings() const;
 	bool currentProfile(Profile& p);
 	bool currentUser(User&);
+	bool tryLoadProfile(Profile& dst, const QString& name);
 	
 public slots:
 	void resetDownloadIndicators();

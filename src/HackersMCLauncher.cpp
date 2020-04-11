@@ -503,6 +503,23 @@ void HackersMCLauncher::play(bool withUpdate)
 	}
 }
 
+bool HackersMCLauncher::tryLoadProfile(Profile& dst, const QString& name)
+{
+	for (auto extension : { ".hck.json", ".json" })
+	{
+		QFile file = mSettings->getGameDir()
+			.absoluteFilePath("versions/" + name + '/' + name + extension);
+		if (file.exists())
+		{
+			file.open(QIODevice::ReadOnly);
+			dst = Profile::fromJson(this, name,
+				QJsonDocument::fromJson(file.readAll()).object());
+			file.close();
+			return true;
+		}
+	}
+	return false;
+};
 void HackersMCLauncher::loadProfiles()
 {
 	QFile c = getSettings()->getGameDir().absoluteFilePath("launcher_profiles.json");
@@ -520,30 +537,13 @@ void HackersMCLauncher::loadProfiles()
 		}
 		for (auto& key : config["profiles"].toObject().keys())
 		{
-			auto tryLoad = [&](Profile& dst, const QString& name) -> bool
-			{
-				for (auto extension : {".hck.json", ".json"})
-				{
-					QFile file = mSettings->getGameDir()
-					                      .absoluteFilePath("versions/" + name + '/' + name + extension);
-					if (file.exists())
-					{
-						file.open(QIODevice::ReadOnly);
-						dst = Profile::fromJson(this, name,
-						                        QJsonDocument::fromJson(file.readAll()).object());
-						file.close();
-						return true;
-					}
-				}
-				return false;
-			};
 			auto profile = config["profiles"].toObject()[key].toObject();
 			auto name = profile["name"].toString();
 			Profile dst;
-			if (name.isEmpty() || !tryLoad(dst, name))
+			if (name.isEmpty() || !tryLoadProfile(dst, name))
 			{
 				name = profile["lastVersionId"].toString();
-				if (!tryLoad(dst, name))
+				if (!tryLoadProfile(dst, name))
 					continue;
 			}
 

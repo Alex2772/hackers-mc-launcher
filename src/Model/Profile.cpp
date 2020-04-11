@@ -18,8 +18,12 @@ Download downloadFromJson(const QString& path, const QJsonObject& v)
 Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, const QJsonObject& object)
 {
 	Profile p;
+	if (object["inheritsFrom"].isString())
+	{
+		launcher->tryLoadProfile(p, object["inheritsFrom"].toString());
+	}
+	
 	p.mName = name;
-
 	p.mMainClass = object["mainClass"].toString();
 	p.mAssetsIndex = object["assets"].toString();
 
