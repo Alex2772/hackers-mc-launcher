@@ -5,12 +5,16 @@
 #include "Model/UsersListModel.h"
 #include "Model/RepositoriesModel.h"
 #include "Model/ProfilesListModel.h"
+#include <QNetworkAccessManager>
+#include <qprocess.h>
 
 class Settings;
 
 class HackersMCLauncher : public QMainWindow
 {
 	Q_OBJECT
+
+		friend class DownloadHelper;
 protected:
 	void closeEvent(QCloseEvent* event) override;
 
@@ -34,6 +38,8 @@ public:
 	
 public slots:
 	void resetDownloadIndicators();
+	void installPackage(const QUrl& url);
+	void downloadJava();
 	void play(bool withUpdate = false);
 	void loadProfiles();
 	void saveProfiles();
@@ -45,11 +51,14 @@ private:
 	UsersListModel mUsers;
 	ProfilesListModel mProfiles;
 	RepositoriesModel mRepos;
-
 	Settings* mSettings;
+	QNetworkAccessManager mNetwork;
 
-
+	QList<QProcess*> mProcesses;
+	QProcess* createProcess();
+	void removeProcess(QProcess* p, int status, QProcess::ExitStatus e);
 private slots:
 	void screenScaleChanged();
 	void setDownloadMode(bool m);
+	void updatePlayButton();
 };

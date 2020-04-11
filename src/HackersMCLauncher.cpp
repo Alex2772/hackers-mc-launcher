@@ -22,6 +22,9 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include "unzip.h"
+#include "LicenseForm.h"
+#include <QJsonArray>
+#include "Util/DownloadHelper.h"
 
 
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
@@ -31,7 +34,7 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	ui.setupUi(this);
 
 	setWindowIcon(QIcon(":/hck/logo_256.png"));
-	
+
 	ui.content->setLayout(new StackedLayout(ui.content));
 	ui.content->layout()->addWidget(ui.label);
 	ui.content->layout()->addWidget(ui.frame);
@@ -90,6 +93,7 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	setDownloadMode(false);
 
 	loadProfiles();
+	updatePlayButton();
 
 	connect(&mUsers, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
 	connect(&mProfiles, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
@@ -157,7 +161,6 @@ Settings* HackersMCLauncher::getSettings() const
 
 bool HackersMCLauncher::currentProfile(Profile& p)
 {
-
 	int r = ui.profilesList->selectionModel()->currentIndex().row();
 	if (r < 0 || r >= mProfiles.profiles().size())
 	{
@@ -169,7 +172,6 @@ bool HackersMCLauncher::currentProfile(Profile& p)
 
 bool HackersMCLauncher::currentUser(User& p)
 {
-
 	int r = ui.usersList->selectionModel()->currentIndex().row();
 	if (r < 0 || r >= mUsers.users().size())
 	{
@@ -188,6 +190,133 @@ void HackersMCLauncher::resetDownloadIndicators()
 	ui.eta->setText("-");
 }
 
+
+void HackersMCLauncher::installPackage(const QUrl& url)
+{
+	auto reply = mNetwork.get(QNetworkRequest(url));
+	setDownloadMode(true);
+	ui.status->setText(tr("Downloading package manifest..."));
+
+	connect(reply, &QNetworkReply::finished, this, [&, reply]()
+	{
+		reply->deleteLater();
+		auto buffer = reply->readAll();
+		auto hash = Crypto::sha1(buffer);
+		QJsonObject manifest = QJsonDocument::fromJson(buffer).object();
+
+		auto performDownload = [&, manifest, hash]() {
+			QThreadPool::globalInstance()->start(lambda([&, manifest, hash]()
+			{
+				QDir installDir = getSettings()->getGameDir().absoluteFilePath("packages/" + hash);
+				if (!installDir.exists())
+				{
+					installDir.mkpath(installDir.absolutePath());
+				}
+				// compose the download list
+				QList<Download> downloads;
+				for (auto& key : manifest["files"].toObject().keys())
+				{
+					auto file = manifest["files"].toObject()[key].toObject();
+					// necessary directories will be created automatically
+					if (file["type"].toString() == "file") {
+						auto raw = file["downloads"].toObject()["raw"].toObject();
+						downloads << Download{ installDir.absoluteFilePath(key), raw["url"].toString(),
+							quint64(raw["size"].toInt()), false, raw["sha1"].toString() };
+					}
+				}
+				DownloadHelper d(this);
+				d.addDownloadList(downloads, true);
+				d.performDownload();
+				UIThread::run([&]()
+				{
+					ui.play->setEnabled(true); // play will work only if ui.play is enabled
+					play(false);
+				});
+			}));
+		};
+
+		
+		// check for the license file
+		if (manifest["files"].toObject()["LICENSE"].isObject())
+		{
+			auto url =
+				manifest["files"].toObject()["LICENSE"].toObject()["downloads"].toObject()["raw"].toObject()["url"].toString();
+			auto licenseReply = mNetwork.get(QNetworkRequest(url));
+			connect(licenseReply, &QNetworkReply::finished, this, [&, performDownload, licenseReply]()
+			{
+				licenseReply->deleteLater();
+
+				LicenseForm f(QString::fromUtf8(licenseReply->readAll()), this);
+				if (f.exec())
+				{
+					performDownload();
+				} else
+				{
+					setDownloadMode(false);
+				}
+			});
+		} else
+		{
+			performDownload();
+		}
+	});
+}
+
+void HackersMCLauncher::downloadJava()
+{
+	// cracked from the legacy minecraft launcher
+	auto reply = mNetwork.get(QNetworkRequest(QUrl(
+		"http://launchermeta.mojang.com/v1/products/launcher/d03cf0cf95cce259fa9ea3ab54b65bd28bb0ae82/windows-x86.json")));
+
+	setDownloadMode(true);
+	ui.status->setText(tr("Locating package manifest..."));
+	
+	connect(reply, &QNetworkReply::finished, this, [&, reply]()
+	{
+		reply->deleteLater();
+		QJsonObject json = QJsonDocument::fromJson(reply->readAll()).object();
+		QJsonObject manifest = json[QSysInfo::currentCpuArchitecture().contains(QLatin1String("64"))
+			                            ? "jre-x64"
+			                            : "jre-x86"].toArray()[0].toObject()["manifest"].toObject();
+
+		QString url = manifest["url"].toString();
+		if (url.isEmpty())
+		{
+			QMessageBox::critical(this, tr("Failed to install Java"), tr("Could not locate package manifest."));
+			setDownloadMode(false);
+		} else
+		{
+			installPackage(QUrl(url));
+		}
+	});
+}
+
+
+void HackersMCLauncher::updatePlayButton()
+{
+	if (mProcesses.isEmpty())
+	{
+		ui.play->setText(tr("Play"));
+	} else
+	{
+		ui.play->setText(tr("New instance"));
+	}
+}
+
+QProcess* HackersMCLauncher::createProcess()
+{
+	auto p = new QProcess(this);
+	mProcesses << p;
+	updatePlayButton();
+	return p;
+}
+
+void HackersMCLauncher::removeProcess(QProcess* p, int status, QProcess::ExitStatus e)
+{
+	mProcesses.removeAll(p);
+	p->deleteLater();
+	updatePlayButton();
+}
 
 void HackersMCLauncher::play(bool withUpdate)
 {
@@ -215,202 +344,18 @@ void HackersMCLauncher::play(bool withUpdate)
 
 		QThreadPool::globalInstance()->start(lambda([&, profile, user, withUpdate]()
 		{
-			auto setStatus = [&](const QString& s)
-			{
-				UIThread::run([&, s]()
-				{
-					ui.status->setText(s);
-				});
-			};
-
-			setStatus(tr("Searching files..."));
-
-			QDir gameDir = mSettings->getGameDir();
-
-			// Determine download list and count total download size
-
-			typedef QPair<QString, QUrl> D; // just for convenience
-			for (int i = 0; i < 2; ++i) {
-				QList<D> downloads;
-				quint64 totalDownloadSize = 0;
-				auto assetJsonPath = gameDir.absoluteFilePath("assets/indexes/" + profile.mAssetsIndex + ".json");
-				bool assetIndexExists = QFile(assetJsonPath).exists();
-
-				for (auto d : profile.mDownloads)
-				{
-					auto absPath = gameDir.absoluteFilePath(d.mLocalPath);
-					QFile local = absPath;
-					if (local.exists())
-					{
-						if (!withUpdate
-							|| d.mHash.isEmpty()
-							|| Crypto::sha1(local) == d.mHash // check file's sha1
-							)
-						{
-							continue;
-						}
-					}
-
-					totalDownloadSize += d.mSize;
-					downloads << D{ absPath, QUrl(d.mUrl) };
-				}
-				if (assetIndexExists)
-				{
-					QFile f(assetJsonPath);
-					f.open(QIODevice::ReadOnly);
-					auto objects = QJsonDocument::fromJson(f.readAll()).object()["objects"].toObject();
-					f.close();
-					
-					QDir objectsDir = gameDir.absoluteFilePath("assets/objects");
-
-					for (QJsonValue object : objects)
-					{
-						auto hash = object["hash"].toString();
-						QString path = QString(hash.at(0)) + hash.at(1) + '/' + hash;
-						QFile local = objectsDir.absoluteFilePath(path);
-
-						if (local.exists())
-						{
-							if (!withUpdate
-								|| Crypto::sha1(local) == hash // check file's sha1
-								)
-							{
-								continue;
-							}
-						}
-
-						totalDownloadSize += object["size"].toInt();
-						downloads << D{ objectsDir.absoluteFilePath(path), QUrl("http://resources.download.minecraft.net/" + path) };
-					}
-				}
-				if (!downloads.isEmpty())
-				{
-					setStatus(tr("Downloading..."));
-
-					UIThread::run([&, totalDownloadSize]()
-					{
-						ui.total->setText(StringHelper::prettySize(totalDownloadSize));
-						ui.downloaded->setText(StringHelper::prettySize(0));
-						ui.eta->setText(tr("Calculating..."));
-						ui.speed->setText(StringHelper::prettySize(0, true));
-						ui.progressBar->setMaximum(1000);
-						ui.progressBar->setValue(0);
-					});
-					QNetworkAccessManager network;
-					QEventLoop zaloop;
-
-					quint64 downloaded = 0;
-					unsigned downloadTasks = 0;
-
-					auto dummy = new QObject(&network);
-
-					for (auto& d : downloads)
-					{
-						auto reply = network.get(QNetworkRequest(d.second));
-						auto file = new QFile(d.first, &network);
-
-						connect(reply, &QNetworkReply::readyRead, dummy, [&, reply, file]()
-						{
-							if (!file->isOpen())
-							{
-								auto absDir = QFileInfo(*file).absoluteDir();
-								if (!absDir.exists())
-								{
-									absDir.mkpath(absDir.absolutePath());
-								}
-								if (!file->open(QIODevice::WriteOnly))
-								{
-									// try to delete existing file.
-									file->remove();
-
-									if (!file->open(QIODevice::WriteOnly))
-									{
-										qWarning("Could not open file: %s", file->fileName().toStdString().c_str());
-										reply->close();
-										return;
-									}
-								}
-							}
-							auto buf = reply->readAll();
-							downloaded += file->write(buf);
-						});
-						connect(reply, &QNetworkReply::finished, dummy, [&, reply, file]()
-						{
-							if (file->isOpen())
-							{
-								file->deleteLater();
-								file->close();
-							}
-							downloadTasks -= 1;
-
-							if (downloadTasks == 0)
-							{
-								zaloop.exit();
-							}
-						});
-						downloadTasks += 1;
-					}
-
-					QTimer t;
-					unsigned counter = 0;
-					quint64 lastPeriodDownloaded = 0;
-					float averangeDelta = 0.f;
-					connect(&t, &QTimer::timeout, dummy, [&]()
-					{
-
-						if (QThread::currentThread()->isInterruptionRequested())
-						{
-							zaloop.exit();
-							return;
-						}
-						unsigned delta = downloaded - lastPeriodDownloaded;
-						if (++counter % 10 == 0)
-						{
-							averangeDelta += (delta - averangeDelta) * 0.2f;
-							if (counter >= 50)
-							{
-								// it's time to show up the speed
-								float time = (totalDownloadSize - downloaded) / averangeDelta;
-								UIThread::run([&, time]()
-								{
-									auto k = QDateTime::fromMSecsSinceEpoch(time * 1000).toUTC().toString("HH:mm:ss");
-									ui.eta->setText(k);
-								});
-							}
-
-							lastPeriodDownloaded = downloaded;
-						}
-
-						// copy this value to prevent data racing
-						quint64 d = downloaded;
-						UIThread::run([&, d]()
-						{
-							ui.downloaded->setText(StringHelper::prettySize(d));
-							ui.speed->setText(StringHelper::prettySize(averangeDelta, true));
-							ui.progressBar->setValue(d * 1000 / totalDownloadSize);
-						});
-					});
-					t.setInterval(100);
-					t.start();
-					interruptionCheck();
-					zaloop.exec();
-				}
-				if (assetIndexExists)
-					break;
-			}
-			UIThread::run([&]()
-			{
-				resetDownloadIndicators();
-			});
-			setStatus(tr("Preparing to launch..."));
-
+			DownloadHelper helper(this);
+			helper.setStatusUI(tr("Searching files..."));
+			helper.gameDownload(profile, user, withUpdate);
+			helper.setStatusUI(tr("Preparing to launch..."));
+			
 			// unpack necessary libraries
 			for (auto& lib : profile.mDownloads)
 			{
 				if (lib.mExtract)
 				{
-					std::string absoluteFilePath = gameDir.absoluteFilePath(lib.mLocalPath).toStdString();
-					QDir extractTo = gameDir.absoluteFilePath("bin/" + profile.id());
+					std::string absoluteFilePath = mSettings->getGameDir().absoluteFilePath(lib.mLocalPath).toStdString();
+					QDir extractTo = mSettings->getGameDir().absoluteFilePath("bin/" + profile.id());
 					if (!extractTo.exists())
 						extractTo.mkpath(extractTo.absolutePath());
 
@@ -424,11 +369,12 @@ void HackersMCLauncher::play(bool withUpdate)
 						{
 							unz_file_info fileInfo;
 							char cFileName[512];
-							if (unzGetCurrentFileInfo(unz, &fileInfo, cFileName, sizeof(cFileName), nullptr, 0, nullptr, 0) != UNZ_OK)
+							if (unzGetCurrentFileInfo(unz, &fileInfo, cFileName, sizeof(cFileName), nullptr, 0, nullptr,
+							                          0) != UNZ_OK)
 								break;
 
 							QString fileName = cFileName;
-							
+
 							// meta-inf folder is not needed
 							if (!fileName.startsWith("META-INF/"))
 							{
@@ -437,7 +383,8 @@ void HackersMCLauncher::play(bool withUpdate)
 									// folder
 									extractTo.mkpath(extractTo.absoluteFilePath(fileName));
 								}
-								else {
+								else
+								{
 									// file
 									if (unzOpenCurrentFile(unz) != UNZ_OK)
 										break;
@@ -461,17 +408,17 @@ void HackersMCLauncher::play(bool withUpdate)
 									unzCloseCurrentFile(unz);
 								}
 							}
-							
-							
+
+
 							if ((i + 1) < info.number_entry)
 							{
 								if (unzGoToNextFile(unz) != UNZ_OK)
 									break;
 							}
 						}
-						
+
 						unzClose(unz);
-					}					
+					}
 				}
 			}
 			UIThread::run([&]()
@@ -503,22 +450,55 @@ void HackersMCLauncher::play(bool withUpdate)
 
 			UIThread::run([&, args]()
 			{
-				auto p = new QProcess(this);
-				connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, [p](int status, QProcess::ExitStatus e)
-				{
-					p->deleteLater();
-				});
+				auto p = createProcess();
+				connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this,
+				        [&, p](int status, QProcess::ExitStatus e)
+				        {
+							removeProcess(p, status, e);
+				        });
 				connect(p, &QProcess::readyReadStandardOutput, this, [p]()
 				{
 					qInfo() << p->readAllStandardOutput();
 					qInfo() << p->readAllStandardError();
 				});
+				connect(p, &QProcess::errorOccurred, this, [&, p](QProcess::ProcessError e)
+				{
+					if (e == 0)
+						switch (QMessageBox::question(this, tr("Could not start Java"), tr(
+							"It seems like you have no proper Java installation."
+							" Minecraft requires Java to launch.\n\nLauncher can download and install Java for you."),
+							tr("Download and install Java for me"), tr("I'll install by myself")))
+						{
+						case 0: // install
+							downloadJava();
+							break;
+						case 1: // install by user
+							QMessageBox::information(this, tr("Java installation"),
+								tr("Don't forget to restart the launcher."), tr("Got it"));
+							break;
+						}
+					removeProcess(p, 0, QProcess::ExitStatus::NormalExit);
+				});
 				p->setWorkingDirectory(getSettings()->getGameDir().absolutePath());
-				p->setProgram("java");
-				p->setArguments(args);
-				p->startDetached();
-			});
 
+				// set default java command.
+				p->setProgram("java");
+
+				// try to find java in packages dir
+				QDir packageDir = getSettings()->getGameDir().absoluteFilePath("packages");
+				for (auto& e : packageDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot))
+				{
+					auto executable = packageDir.absoluteFilePath(e + "/bin/java.exe");
+					if (QFileInfo(executable).isFile())
+					{
+						p->setProgram(executable);
+						break;
+					}
+				}
+				
+				p->setArguments(args);
+				p->start();
+			});
 		}));
 	}
 }
@@ -535,20 +515,22 @@ void HackersMCLauncher::loadProfiles()
 		for (auto& key : config["authenticationDatabase"].toObject().keys())
 		{
 			auto user = config["authenticationDatabase"].toObject()[key].toObject();
-			
-			mUsers.add(User{ user["username"].toString() });
+
+			mUsers.add(User{user["username"].toString()});
 		}
 		for (auto& key : config["profiles"].toObject().keys())
 		{
 			auto tryLoad = [&](Profile& dst, const QString& name) -> bool
 			{
-				for (auto extension : { ".hck.json", ".json" }) {
+				for (auto extension : {".hck.json", ".json"})
+				{
 					QFile file = mSettings->getGameDir()
-					.absoluteFilePath("versions/" + name + '/' + name + extension);
-					if (file.exists()) {
+					                      .absoluteFilePath("versions/" + name + '/' + name + extension);
+					if (file.exists())
+					{
 						file.open(QIODevice::ReadOnly);
-						dst = Profile::fromJson(this, name, 
-							QJsonDocument::fromJson(file.readAll()).object());
+						dst = Profile::fromJson(this, name,
+						                        QJsonDocument::fromJson(file.readAll()).object());
 						file.close();
 						return true;
 					}
@@ -564,7 +546,7 @@ void HackersMCLauncher::loadProfiles()
 				if (!tryLoad(dst, name))
 					continue;
 			}
-			
+
 			mProfiles.add(std::move(dst));
 		}
 
@@ -576,7 +558,8 @@ void HackersMCLauncher::loadProfiles()
 			{
 				if (u.id() == selectedUser["account"].toString())
 				{
-					ui.usersList->selectionModel()->setCurrentIndex(mUsers.index(counter, 0, {}), QItemSelectionModel::Select);
+					ui.usersList->selectionModel()->setCurrentIndex(mUsers.index(counter, 0, {}),
+					                                                QItemSelectionModel::Select);
 					break;
 				}
 				++counter;
@@ -589,7 +572,8 @@ void HackersMCLauncher::loadProfiles()
 			{
 				if (u.id() == selectedUser["profile"].toString())
 				{
-					ui.profilesList->selectionModel()->setCurrentIndex(mProfiles.index(counter, 0, {}), QItemSelectionModel::Select);
+					ui.profilesList->selectionModel()->setCurrentIndex(mProfiles.index(counter, 0, {}),
+					                                                   QItemSelectionModel::Select);
 					break;
 				}
 				++counter;
@@ -671,7 +655,7 @@ void HackersMCLauncher::saveProfiles()
 
 		p["name"] = profile.mName;
 		p["lastVersionId"] = profile.mName;
-		
+
 		profiles[profile.id()] = p;
 	}
 	out["profiles"] = profiles;
@@ -686,10 +670,10 @@ void HackersMCLauncher::saveProfiles()
 	if (currentProfile(p))
 		selectedUser["profile"] = p.id();
 	out["selectedUser"] = selectedUser;
-	
+
 	// unused.
 	out["settings"] = QJsonObject();
-	
+
 	QFile f = mSettings->getGameDir().absoluteFilePath("launcher_profiles.json");
 	f.open(QIODevice::WriteOnly);
 	f.write(QJsonDocument(out).toJson());

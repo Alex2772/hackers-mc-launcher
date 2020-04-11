@@ -1,16 +1,16 @@
 #pragma once
 
-#include <QWidget>
+#include <Form/Form.h>
 #include "ui_LicenseForm.h"
 
-class LicenseForm : public QWidget
+class LicenseForm : public Form
 {
 	Q_OBJECT
 
 public:
-	LicenseForm(QWidget *parent = Q_NULLPTR);
-	~LicenseForm();
-
+	LicenseForm(const QString& text, QWidget *parent = Q_NULLPTR);
+	virtual ~LicenseForm();
+	
 private:
 	Ui::LicenseForm ui;
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include <qrunnable.h>
+#include <QThread>
 
 class Interrupted {};
 
