@@ -24,8 +24,11 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 	}
 	
 	p.mName = name;
-	p.mMainClass = object["mainClass"].toString();
-	p.mAssetsIndex = object["assets"].toString();
+
+	if (object["mainClass"].isString())
+		p.mMainClass = object["mainClass"].toString();
+	if (object["assets"].isString())
+		p.mAssetsIndex = object["assets"].toString();
 
 	if (object["hackers-mc"].isBool())
 	{
