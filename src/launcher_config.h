@@ -1,3 +1,3 @@
 #pragma once
 
-#define LAUNCHER_VERSION "0.1"
+#define LAUNCHER_VERSION "0.2"
