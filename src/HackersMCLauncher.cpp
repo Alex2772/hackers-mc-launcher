@@ -458,8 +458,8 @@ void HackersMCLauncher::play(bool withUpdate)
 				        });
 				connect(p, &QProcess::readyReadStandardOutput, this, [p]()
 				{
-					qInfo() << p->readAllStandardOutput();
-					qInfo() << p->readAllStandardError();
+					printf("%s", p->readAllStandardOutput().data());
+					printf("%s", p->readAllStandardError().data());
 				});
 				connect(p, &QProcess::errorOccurred, this, [&, p](QProcess::ProcessError e)
 				{
@@ -495,6 +495,13 @@ void HackersMCLauncher::play(bool withUpdate)
 						break;
 					}
 				}
+
+				QString commandLine = p->program();
+				for (auto& a : args)
+				{
+					commandLine += ' ' + a;
+				}
+				qInfo() << commandLine;
 				
 				p->setArguments(args);
 				p->start();

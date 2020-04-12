@@ -15,6 +15,31 @@ Download downloadFromJson(const QString& path, const QJsonObject& v)
 	};
 }
 
+/**
+ * \brief Converts maven library name notation to path
+ * 
+ *        for example:
+ *					optifine:OptiFine:1.14.4_HD_U_F4
+ *							 ->
+ *        optifine/OptiFine/1.14.4_HD_U_F4/OptiFine-1.14.4_HD_U_F4.jar
+ *
+ *        Java coders so Java coders.
+ *        
+ * \param name maven notation
+ * \return meaningful path
+ */
+QString Profile::javaLibNameToPath(const QString& name)
+{
+	auto colonSplitted = name.split(':');
+	if (colonSplitted.size() == 3)
+	{
+		colonSplitted[0].replace('.', '/');
+		return colonSplitted[0] + '/' + colonSplitted[1] + '/' + colonSplitted[2]
+			+ '/' + colonSplitted[1] + '-' + colonSplitted[2] + ".jar";
+	}
+	return "INVALID:" + name;
+}
+
 Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, const QJsonObject& object)
 {
 	Profile p;
@@ -86,7 +111,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		p.mDownloads << Download{
 			"assets/indexes/" + p.mAssetsIndex + ".json",
 			object["assetIndex"].toObject()["url"].toString(),
-			quint64(object["assetIndex"].toObject()["totalSize"].toInt()),
+			quint64(object["assetIndex"].toObject()["size"].toInt()),
 			false,
 			object["assetIndex"].toObject()["sha1"].toString()
 		};
@@ -149,13 +174,17 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 
 			QString name = v["name"].toString();
 
-			p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(),
-			                                 v["downloads"]["artifact"].toObject());
+			if (v["downloads"].isObject())
+				p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(),
+				                                 v["downloads"]["artifact"].toObject());
 
 			bool extract = v["extract"].isObject();
 			p.mDownloads.last().mExtract = extract;
-			
-			p.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].toString()};
+
+			if (v["downloads"].isObject())
+				p.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].toString()};
+			else
+				p.mClasspath << ClasspathEntry{"libraries/" + javaLibNameToPath(name)};
 
 			if (v["downloads"]["classifiers"].isObject())
 			{
@@ -227,6 +256,16 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 				else
 				{
 					arg.mValue = value;
+					for (auto it = p.mGameArgs.begin(); it != p.mGameArgs.end();)
+					{
+						if (it->mName == arg.mName)
+						{
+							it = p.mGameArgs.erase(it);
+						} else
+						{
+							++it;
+						}
+					}
 					p.mGameArgs << arg;
 					arg = {};
 				}
@@ -239,7 +278,8 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 				// old-style args
 				QStringList args = object["minecraftArguments"].toString().split(' ');
 				for (auto& s : args)
-					processStringObject(s);
+					if (!s.isEmpty())
+						processStringObject(s);
 			}
 			else
 			{

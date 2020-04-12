@@ -169,6 +169,7 @@ void DownloadHelper::gameDownload(const Profile& profile, const User& user, bool
 	// running twice because of asset index
 	for (int i = 0; i < 2; ++i)
 	{
+		mTotalDownloadSize = 0;
 		auto assetJsonPath = mGameDir.absoluteFilePath("assets/indexes/" + profile.mAssetsIndex + ".json");
 		bool assetIndexExists = QFile(assetJsonPath).exists();
 

@@ -9,6 +9,8 @@
 #include "ProfileForm.h"
 #include "Util/StringHelper.h"
 #include "Util/VariableHelper.h"
+#include <QFileDialog>
+#include "Settings.h"
 
 
 VersionChooserForm::VersionChooserForm(HackersMCLauncher* launcher)
@@ -120,8 +122,13 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 		});
 		connect(reply, &QNetworkReply::finished, this, [&, item, reply]()
 		{
-			Profile p = Profile::fromJson(mLauncher, item->mName, QJsonDocument::fromJson(reply->readAll()).object());
-
+			auto buf = reply->readAll();
+			Profile p = Profile::fromJson(mLauncher, item->mName, QJsonDocument::fromJson(buf).object());
+			QFile f = mLauncher->getSettings()->getGameDir().absoluteFilePath("versions/" + item->mName + '/' + item->mName + ".json");
+			QDir().mkpath(QFileInfo(f).absoluteDir().absolutePath());
+			f.open(QIODevice::WriteOnly);
+			f.write(buf);
+			f.close();
 
 			(new ProfileForm(mLauncher->getProfiles().add(std::move(p)), mLauncher))->show();
 			close();
