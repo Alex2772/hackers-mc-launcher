@@ -14,5 +14,6 @@
         <file>icons/save.svg</file>
         <file>translations/hackersmclauncher_ru_RU.qm</file>
         <file>logo_256.png</file>
+        <file>logo_console_256.png</file>
     </qresource>
 </RCC>

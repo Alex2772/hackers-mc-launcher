@@ -13,6 +13,7 @@ Settings::Settings(const QString& organization, const QString& application, QObj
 	bindDefault("game_dir", d.absoluteFilePath(".minecraft"));
 	bindDefault("hide_launcher", true);
 	bindDefault("close_launcher", true);
+	bindDefault("show_console", false);
 }
 
 void Settings::bindDefault(const QString& name, const QVariant& value)

@@ -177,6 +177,9 @@
     <ClCompile Include="src\Util\DownloadHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Window\ConsoleWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -256,6 +259,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="src\Form\LicenseForm.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Window\ConsoleWindow.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

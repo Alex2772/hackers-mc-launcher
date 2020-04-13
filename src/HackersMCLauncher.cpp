@@ -25,6 +25,7 @@
 #include "LicenseForm.h"
 #include <QJsonArray>
 #include "Util/DownloadHelper.h"
+#include "Window/ConsoleWindow.h"
 
 
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
@@ -307,7 +308,18 @@ QProcess* HackersMCLauncher::createProcess()
 {
 	auto p = new QProcess(this);
 	mProcesses << p;
-	updatePlayButton();
+	if (getSettings()->value("hide_launcher").toBool())
+	{
+		hide();
+	}
+	else {
+		updatePlayButton();
+	}
+	if (getSettings()->value("show_console").toBool())
+	{
+		auto console = new ConsoleWindow(p);
+		connect(this, &HackersMCLauncher::processDead, console, &ConsoleWindow::onProcessDead);
+	}
 	return p;
 }
 
@@ -315,7 +327,21 @@ void HackersMCLauncher::removeProcess(QProcess* p, int status, QProcess::ExitSta
 {
 	mProcesses.removeAll(p);
 	p->deleteLater();
-	updatePlayButton();
+	if (isHidden())
+	{
+		show();
+	}
+	else {
+		updatePlayButton();
+	}
+	if (mProcesses.isEmpty())
+	{
+		if (getSettings()->value("close_launcher").toBool())
+		{
+			close();
+		}
+	}
+	emit processDead(p);
 }
 
 void HackersMCLauncher::play(bool withUpdate)
@@ -495,13 +521,8 @@ void HackersMCLauncher::play(bool withUpdate)
 						break;
 					}
 				}
-
-				QString commandLine = p->program();
-				for (auto& a : args)
-				{
-					commandLine += ' ' + a;
-				}
-				qInfo() << commandLine;
+				qInfo() << p->program();
+				qInfo() << p->arguments().join(' ');
 				
 				p->setArguments(args);
 				p->start();

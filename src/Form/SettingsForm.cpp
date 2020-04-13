@@ -20,6 +20,7 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	mapper->addMapping(ui.gameDir, launcher->getSettings()->sectionOf("game_dir"));
 	mapper->addMapping(ui.hideLauncher, launcher->getSettings()->sectionOf("hide_launcher"));
 	mapper->addMapping(ui.closeLauncher, launcher->getSettings()->sectionOf("close_launcher"));
+	mapper->addMapping(ui.showConsole, launcher->getSettings()->sectionOf("show_console"));
 
 	mapper->toFirst();
 

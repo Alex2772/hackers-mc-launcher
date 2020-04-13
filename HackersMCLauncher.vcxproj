@@ -135,6 +135,7 @@
     <ClCompile Include="src\Util\UIHelper.cpp" />
     <ClCompile Include="src\Util\UIThread.cpp" />
     <ClCompile Include="src\Util\VariableHelper.cpp" />
+    <ClCompile Include="src\Window\ConsoleWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="src\HackersMCLauncher.h" />
@@ -168,6 +169,7 @@
     <ClInclude Include="3rdparty\zlib\zconf.h" />
     <ClInclude Include="3rdparty\zlib\zlib.h" />
     <ClInclude Include="3rdparty\zlib\zutil.h" />
+    <QtMoc Include="src\Window\ConsoleWindow.h" />
     <QtMoc Include="src\Form\LicenseForm.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="src\launcher_config.h" />
