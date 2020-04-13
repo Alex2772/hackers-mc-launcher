@@ -7,7 +7,7 @@ class ConsoleWindow: public QFrame
 {
 	Q_OBJECT
 public slots:
-	void onProcessDead();
+	void onClose();
 public:
 	ConsoleWindow(QProcess* process);
 	virtual ~ConsoleWindow() = default;

@@ -306,6 +306,10 @@ void HackersMCLauncher::updatePlayButton()
 
 QProcess* HackersMCLauncher::createProcess()
 {
+	if (mProcesses.empty())
+	{
+		emit closeConsoleWindows();
+	}
 	auto p = new QProcess(this);
 	mProcesses << p;
 	if (getSettings()->value("hide_launcher").toBool())
@@ -318,7 +322,7 @@ QProcess* HackersMCLauncher::createProcess()
 	if (getSettings()->value("show_console").toBool())
 	{
 		auto console = new ConsoleWindow(p);
-		connect(this, &HackersMCLauncher::processDead, console, &ConsoleWindow::onProcessDead);
+		connect(this, &HackersMCLauncher::closeConsoleWindows, console, &ConsoleWindow::onClose);
 	}
 	return p;
 }
@@ -341,7 +345,6 @@ void HackersMCLauncher::removeProcess(QProcess* p, int status, QProcess::ExitSta
 			close();
 		}
 	}
-	emit processDead(p);
 }
 
 void HackersMCLauncher::play(bool withUpdate)
@@ -521,10 +524,11 @@ void HackersMCLauncher::play(bool withUpdate)
 						break;
 					}
 				}
+				p->setArguments(args);
+				
 				qInfo() << p->program();
 				qInfo() << p->arguments().join(' ');
 				
-				p->setArguments(args);
 				p->start();
 			});
 		}));

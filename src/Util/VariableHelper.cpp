@@ -56,7 +56,7 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 			"classpath",
 			[launcher]() -> QVariant
 			{
-				QString cp;
+				QString cp = '"';
 				Profile p;
 				if (launcher->currentProfile(p)) {
 					for (auto& c : p.mClasspath)
@@ -68,6 +68,7 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 						}
 						cp += c.mPath;
 					}
+					cp += '"';
 					return cp;
 				}
 				return {};
@@ -151,6 +152,13 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 					return u.mAssetsIndex;
 				}
 				return {};
+			}
+		},
+		{
+			"user_properties",
+			[]() -> QVariant
+			{
+				return "{}";
 			}
 		},
 	};

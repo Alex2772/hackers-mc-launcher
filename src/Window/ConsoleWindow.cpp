@@ -5,7 +5,7 @@
 #include <QIcon>
 #include <QProcess>
 
-void ConsoleWindow::onProcessDead()
+void ConsoleWindow::onClose()
 {
 	close();
 	deleteLater();

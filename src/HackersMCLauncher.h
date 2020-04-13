@@ -16,7 +16,7 @@ class HackersMCLauncher : public QMainWindow
 
 		friend class DownloadHelper;
 signals:
-	void processDead(QProcess* process);
+	void closeConsoleWindows();
 protected:
 	void closeEvent(QCloseEvent* event) override;
 
