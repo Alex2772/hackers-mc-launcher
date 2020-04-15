@@ -5,7 +5,7 @@
 
 int ProfilesListModel::columnCount(const QModelIndex& parent) const
 {
-	return 2;
+	return 5;
 }
 
 int ProfilesListModel::rowCount(const QModelIndex& parent) const
@@ -40,6 +40,12 @@ QVariant ProfilesListModel::data(const QModelIndex& index, int role) const
 				return mProfiles[index.row()].mName;
 			case 1:
 				return mProfiles[index.row()].mMainClass;
+			case 2:
+				return mProfiles[index.row()].mWindowWidth;
+			case 3:
+				return mProfiles[index.row()].mWindowHeight;
+			case 4:
+				return mProfiles[index.row()].mIsFullscreen;
 			}
 		}
 	}
@@ -53,14 +59,19 @@ bool ProfilesListModel::setData(const QModelIndex& index, const QVariant& value,
 		switch (index.column())
 		{
 		case 0:
-			switch (index.column()) {
-			case 0:
-				mProfiles[index.row()].mName = value.toString();
-				break;
-			case 1:
-				mProfiles[index.row()].mMainClass = value.toString();
-				break;
-			}
+			mProfiles[index.row()].mName = value.toString();
+			break;
+		case 1:
+			mProfiles[index.row()].mMainClass = value.toString();
+			break;
+		case 2:
+			mProfiles[index.row()].mWindowWidth = value.toUInt();
+			break;
+		case 3:
+			mProfiles[index.row()].mWindowHeight = value.toUInt();
+			break;
+		case 4:
+			mProfiles[index.row()].mIsFullscreen = value.toBool();
 			break;
 		default:
 			return false;

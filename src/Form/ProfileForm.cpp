@@ -60,6 +60,9 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 	mapper->setModel(&parent->getProfiles());
 	mapper->addMapping(ui.profilename, 0);
 	mapper->addMapping(ui.mainClass, 1);
+	mapper->addMapping(ui.width, 2);
+	mapper->addMapping(ui.height, 3);
+	
 	mapper->setCurrentIndex(index.row());
 
 	ui.profilename->setValidator(new DefaultValidator(this));

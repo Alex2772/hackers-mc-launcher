@@ -104,6 +104,11 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 		{
 			p.mClasspath << ClasspathEntry{e.toString()};
 		}
+
+		auto settings = object["settings"].toObject();
+		p.mWindowWidth = settings["window_width"].toInt();
+		p.mWindowHeight = settings["window_height"].toInt();
+		p.mIsFullscreen = settings["fullscreen"].toBool();
 	}
 	else
 	{
@@ -453,8 +458,16 @@ QJsonObject Profile::toJson()
 	{
 		classpath << lib.mPath;
 	}
-
 	object["classpath"] = classpath;
+
+	// Settings
+	QJsonObject settings;
+
+	settings["window_width"] = mWindowWidth;
+	settings["window_height"] = mWindowHeight;
+	settings["fullscreen"] = mIsFullscreen;
+
+	object["settings"] = settings;
 
 	return object;
 }

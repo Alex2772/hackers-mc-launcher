@@ -161,6 +161,49 @@ QVariant VariableHelper::getVariableValue(HackersMCLauncher* launcher, const QSt
 				return "{}";
 			}
 		},
+		{
+			"has_custom_resolution",
+			[]() -> QVariant
+			{
+				return true;
+			}
+		},
+		{
+			"resolution_width",
+			[launcher]()->QVariant
+			{
+				Profile p;
+				if (launcher->currentProfile(p))
+				{
+					return p.mWindowWidth;
+				}
+				return {};
+			}
+		},
+		{
+			"resolution_height",
+			[launcher]()->QVariant
+			{
+				Profile p;
+				if (launcher->currentProfile(p))
+				{
+					return p.mWindowHeight;
+				}
+				return {};
+			}
+		},
+		{
+			"is_fullscreen",
+			[launcher]() -> QVariant
+			{
+				Profile p;
+				if (launcher->currentProfile(p))
+				{
+					return p.mIsFullscreen;
+				}
+				return {};
+			}
+		},
 	};
 	if (vars.contains(name))
 		return vars[name]();

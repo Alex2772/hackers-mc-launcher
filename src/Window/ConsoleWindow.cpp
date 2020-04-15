@@ -35,9 +35,12 @@ ConsoleWindow::ConsoleWindow(QProcess* process)
 	connect(process, &QProcess::readyReadStandardOutput, this, [text, process]()
 	{
 		auto sout = QString::fromLocal8Bit(process->readAllStandardOutput());
-		if (!sout.isEmpty())
+		sout.replace("\n", "<br />");
+		if (!sout.isEmpty()) {
 			text->appendHtml(sout);
+		}
 		auto serr = QString::fromLocal8Bit(process->readAllStandardError());
+		serr.replace("\n", "<br />");
 		
 		if (!serr.isEmpty()) {
 			text->appendHtml("<span style='color: #c00;'>" + serr + "</span>");

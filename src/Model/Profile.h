@@ -39,4 +39,8 @@ public:
 	QJsonObject toJson();
 	void save(HackersMCLauncher* launcher);
 	QString id() const;
+
+	bool mIsFullscreen = false;
+	unsigned short mWindowWidth = 854;
+	unsigned short mWindowHeight = 500;
 };
