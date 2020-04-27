@@ -14,6 +14,7 @@ Settings::Settings(const QString& organization, const QString& application, QObj
 	bindDefault("hide_launcher", true);
 	bindDefault("close_launcher", true);
 	bindDefault("show_console", false);
+	bindDefault("check_launcher_updates", true);
 }
 
 void Settings::bindDefault(const QString& name, const QVariant& value)
@@ -86,4 +87,14 @@ QVariant Settings::data(const QModelIndex& index, int role) const
 QVariant Settings::value(const QString& key) const
 {
 	return QSettings::value(key, mDefaults[key]);
+}
+
+void Settings::setValue(const QString& key, const QVariant& value)
+{
+	QSettings::setValue(key, value);
+	int index = mMappings.indexOf(key);
+	if (index >= 0)
+	{
+		emit dataChanged(Settings::index(0, index, {}), Settings::index(0, index, {}));
+	}
 }

@@ -26,6 +26,8 @@
 #include <QJsonArray>
 #include "Util/DownloadHelper.h"
 #include "Window/ConsoleWindow.h"
+#include "launcher_config.h"
+#include <QDesktopServices>
 
 
 HackersMCLauncher::HackersMCLauncher(QWidget* parent)
@@ -98,6 +100,12 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 
 	connect(&mUsers, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
 	connect(&mProfiles, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
+
+	// Check for updates
+	if (mSettings->value("check_launcher_updates").toBool())
+	{
+		checkForUpdates();
+	}
 }
 
 void HackersMCLauncher::closeEvent(QCloseEvent* event)
@@ -551,6 +559,58 @@ bool HackersMCLauncher::tryLoadProfile(Profile& dst, const QString& name)
 		}
 	}
 	return false;
+}
+
+void HackersMCLauncher::checkForUpdates(bool ignoreErrors)
+{
+	auto reply = mNetwork.get(QNetworkRequest(QUrl("https://api.github.com/repos/alex2772/hackers-mc-launcher/releases/latest")));
+	connect(reply, &QNetworkReply::finished, this, [&, reply, ignoreErrors]()
+	{
+		emit updateCheckFinished();
+		auto replyBuffer = reply->readAll();
+		if (!replyBuffer.isEmpty())
+		{
+			QJsonObject o = QJsonDocument::fromJson(replyBuffer).object();
+			if (o.contains("tag_name"))
+			{
+				if (o["tag_name"].toString() != LAUNCHER_VERSION)
+				{
+					QMessageBox b(this);
+					b.setWindowTitle(tr("Update available"));
+					b.setTextFormat(Qt::TextFormat::MarkdownText);
+					b.setText("### New version available: " + o["tag_name"].toString() + "\n" + o["body"].toString());
+					b.setIcon(QMessageBox::Information);
+					b.addButton(tr("Download"), QMessageBox::AcceptRole);
+					b.addButton(tr("Remind me later"), QMessageBox::AcceptRole);
+
+					if (mSettings->value("check_launcher_updates").toBool())
+						b.addButton(tr("Disable update checking"), QMessageBox::AcceptRole);
+
+					switch (b.exec())
+					{
+					case 0:
+						QDesktopServices::openUrl(o["html_url"].toString());
+					case 1:
+						break;
+					case 2:
+						mSettings->setValue("check_launcher_updates", false);
+						break;
+					}
+				} else if (!ignoreErrors)
+				{
+					QMessageBox::information(this, tr("No updates found"), tr("You are using the latest version."));
+				}
+			}
+			else if (!ignoreErrors)
+			{
+				QMessageBox::information(this, tr("Could not check for updates"), tr("Invalid response."));
+			}
+		}
+		else if (!ignoreErrors)
+		{
+			QMessageBox::information(this, tr("Could not check for updates"), tr("Service is unavailable."));
+		}
+	});
 };
 void HackersMCLauncher::loadProfiles()
 {

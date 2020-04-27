@@ -25,6 +25,7 @@ public:
 	QVariant data(const QModelIndex& index, int role) const override;
 
 	QVariant value(const QString& key) const;
+	void setValue(const QString& key, const QVariant& value);
 public slots:
 	void resetToDefaults();
 };

@@ -1,3 +1,4 @@
 #pragma once
 
-#define LAUNCHER_VERSION "0.3"
+// has to much the github release.
+#define LAUNCHER_VERSION "v0.4"

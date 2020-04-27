@@ -17,6 +17,7 @@ class HackersMCLauncher : public QMainWindow
 		friend class DownloadHelper;
 signals:
 	void closeConsoleWindows();
+	void updateCheckFinished();
 protected:
 	void closeEvent(QCloseEvent* event) override;
 
@@ -40,6 +41,7 @@ public:
 	bool tryLoadProfile(Profile& dst, const QString& name);
 	
 public slots:
+	void checkForUpdates(bool ignoreErrors = true);
 	void resetDownloadIndicators();
 	void installPackage(const QUrl& url);
 	void downloadJava();

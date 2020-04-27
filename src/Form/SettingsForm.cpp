@@ -21,6 +21,7 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	mapper->addMapping(ui.hideLauncher, launcher->getSettings()->sectionOf("hide_launcher"));
 	mapper->addMapping(ui.closeLauncher, launcher->getSettings()->sectionOf("close_launcher"));
 	mapper->addMapping(ui.showConsole, launcher->getSettings()->sectionOf("show_console"));
+	mapper->addMapping(ui.updateLauncher, launcher->getSettings()->sectionOf("check_launcher_updates"));
 
 	mapper->toFirst();
 
@@ -41,6 +42,11 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	ui.repoList->setModel(launcher->getRepositories());	
 	ui.logo->setPixmap(ui.logo->pixmap()->scaled(64, 64,
 		Qt::IgnoreAspectRatio, Qt::FastTransformation));
+
+
+	connect(ui.forceCheckUpdates, &QAbstractButton::clicked, launcher, &HackersMCLauncher::checkForUpdates);
+	connect(ui.forceCheckUpdates, &QAbstractButton::clicked, ui.forceCheckUpdates, &QAbstractButton::setEnabled);
+	connect(launcher, &HackersMCLauncher::updateCheckFinished, ui.forceCheckUpdates, [&]() {ui.forceCheckUpdates->setDisabled(false); });
 }
 
 SettingsForm::~SettingsForm()
