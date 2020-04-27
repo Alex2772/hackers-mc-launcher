@@ -10,5 +10,16 @@ ads of these companies.
 **Download**: https://github.com/Alex2772/hackers-mc-launcher/releases
 
 This launcher is designed for the user, not for money.
-
 *Feel free to contribute!*
+
+## Features
+* Multiple accounts (non-online)
+* Multiple profiles
+* Multiple game instances
+* Muttiple game repositories
+* Colored console
+* Deep profile editor
+  * JVM argument editor
+  * Game argument editor (with variables)
+  * Classpath editor
+  * Downloading files editor

@@ -58,14 +58,14 @@
           <item row="1" column="1">
            <layout class="QHBoxLayout" name="horizontalLayout_8">
             <item>
-             <widget class="QRadioButton" name="radioButton">
+             <widget class="QRadioButton" name="rWindowed">
               <property name="text">
                <string>Windowed</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QRadioButton" name="radioButton_2">
+             <widget class="QRadioButton" name="rFullscreen">
               <property name="text">
                <string>Fullscreen</string>
               </property>

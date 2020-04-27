@@ -6,6 +6,8 @@ class QProcess;
 class ConsoleWindow: public QFrame
 {
 	Q_OBJECT
+	int mCurrentColor = -1;
+	
 public slots:
 	void onClose();
 public:

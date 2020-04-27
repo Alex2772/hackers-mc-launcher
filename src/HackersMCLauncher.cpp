@@ -110,6 +110,7 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 
 void HackersMCLauncher::closeEvent(QCloseEvent* event)
 {
+	emit closeConsoleWindows();
 	saveProfiles();
 }
 
