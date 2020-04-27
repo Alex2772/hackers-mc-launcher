@@ -574,12 +574,24 @@ void HackersMCLauncher::checkForUpdates(bool ignoreErrors)
 			QJsonObject o = QJsonDocument::fromJson(replyBuffer).object();
 			if (o.contains("tag_name"))
 			{
+				// Construct release info information.
+				QString releaseInfo;
+				if (o["assets"].isArray() && !o["assets"].toArray().isEmpty())
+				{
+					auto release = o["assets"].toArray().first().toObject();
+
+					releaseInfo += tr("**Release date:** ") + QDateTime::fromString(release["updated_at"].toString(), Qt::ISODate).toString() + "\n\n";
+					releaseInfo += tr("**Size:** ") + StringHelper::prettySize(release["size"].toInt()) + "\n\n";
+					releaseInfo += tr("**Downloads:** ") + QString::number(release["download_count"].toInt()) + "\n\n";
+					releaseInfo += tr("*Changelog:*") + "\n" + o["body"].toString();
+				}
+				
 				if (o["tag_name"].toString() != LAUNCHER_VERSION)
 				{
 					QMessageBox b(this);
 					b.setWindowTitle(tr("Update available"));
 					b.setTextFormat(Qt::TextFormat::MarkdownText);
-					b.setText("### New version available: " + o["tag_name"].toString() + "\n" + o["body"].toString());
+					b.setText(tr("## New version available: ") + o["tag_name"].toString() + "\n" + releaseInfo);
 					b.setIcon(QMessageBox::Information);
 					b.addButton(tr("Download"), QMessageBox::AcceptRole);
 					b.addButton(tr("Remind me later"), QMessageBox::AcceptRole);
@@ -599,7 +611,11 @@ void HackersMCLauncher::checkForUpdates(bool ignoreErrors)
 					}
 				} else if (!ignoreErrors)
 				{
-					QMessageBox::information(this, tr("No updates found"), tr("You are using the latest version."));
+					QMessageBox b(this);
+					b.setWindowTitle(tr("No updates available"));
+					b.setTextFormat(Qt::TextFormat::MarkdownText);
+					b.setText(tr("## You are using the latest version: ") + o["tag_name"].toString() + "\n" + releaseInfo);
+					b.exec();
 				}
 			}
 			else if (!ignoreErrors)
