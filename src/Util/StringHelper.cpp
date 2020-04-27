@@ -58,3 +58,89 @@ QString StringHelper::prettySize(quint64 size, bool isSpeed)
 
 	return QString("%1 %2").arg(double(size / pow(1024, index)), 0, 'f', 1).arg(i < strs.size() ? strs[i] : "??");
 }
+
+QString StringHelper::markdownToHtml(const QString& markdown)
+{
+	auto lines = markdown.split("\n");
+	QString result;
+
+	unsigned openedTagsStack = 0;
+	QString sectionTag;
+	
+	for (auto line : lines)
+	{
+		if (line.isEmpty())
+		{
+			if (!sectionTag.isEmpty())
+			{
+				result += "</" + sectionTag + ">";
+				sectionTag.clear();
+			}
+			continue;
+		}
+		
+		bool listItem = false;
+		QString resultLine;
+
+		bool wasEmpty = sectionTag.isEmpty();
+		if (line.startsWith("* "))
+		{
+			// list item
+			listItem = true;
+			line = line.mid(2);
+			resultLine += "<li>";
+
+			if (sectionTag.isEmpty())
+			{
+				sectionTag = "ul";
+			}
+		} else
+		{
+			sectionTag = "p";
+		}
+		if (wasEmpty)
+		{
+			result += "<" + sectionTag + ">";
+		}
+		
+		for (auto it = line.begin(); it != line.end(); ++it)
+		{
+			if (*it == '*')
+			{
+				QChar nextChar = *std::next(it);
+				
+				char tag = 'i';
+				if (nextChar == '*')
+				{
+					// bold
+					tag = 'b';
+				}
+				
+				result += '<';
+				if (openedTagsStack)
+				{
+					result += '/';
+				}
+				openedTagsStack = !openedTagsStack;
+				result += tag;
+				result += '>';
+			} else
+			{
+				resultLine += *it;
+			}
+		}
+		if (listItem)
+		{
+			resultLine += "</li>";
+		}
+		result += resultLine;
+	}
+
+	if (!sectionTag.isEmpty())
+	{
+		result += "</" + sectionTag + ">";
+		sectionTag.clear();
+	}
+	
+	return result;
+}

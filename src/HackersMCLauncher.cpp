@@ -580,18 +580,18 @@ void HackersMCLauncher::checkForUpdates(bool ignoreErrors)
 				{
 					auto release = o["assets"].toArray().first().toObject();
 
-					releaseInfo += tr("**Release date:** ") + QDateTime::fromString(release["updated_at"].toString(), Qt::ISODate).toString() + "\n\n";
-					releaseInfo += tr("**Size:** ") + StringHelper::prettySize(release["size"].toInt()) + "\n\n";
-					releaseInfo += tr("**Downloads:** ") + QString::number(release["download_count"].toInt()) + "\n\n";
-					releaseInfo += tr("*Changelog:*") + "\n" + o["body"].toString();
+					releaseInfo += "<b>" + tr("Release date") + ":</b> " + QDateTime::fromString(release["updated_at"].toString(), Qt::ISODate).toString() + "<br />";
+					releaseInfo += "<b>" + tr("Size") + ":</b> " + StringHelper::prettySize(release["size"].toInt()) + "<br />";
+					releaseInfo += "<b>" + tr("Downloads") + ":</b> " + QString::number(release["download_count"].toInt()) + "<br />";
+					releaseInfo += "<br /><i>" + tr("Changelog") + ":</i>" + StringHelper::markdownToHtml(o["body"].toString());
 				}
 				
 				if (o["tag_name"].toString() != LAUNCHER_VERSION)
 				{
 					QMessageBox b(this);
 					b.setWindowTitle(tr("Update available"));
-					b.setTextFormat(Qt::TextFormat::MarkdownText);
-					b.setText(tr("## New version available: ") + o["tag_name"].toString() + "\n" + releaseInfo);
+					b.setTextFormat(Qt::TextFormat::RichText);
+					b.setText("<h2>" + tr("New version available") + ": " + o["tag_name"].toString() + "</h2>" + releaseInfo);
 					b.setIcon(QMessageBox::Information);
 					b.addButton(tr("Download"), QMessageBox::AcceptRole);
 					b.addButton(tr("Remind me later"), QMessageBox::AcceptRole);
@@ -613,8 +613,8 @@ void HackersMCLauncher::checkForUpdates(bool ignoreErrors)
 				{
 					QMessageBox b(this);
 					b.setWindowTitle(tr("No updates available"));
-					b.setTextFormat(Qt::TextFormat::MarkdownText);
-					b.setText(tr("## You are using the latest version: ") + o["tag_name"].toString() + "\n" + releaseInfo);
+					b.setTextFormat(Qt::TextFormat::RichText);
+					b.setText("<h4>" + tr("You are using the latest version") + ": " + o["tag_name"].toString() + "</h4>" + releaseInfo);
 					b.exec();
 				}
 			}
