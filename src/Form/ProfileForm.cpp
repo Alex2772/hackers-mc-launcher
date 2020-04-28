@@ -169,9 +169,14 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 		if (QMessageBox::question(this, tr("Remove profile?"), 
 			tr("Do you really want to remove this profile?")) == QMessageBox::Yes)
 		{
-			// to prevent access violation
+			// remove from the disk
+			QDir f = parent->getSettings()->getGameDir().absoluteFilePath("versions/" + mItem->mName);
+			f.removeRecursively();
+			
+			// to prevent access violation in destructor
 			mItem = nullptr;
 			
+			// remove from the model
 			parent->getProfiles().removeRow(index.row(), {});
 			close();
 		}
