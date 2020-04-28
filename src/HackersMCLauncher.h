@@ -47,6 +47,7 @@ public slots:
 	void downloadJava();
 	void play(bool withUpdate = false);
 	void loadProfiles();
+	void loadRepositories();
 	void saveProfiles();
 	
 private:

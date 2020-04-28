@@ -17,6 +17,10 @@ public:
 	QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 	
 	void setToDefault();
+	QModelIndex add(const Repository& profile);
+
+	bool removeRows(int row, int count, const QModelIndex& parent) override;
+	void update(int row, const Repository& profile);
 
 	const QList<Repository>& getItems();
 };

@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include "RepositoryForm.h"
 
+
 SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	: Form(launcher)
 {
@@ -66,8 +67,42 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	});
 	connect(ui.repositoryAdd, &QAbstractButton::clicked, this, [&, launcher]()
 	{
-		auto r = new RepositoryForm(this);
+		auto r = new RepositoryForm({}, this);
+		connect(r, &RepositoryForm::result, this, [launcher](const Repository& r)
+		{
+			launcher->getRepositories()->add(r);
+		});
 		r->show();
+	});
+
+	auto updateRow = [&, launcher](int row)
+	{
+		auto r = new RepositoryForm(launcher->getRepositories()->getItems().at(row), this);
+		connect(r, &RepositoryForm::result, this, [launcher, row](const Repository& r)
+		{
+			launcher->getRepositories()->update(row, r);
+		});
+		r->show();
+	};
+	
+	connect(ui.repositoryModify, &QAbstractButton::clicked, this, [&, updateRow]()
+	{
+		int row = ui.repos->selectionModel()->currentIndex().row();
+		if (row >= 0) {
+			updateRow(row);
+		}
+	});
+	connect(ui.repos, &QTreeView::doubleClicked, this, [updateRow](const QModelIndex& i)
+	{
+		updateRow(i.row());
+	});
+
+	connect(ui.repositoryDelete, &QAbstractButton::clicked, this, [&, launcher]()
+	{
+		int row = ui.repos->selectionModel()->currentIndex().row();
+		if (row >= 0) {
+			launcher->getRepositories()->removeRow(row);
+		}
 	});
 
 }

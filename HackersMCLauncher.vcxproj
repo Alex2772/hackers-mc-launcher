@@ -132,6 +132,7 @@
     <ClCompile Include="src\Util\Crypto.cpp" />
     <ClCompile Include="src\Util\DefaultValidator.cpp" />
     <ClCompile Include="src\Util\DownloadHelper.cpp" />
+    <ClCompile Include="src\Util\CommonUtils.cpp" />
     <ClCompile Include="src\Util\StringHelper.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
     <ClCompile Include="src\Util\UIThread.cpp" />
@@ -178,6 +179,7 @@
     <ClInclude Include="src\launcher_config.h" />
     <ClInclude Include="src\Util\DefaultValidator.h" />
     <ClInclude Include="src\Util\DownloadHelper.h" />
+    <ClInclude Include="src\Util\CommonUtils.h" />
     <ClInclude Include="src\Util\VariableHelper.h" />
     <QtMoc Include="src\Util\UIThread.h" />
     <QtMoc Include="src\Form\UserForm.h" />

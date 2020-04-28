@@ -67,8 +67,46 @@ QVariant RepositoriesModel::headerData(int section, Qt::Orientation orientation,
 
 void RepositoriesModel::setToDefault()
 {
-	mList.clear();
-	mList << Repository{tr("Official Minecraft"), "https://launchermeta.mojang.com/mc/game/version_manifest.json"};
+	removeRows(0, mList.size(), {});
+	add(Repository{tr("Official Minecraft"), "https://launchermeta.mojang.com/mc/game/version_manifest.json"});
+}
+
+QModelIndex RepositoriesModel::add(const Repository& profile)
+{
+	for (auto& i : mList)
+	{
+		if (i.mUrl == profile.mUrl)
+		{
+			return {};
+		}
+	}
+	
+	beginInsertRows({}, mList.size(), mList.size());
+	mList << profile;
+	endInsertRows();
+
+	auto i = index(mList.size() - 1, 0);
+	emit dataChanged(i, i);
+	return i;
+}
+
+bool RepositoriesModel::removeRows(int row, int count, const QModelIndex& parent)
+{
+	if (count) {
+		beginRemoveRows(parent, row, row + count - 1);
+		mList.erase(mList.begin() + row, mList.begin() + row + count);
+		endRemoveRows();
+
+		emit dataChanged({}, {});
+		return true;
+	}
+	return false;
+}
+
+void RepositoriesModel::update(int row, const Repository& profile)
+{
+	mList[row] = profile;
+	emit dataChanged(index(row), index(row, columnCount({})));
 }
 
 const QList<Repository>& RepositoriesModel::getItems()

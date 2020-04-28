@@ -29,7 +29,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -204,13 +204,6 @@
           <widget class="QPushButton" name="repositoryDelete">
            <property name="text">
             <string>Delete</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="repositoryTest">
-           <property name="text">
-            <string>Test</string>
            </property>
           </widget>
          </item>
