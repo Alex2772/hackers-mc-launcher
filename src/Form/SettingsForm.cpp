@@ -5,6 +5,7 @@
 #include <QFileDialog>
 #include <Settings.h>
 #include "launcher_config.h"
+#include <QMessageBox>
 
 SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	: Form(launcher)
@@ -15,6 +16,8 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 
 	connect(ui.buttonBox, &QDialogButtonBox::accepted, this, &SettingsForm::close);
 
+	// Common
+	
 	auto mapper = new QDataWidgetMapper(this);
 	mapper->setModel(launcher->getSettings());
 	mapper->addMapping(ui.gameDir, launcher->getSettings()->sectionOf("game_dir"));
@@ -47,6 +50,18 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	connect(ui.forceCheckUpdates, &QAbstractButton::clicked, launcher, &HackersMCLauncher::checkForUpdates);
 	connect(ui.forceCheckUpdates, &QAbstractButton::clicked, ui.forceCheckUpdates, &QAbstractButton::setEnabled);
 	connect(launcher, &HackersMCLauncher::updateCheckFinished, ui.forceCheckUpdates, [&]() {ui.forceCheckUpdates->setDisabled(false); });
+
+
+	// Repositories
+	connect(ui.repositoryReset, &QAbstractButton::clicked, this, [&, launcher]()
+	{
+		if (QMessageBox::information(this, tr("Reset to default"), 
+			tr("The repositories will be removed from your list. Continue?"), 
+			QMessageBox::Yes, QMessageBox::Cancel) == QMessageBox::Yes)
+		{
+			launcher->getRepositories()->setToDefault();			
+		}
+	});
 }
 
 SettingsForm::~SettingsForm()

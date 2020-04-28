@@ -187,14 +187,14 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QPushButton" name="pushButton_5">
+          <widget class="QPushButton" name="repositoryReset">
            <property name="text">
             <string>Reset to default</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="QPushButton" name="repositoryAdd">
            <property name="text">
             <string>Add...</string>
            </property>
@@ -208,21 +208,21 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="QPushButton" name="repositoryModify">
            <property name="text">
-            <string>Modfy</string>
+            <string>Modify</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="repositoryDelete">
            <property name="text">
             <string>Delete</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_4">
+          <widget class="QPushButton" name="repositoryTest">
            <property name="text">
             <string>Test</string>
            </property>
