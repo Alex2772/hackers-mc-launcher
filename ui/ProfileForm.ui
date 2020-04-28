@@ -480,6 +480,13 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="resetProfile">
+       <property name="text">
+        <string>Reset profile</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QDialogButtonBox" name="buttonBox">
        <property name="standardButtons">
         <set>QDialogButtonBox::Close</set>

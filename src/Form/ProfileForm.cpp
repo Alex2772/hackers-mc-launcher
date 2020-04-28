@@ -176,6 +176,27 @@ ProfileForm::ProfileForm(const QModelIndex& index, HackersMCLauncher* parent)
 			close();
 		}
 	});
+	connect(ui.resetProfile, &QAbstractButton::clicked, this, [&, parent, index]()
+	{
+		if (QMessageBox::question(this, tr("Reset profile?"), 
+			tr("Do you really want to reset to default this profile?")) == QMessageBox::Yes)
+		{
+			close();
+			auto name = mItem->mName;
+
+			// Delete hck.json
+			QFile f = parent->getSettings()->getGameDir().absoluteFilePath("versions/" + name + "/" + name + ".hck.json");
+			if (f.exists())
+			{
+				f.remove();
+			}
+			*mItem = Profile();
+			parent->tryLoadProfile(*mItem, name);
+
+			auto newProfile = new ProfileForm(index, parent);
+			newProfile->show();
+		}
+	});
 }
 
 void ProfileForm::updateCaption()

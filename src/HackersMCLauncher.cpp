@@ -553,8 +553,8 @@ bool HackersMCLauncher::tryLoadProfile(Profile& dst, const QString& name)
 		if (file.exists())
 		{
 			file.open(QIODevice::ReadOnly);
-			dst = Profile::fromJson(this, name,
-				QJsonDocument::fromJson(file.readAll()).object());
+			Profile::fromJson(this, dst,
+			                        name, QJsonDocument::fromJson(file.readAll()).object());
 			file.close();
 			return true;
 		}

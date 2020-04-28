@@ -151,7 +151,13 @@ void DownloadHelper::performDownload()
 			{
 				mLauncher->ui.downloaded->setText(StringHelper::prettySize(d));
 				mLauncher->ui.speed->setText(StringHelper::prettySize(averangeDelta, true));
-				mLauncher->ui.progressBar->setValue(d * 1000 / mTotalDownloadSize);
+				if (mTotalDownloadSize) {
+					mLauncher->ui.progressBar->setValue(d * 1000 / mTotalDownloadSize);
+				} else
+				{
+
+					mLauncher->ui.progressBar->setValue(0);
+				}
 			});
 		});
 		t.setInterval(100);

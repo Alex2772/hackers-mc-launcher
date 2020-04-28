@@ -123,7 +123,8 @@ void VersionChooserForm::onVersionSelected(const QModelIndex& index)
 		connect(reply, &QNetworkReply::finished, this, [&, item, reply]()
 		{
 			auto buf = reply->readAll();
-			Profile p = Profile::fromJson(mLauncher, item->mName, QJsonDocument::fromJson(buf).object());
+			Profile p;
+			Profile::fromJson(mLauncher, p, item->mName, QJsonDocument::fromJson(buf).object());
 			QFile f = mLauncher->getSettings()->getGameDir().absoluteFilePath("versions/" + item->mName + '/' + item->mName + ".json");
 			QDir().mkpath(QFileInfo(f).absoluteDir().absolutePath());
 			f.open(QIODevice::WriteOnly);

@@ -40,21 +40,8 @@ QString Profile::javaLibNameToPath(const QString& name)
 	return "INVALID:" + name;
 }
 
-Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, const QJsonObject& object)
+void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& name, const QJsonObject& object)
 {
-	Profile p;
-	if (object["inheritsFrom"].isString())
-	{
-		launcher->tryLoadProfile(p, object["inheritsFrom"].toString());
-	}
-	
-	p.mName = name;
-
-	if (object["mainClass"].isString())
-		p.mMainClass = object["mainClass"].toString();
-	if (object["assets"].isString())
-		p.mAssetsIndex = object["assets"].toString();
-
 	if (object["hackers-mc"].isBool())
 	{
 		// hackers-mc format
@@ -113,20 +100,7 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 	else
 	{
 		// legacy minecraft launcher format
-		p.mDownloads << Download{
-			"assets/indexes/" + p.mAssetsIndex + ".json",
-			object["assetIndex"].toObject()["url"].toString(),
-			quint64(object["assetIndex"].toObject()["size"].toInt()),
-			false,
-			object["assetIndex"].toObject()["sha1"].toString()
-		};
 
-		// client jar
-		{
-			auto path = "versions/" + object["id"].toString() + '/' + object["id"].toString() + ".jar";
-			p.mDownloads << downloadFromJson(path, object["downloads"].toObject()["client"].toObject());
-			p.mClasspath << ClasspathEntry{path};
-		}
 		// Java libraries
 		for (QJsonValue v : object["libraries"].toArray())
 		{
@@ -179,29 +153,31 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 
 			QString name = v["name"].toString();
 
-			if (v["downloads"].isObject())
+			if (v["downloads"].isObject()) {
 				p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(),
-				                                 v["downloads"]["artifact"].toObject());
+					v["downloads"]["artifact"].toObject());
 
-			bool extract = v["extract"].isObject();
-			p.mDownloads.last().mExtract = extract;
+				bool extract = v["extract"].isObject();
+				p.mDownloads.last().mExtract = extract;
+
+				if (v["downloads"]["classifiers"].isObject())
+				{
+					auto k = v["downloads"]["classifiers"]["natives-windows"];
+					if (k.isObject())
+					{
+						p.mDownloads.last().mExtract = false;
+						p.mDownloads << downloadFromJson("libraries/" + k["path"].toString(), k.toObject());
+						p.mDownloads.last().mExtract = extract;
+						p.mClasspath << ClasspathEntry{ "libraries/" + k["path"].toString() };
+					}
+				}
+			}
 
 			if (v["downloads"].isObject())
 				p.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].toString()};
 			else
 				p.mClasspath << ClasspathEntry{"libraries/" + javaLibNameToPath(name)};
 
-			if (v["downloads"]["classifiers"].isObject())
-			{
-				auto k = v["downloads"]["classifiers"]["natives-windows"];
-				if (k.isObject())
-				{
-					p.mDownloads.last().mExtract = false;
-					p.mDownloads << downloadFromJson("libraries/" + k["path"].toString(), k.toObject());
-					p.mDownloads.last().mExtract = extract;
-					p.mClasspath << ClasspathEntry{"libraries/" + k["path"].toString()};
-				}
-			}
 		}
 
 
@@ -375,7 +351,41 @@ Profile Profile::fromJson(HackersMCLauncher* launcher, const QString& name, cons
 			p.mJavaArgs << JavaArg{ "-cp" } << JavaArg{ "${classpath}" };
 		}
 	}
-	return p;
+
+	// classpath order fix for Optifine 1.15.2
+	if (object["inheritsFrom"].isString())
+	{
+		launcher->tryLoadProfile(p, object["inheritsFrom"].toString());
+	}
+	
+	p.mName = name;
+
+	if (object["mainClass"].isString())
+		p.mMainClass = object["mainClass"].toString();
+	if (object["assets"].isString())
+		p.mAssetsIndex = object["assets"].toString();
+
+
+	if (!object["hackers-mc"].isBool())
+	{
+		// again, due to Optifine 1.15.2 load order main game jar should be in the end of classpath load order.
+
+		// client jar
+		{
+			auto path = "versions/" + object["id"].toString() + '/' + object["id"].toString() + ".jar";
+			p.mDownloads << downloadFromJson(path, object["downloads"].toObject()["client"].toObject());
+			p.mClasspath << ClasspathEntry{ path };
+		}
+
+		// Asset index
+		p.mDownloads << Download{
+			"assets/indexes/" + p.mAssetsIndex + ".json",
+			object["assetIndex"].toObject()["url"].toString(),
+			quint64(object["assetIndex"].toObject()["size"].toInt()),
+			false,
+			object["assetIndex"].toObject()["sha1"].toString()
+		};
+	}
 }
 
 // TODO downloads storage
