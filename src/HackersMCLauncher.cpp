@@ -96,6 +96,20 @@ HackersMCLauncher::HackersMCLauncher(QWidget* parent)
 	setDownloadMode(false);
 
 	loadProfiles();
+	loadRepositories();
+
+	connect(&mRepos, &QAbstractItemModel::dataChanged, this, [&]()
+	{
+		QJsonArray r;
+		for (auto& repo : mRepos.getItems())
+		{
+			QJsonArray jsonRepo;
+			jsonRepo << repo.mName << repo.mUrl;
+			r << jsonRepo;
+		}
+		getSettings()->setValue("repos", r);
+	});
+	
 	updatePlayButton();
 
 	connect(&mUsers, &QAbstractItemModel::dataChanged, this, &HackersMCLauncher::saveProfiles);
@@ -687,6 +701,20 @@ void HackersMCLauncher::loadProfiles()
 				}
 				++counter;
 			}
+		}
+	}
+}
+
+void HackersMCLauncher::loadRepositories()
+{
+	auto repos = getSettings()->value("repos").toJsonArray();
+	if (!repos.isEmpty())
+	{
+		mRepos.removeRows(0, mRepos.getItems().size(), {});
+		for (auto& i : repos)
+		{
+			auto repo = i.toArray();
+			mRepos.add(Repository{ repo[0].toString(), repo[1].toString() });
 		}
 	}
 }

@@ -109,6 +109,7 @@
     <ClCompile Include="src\Form\LicenseForm.cpp" />
     <ClCompile Include="src\Form\Form.cpp" />
     <ClCompile Include="src\Form\ProfileForm.cpp" />
+    <ClCompile Include="src\Form\RepositoryForm.cpp" />
     <ClCompile Include="src\Form\SettingsForm.cpp" />
     <ClCompile Include="src\Form\UserForm.cpp" />
     <ClCompile Include="src\Form\VersionChooserForm.cpp" />
@@ -131,6 +132,7 @@
     <ClCompile Include="src\Util\Crypto.cpp" />
     <ClCompile Include="src\Util\DefaultValidator.cpp" />
     <ClCompile Include="src\Util\DownloadHelper.cpp" />
+    <ClCompile Include="src\Util\CommonUtils.cpp" />
     <ClCompile Include="src\Util\StringHelper.cpp" />
     <ClCompile Include="src\Util\UIHelper.cpp" />
     <ClCompile Include="src\Util\UIThread.cpp" />
@@ -141,6 +143,7 @@
     <QtMoc Include="src\HackersMCLauncher.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="ui\RepositoryForm.ui" />
     <QtUic Include="ui\LicenseForm.ui" />
     <QtUic Include="ui\VersionChooserForm.ui" />
     <QtUic Include="ui\ProfileForm.ui" />
@@ -172,9 +175,11 @@
     <QtMoc Include="src\Window\ConsoleWindow.h" />
     <QtMoc Include="src\Form\LicenseForm.h" />
     <ClInclude Include="resource.h" />
+    <QtMoc Include="src\Form\RepositoryForm.h" />
     <ClInclude Include="src\launcher_config.h" />
     <ClInclude Include="src\Util\DefaultValidator.h" />
     <ClInclude Include="src\Util\DownloadHelper.h" />
+    <ClInclude Include="src\Util\CommonUtils.h" />
     <ClInclude Include="src\Util\VariableHelper.h" />
     <QtMoc Include="src\Util\UIThread.h" />
     <QtMoc Include="src\Form\UserForm.h" />

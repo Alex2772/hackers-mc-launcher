@@ -146,7 +146,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit"/>
+           <widget class="QLineEdit" name="ip"/>
           </item>
           <item>
            <widget class="QLabel" name="label_6">
@@ -156,12 +156,15 @@
            </widget>
           </item>
           <item>
-           <widget class="QSpinBox" name="spinBox">
+           <widget class="QSpinBox" name="port">
             <property name="minimum">
              <number>1000</number>
             </property>
             <property name="maximum">
              <number>65535</number>
+            </property>
+            <property name="value">
+             <number>25565</number>
             </property>
            </widget>
           </item>
@@ -290,7 +293,7 @@
          <item>
           <widget class="QPushButton" name="dl_add">
            <property name="text">
-            <string>Add...</string>
+            <string>Add</string>
            </property>
           </widget>
          </item>
