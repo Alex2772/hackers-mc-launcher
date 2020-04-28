@@ -6,6 +6,7 @@
 #include <Settings.h>
 #include "launcher_config.h"
 #include <QMessageBox>
+#include "RepositoryForm.h"
 
 SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 	: Form(launcher)
@@ -42,7 +43,8 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 		}
 	});
 	
-	ui.repoList->setModel(launcher->getRepositories());	
+	ui.repos->setModel(launcher->getRepositories());
+	ui.repos->setColumnWidth(0, 200);
 	ui.logo->setPixmap(ui.logo->pixmap()->scaled(64, 64,
 		Qt::IgnoreAspectRatio, Qt::FastTransformation));
 
@@ -62,6 +64,12 @@ SettingsForm::SettingsForm(HackersMCLauncher* launcher)
 			launcher->getRepositories()->setToDefault();			
 		}
 	});
+	connect(ui.repositoryAdd, &QAbstractButton::clicked, this, [&, launcher]()
+	{
+		auto r = new RepositoryForm(this);
+		r->show();
+	});
+
 }
 
 SettingsForm::~SettingsForm()

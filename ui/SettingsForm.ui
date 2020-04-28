@@ -182,28 +182,14 @@
       </attribute>
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
-        <widget class="QListView" name="repoList"/>
+        <widget class="QTreeView" name="repos"/>
        </item>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QPushButton" name="repositoryReset">
-           <property name="text">
-            <string>Reset to default</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QPushButton" name="repositoryAdd">
            <property name="text">
             <string>Add...</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="Line" name="line">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
            </property>
           </widget>
          </item>
@@ -225,6 +211,20 @@
           <widget class="QPushButton" name="repositoryTest">
            <property name="text">
             <string>Test</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="Line" name="line">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="repositoryReset">
+           <property name="text">
+            <string>Reset to default</string>
            </property>
           </widget>
          </item>

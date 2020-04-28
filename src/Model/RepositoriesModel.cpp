@@ -1,5 +1,10 @@
 ﻿#include "RepositoriesModel.h"
 
+int RepositoriesModel::columnCount(const QModelIndex& parent) const
+{
+	return 2;
+}
+
 int RepositoriesModel::rowCount(const ::QModelIndex& parent) const
 {
 	return mList.size();
@@ -19,6 +24,44 @@ int RepositoriesModel::rowCount(const ::QModelIndex& parent) const
 			return mList[index.row()].mUrl;
 		}
 ;	}
+	return {};
+}
+
+bool RepositoriesModel::setData(const QModelIndex& index, const QVariant& value, int role)
+{
+
+	switch (role)
+	{
+	case Qt::EditRole:
+	case Qt::DisplayRole:
+		switch (index.column())
+		{
+		case 0:
+			mList[index.row()].mName = value.toString();
+			break;
+		case 1:
+			mList[index.row()].mUrl = value.toString();
+			break;
+		}
+		;
+	}
+	return {};
+}
+
+QVariant RepositoriesModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+	switch (role)
+	{
+	case Qt::DisplayRole:
+		switch (section)
+		{
+		case 0:
+			return tr("Name");
+		case 1:
+			return tr("URL");
+		}
+		;
+	}
 	return {};
 }
 

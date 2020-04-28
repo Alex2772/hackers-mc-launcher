@@ -180,6 +180,9 @@
     <ClCompile Include="src\Window\ConsoleWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Form\RepositoryForm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="ui\HackersMCLauncher.ui">
@@ -198,6 +201,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ui\LicenseForm.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ui\RepositoryForm.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -262,6 +268,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="src\Window\ConsoleWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="src\Form\RepositoryForm.h">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
