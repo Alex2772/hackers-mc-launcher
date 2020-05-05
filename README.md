@@ -17,6 +17,7 @@ This launcher is designed for the user, not for money.
 * Multiple profiles
 * Multiple game instances
 * Muttiple game repositories
+* Auto Java installer
 * Colored console
 * Update checking
 * Deep profile editor
