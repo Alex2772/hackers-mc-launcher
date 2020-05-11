@@ -12,6 +12,15 @@ public:
 	QString mHash;
 };
 
+inline bool operator==(const Download& l, const Download& r)
+{
+	return l.mLocalPath == r.mLocalPath;
+}
+inline uint qHash(const Download& t)
+{
+	return qHash(t.mLocalPath);
+}
+
 class DownloadsModel: public QAbstractListModel
 {
 	Q_OBJECT

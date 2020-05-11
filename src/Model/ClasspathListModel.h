@@ -32,3 +32,13 @@ private:
 	int columnCount(const QModelIndex& parent) const override;
 };
 
+
+
+inline bool operator==(const ClasspathEntry& l, const ClasspathEntry& r)
+{
+	return l.mPath == r.mPath;
+}
+inline uint qHash(const ClasspathEntry& t)
+{
+	return qHash(t.mPath);
+}

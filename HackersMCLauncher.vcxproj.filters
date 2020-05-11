@@ -374,6 +374,9 @@
     <ClInclude Include="src\Util\CommonUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Util\Util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="translations\hackersmclauncher_ru_RU.ts">

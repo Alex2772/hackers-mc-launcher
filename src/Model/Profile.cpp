@@ -6,6 +6,7 @@
 #include "Settings.h"
 #include <QJsonDocument>
 #include "Util/Crypto.h"
+#include "Util/Util.h"
 
 Download downloadFromJson(const QString& path, const QJsonObject& v)
 {
@@ -40,8 +41,21 @@ QString Profile::javaLibNameToPath(const QString& name)
 	return "INVALID:" + name;
 }
 
+
+void Profile::cleanup()
+{
+	mClasspath.erase(std::remove_if(mClasspath.begin(), mClasspath.end(), [](const ClasspathEntry& e)
+	{
+		return e.mPath.endsWith("/");
+	}), mClasspath.end());
+	Util::cleanup(mDownloads);
+	Util::cleanup(mClasspath);
+}
+
 void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& name, const QJsonObject& object)
 {
+	bool cleanupNeeded = false;
+	
 	if (object["hackers-mc"].isBool())
 	{
 		// hackers-mc format
@@ -171,6 +185,19 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 						p.mClasspath << ClasspathEntry{ "libraries/" + k["path"].toString() };
 					}
 				}
+			} else
+			{
+				// Minecraft Forge-style entry
+				QString url = "https://libraries.minecraft.net/";
+				if (v["url"].isString())
+				{
+					url = v["url"].toString();
+					if (!url.endsWith("/"))
+					{
+						url += "/";
+					}
+				}
+				p.mDownloads << Download{"libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""};
 			}
 
 			if (v["downloads"].isObject())
@@ -350,13 +377,21 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 			p.mJavaArgs << JavaArg{ "-Djava.library.path=${natives_directory}" };
 			p.mJavaArgs << JavaArg{ "-cp" } << JavaArg{ "${classpath}" };
 		}
+		cleanupNeeded = true;
 	}
 
 	// classpath order fix for Optifine 1.15.2
 	if (object["inheritsFrom"].isString())
 	{
+		auto tmp1 = p.mJavaArgs;
+		auto tmp2 = p.mGameArgs;
 		launcher->tryLoadProfile(p, object["inheritsFrom"].toString());
+		p.mJavaArgs = tmp1;
+		p.mGameArgs = tmp2;
 	}
+
+	if (cleanupNeeded)
+		p.cleanup();
 	
 	p.mName = name;
 
