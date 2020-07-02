@@ -41,21 +41,53 @@ QString Profile::javaLibNameToPath(const QString& name)
 	return "INVALID:" + name;
 }
 
-
-void Profile::cleanup()
+/**
+ * \brief Cleans up garbage from the Profile (duplicate and corrupted
+ *		  entries, order and etc)
+ */
+void Profile::makeClean()
 {
 	mClasspath.erase(std::remove_if(mClasspath.begin(), mClasspath.end(), [](const ClasspathEntry& e)
 	{
-		return e.mPath.endsWith("/");
+		return
+			e.mPath.endsWith("/") // a path ended with '/' is probably a dir, not a jar file.
+			|| e.mPath.startsWith("versions/"); // the only one jar from versions/ folder can exists in classpath.
 	}), mClasspath.end());
+
+	// return profile main jar file back.
+	mClasspath.push_back({"versions/" + mName + "/" + mName + ".jar"});
+
 	Util::cleanup(mDownloads);
 	Util::cleanup(mClasspath);
+
+	QSet<QString> existingKeys;
+	mJavaArgs.erase(std::remove_if(mJavaArgs.begin(), mJavaArgs.end(), [&](const JavaArg& e) -> bool
+	{
+		if (existingKeys.contains(e.mName))
+		{
+			return true;
+		}
+		existingKeys << e.mName;
+		return false;
+	}), mJavaArgs.end());
+
+	existingKeys.clear();
+
+	mGameArgs.erase(std::remove_if(mGameArgs.begin(), mGameArgs.end(), [&](const GameArg& e) -> bool
+	{
+		if (existingKeys.contains(e.mName))
+		{
+			return true;
+		}
+		existingKeys << e.mName;
+		return false;
+	}), mGameArgs.end());
 }
 
 void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& name, const QJsonObject& object)
 {
 	bool cleanupNeeded = false;
-	
+
 	if (object["hackers-mc"].isBool())
 	{
 		// hackers-mc format
@@ -167,9 +199,10 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 
 			QString name = v["name"].toString();
 
-			if (v["downloads"].isObject()) {
+			if (v["downloads"].isObject())
+			{
 				p.mDownloads << downloadFromJson("libraries/" + v["downloads"]["artifact"]["path"].toString(),
-					v["downloads"]["artifact"].toObject());
+				                                 v["downloads"]["artifact"].toObject());
 
 				bool extract = v["extract"].isObject();
 				p.mDownloads.last().mExtract = extract;
@@ -182,10 +215,11 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 						p.mDownloads.last().mExtract = false;
 						p.mDownloads << downloadFromJson("libraries/" + k["path"].toString(), k.toObject());
 						p.mDownloads.last().mExtract = extract;
-						p.mClasspath << ClasspathEntry{ "libraries/" + k["path"].toString() };
+						p.mClasspath << ClasspathEntry{"libraries/" + k["path"].toString()};
 					}
 				}
-			} else
+			}
+			else
 			{
 				// Minecraft Forge-style entry
 				QString url = "https://libraries.minecraft.net/";
@@ -197,14 +231,15 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 						url += "/";
 					}
 				}
-				p.mDownloads << Download{"libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""};
+				p.mDownloads << Download{
+					"libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
+				};
 			}
 
 			if (v["downloads"].isObject())
 				p.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].toString()};
 			else
 				p.mClasspath << ClasspathEntry{"libraries/" + javaLibNameToPath(name)};
-
 		}
 
 
@@ -269,7 +304,8 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 						if (it->mName == arg.mName)
 						{
 							it = p.mGameArgs.erase(it);
-						} else
+						}
+						else
 						{
 							++it;
 						}
@@ -280,7 +316,7 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 
 				counter += 1;
 			};
-			
+
 			if (object["minecraftArguments"].isString())
 			{
 				// old-style args
@@ -374,8 +410,8 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 		if (p.mJavaArgs.isEmpty())
 		{
 			// add some important Java args
-			p.mJavaArgs << JavaArg{ "-Djava.library.path=${natives_directory}" };
-			p.mJavaArgs << JavaArg{ "-cp" } << JavaArg{ "${classpath}" };
+			p.mJavaArgs << JavaArg{"-Djava.library.path=${natives_directory}"};
+			p.mJavaArgs << JavaArg{"-cp"} << JavaArg{"${classpath}"};
 		}
 		cleanupNeeded = true;
 	}
@@ -386,13 +422,25 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 		auto tmp1 = p.mJavaArgs;
 		auto tmp2 = p.mGameArgs;
 		launcher->tryLoadProfile(p, object["inheritsFrom"].toString());
-		p.mJavaArgs = tmp1;
-		p.mGameArgs = tmp2;
+		p.mJavaArgs << tmp1;
+		p.mGameArgs << tmp2;
+
+		// if the profile does not have it's own main jar file, we can copy it from
+		// the inherited profile.
+		// in theory, it would work recursively too.
+		auto mainJarAbsPath = launcher->getSettings()->getGameDir().absoluteFilePath(
+			"versions/" + name + "/" + name + ".jar");
+		if (!QFile(mainJarAbsPath).exists())
+		{
+			QFile::copy(
+				launcher->getSettings()->getGameDir().absoluteFilePath("versions/" + p.mName + "/" + p.mName + ".jar"),
+				mainJarAbsPath);
+		}
 	}
 
 	if (cleanupNeeded)
-		p.cleanup();
-	
+		p.makeClean();
+
 	p.mName = name;
 
 	if (object["mainClass"].isString())
@@ -409,7 +457,7 @@ void Profile::fromJson(HackersMCLauncher* launcher, Profile& p, const QString& n
 		{
 			auto path = "versions/" + object["id"].toString() + '/' + object["id"].toString() + ".jar";
 			p.mDownloads << downloadFromJson(path, object["downloads"].toObject()["client"].toObject());
-			p.mClasspath << ClasspathEntry{ path };
+			p.mClasspath << ClasspathEntry{path};
 		}
 
 		// Asset index

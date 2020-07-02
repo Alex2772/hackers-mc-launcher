@@ -35,7 +35,7 @@ public:
 	QList<ClasspathEntry> mClasspath;
 
 	static QString javaLibNameToPath(const QString& name);
-	void cleanup();
+	void makeClean();
 	static void fromJson(HackersMCLauncher* launcher, Profile& p, const QString& name, const QJsonObject& object);
 	QJsonObject toJson();
 	void save(HackersMCLauncher* launcher);
