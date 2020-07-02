@@ -1,4 +1,4 @@
 #pragma once
 
-// has to much the github release.
+// has to match the github release.
 #define LAUNCHER_VERSION "v0.6"
