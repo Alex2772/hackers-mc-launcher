@@ -7,6 +7,8 @@ independent of any third-party commercial organizations (Minecraft servers, host
 launcher-based projects, even official Minecraft newsletter), do not be filled with terrible
 ads of these companies.
 
+This project uses Qt Framework.
+
 **Download**: https://github.com/Alex2772/hackers-mc-launcher/releases
 
 This launcher is designed for the user, not for money.
