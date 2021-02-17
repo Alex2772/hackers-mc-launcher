@@ -6,19 +6,14 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/View/AListView.h>
+#include <AUI/Model/AListModelAdapter.h>
+#include <Repository/UsersRepository.h>
 #include "MainWindow.h"
 #include "AccountWindow.h"
 
 MainWindow::MainWindow():
     AWindow("Hacker's Minecraft Launcher", 600_dp, 140_dp)
 {
-    mUsersModel = _new<AListModel<AString>>({
-        "<no user>"
-    });
-    mProfilesModel = _new<AListModel<AString>>({
-        "<latest>"
-    });
-
     setContents(Horizontal {
         Vertical {
             Horizontal {
@@ -33,7 +28,9 @@ MainWindow::MainWindow():
                 },
                 _new<AButton>() << ".configure",
             },
-            _new<AListView>(mUsersModel),
+            _new<AListView>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
+                return u.username;
+            })),
 
         } << ".column",
         Vertical {
@@ -46,7 +43,7 @@ MainWindow::MainWindow():
                 },
                 _new<AButton>() << ".configure",
             },
-            _new<AListView>(mProfilesModel),
+            //_new<AListView>(mProfilesModel),
         } << ".column",
         Stacked{
             _new<AButton>() << "#play" let { it->setDefault(); },
