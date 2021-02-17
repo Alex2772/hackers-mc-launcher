@@ -1,10 +1,14 @@
-﻿#pragma once
-#include <qstring.h>
+//
+// Created by alex2772 on 2/17/21.
+//
 
-class User
-{
-public:
+#pragma once
 
-	QString mUsername;
-	QString id() const;
+#include <AUI/Common/AString.h>
+
+
+struct User {
+    AString username;
+    bool isOnlineAccount = false;
+    AString token;
 };
