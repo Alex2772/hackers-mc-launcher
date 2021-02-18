@@ -19,9 +19,9 @@ AccountWindow::AccountWindow(User* user):
     setContents(
         Vertical {
             _form({
-                {"Username"_as, mUsername = _new<ATextField>() let { it->focus(); it && mBinding->link(&User::username, &ATextField::textChanging, &ATextField::setText); }},
-                {{},            _new<ACheckBox>("Online account on minecraft.net")},
-                {"Password"_as, _new<ATextField>() let { it && mBinding->link(&User::token, &ATextField::textChanging, &ATextField::setText); }},
+                {"Username"_as, mUsername = _new<ATextField>() let { it->focus(); it && mBinding(&User::username); }},
+                {{},            _new<ACheckBox>("Online account on minecraft.net") && mBinding(&User::isOnlineAccount)},
+                {"Password"_as, _new<ATextField>() && mBinding(&User::token) && mBinding(&User::isOnlineAccount, &ATextField::setEnabled) },
                 }),
             Horizontal {
                 _new<ASpacer>(),
