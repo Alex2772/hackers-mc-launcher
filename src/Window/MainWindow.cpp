@@ -26,11 +26,23 @@ MainWindow::MainWindow():
                         _new<AccountWindow>(nullptr)->show();
                     });
                 },
-                _new<AButton>() << ".configure",
+                mUserConfigureButton = _new<AButton>() let {
+                    it->addAssName(".configure");
+                    connect(it->clicked, this, [&] {
+                        showUserConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
+                    });
+                },
             },
-            _new<AListView>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
+            mUsersListView = _new<AListView>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
                 return u.username;
-            })),
+            })) let {
+                connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
+                    mUserConfigureButton->setEnabled(!e.empty());
+                });
+                connect(it->itemDoubleClicked, this, [&](unsigned i) {
+                    showUserConfigureDialogFor(i);
+                });
+            },
 
         } << ".column",
         Vertical {
@@ -50,4 +62,13 @@ MainWindow::MainWindow():
         },
     });
 
+}
+
+void MainWindow::showUserConfigureDialogFor(unsigned int index) {
+    _new<AccountWindow>(&UsersRepository::inst().getModel()->at(index)) let {
+        connect(it->finished, this, [&, index] {
+            UsersRepository::inst().getModel()->invalidate(index);
+        });
+        it->show();
+    };
 }

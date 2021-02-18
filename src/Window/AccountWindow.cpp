@@ -28,6 +28,7 @@ AccountWindow::AccountWindow(User* user):
                 (user ?
                     _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
                         *user = mBinding->getModel();
+                        emit finished();
                         close();
                     })
                         :

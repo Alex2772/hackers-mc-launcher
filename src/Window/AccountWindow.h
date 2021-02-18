@@ -15,5 +15,8 @@ private:
 public:
 
     AccountWindow(User* user);
+
+signals:
+    emits<> finished;
 };
 
