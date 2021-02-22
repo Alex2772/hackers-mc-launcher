@@ -18,5 +18,6 @@ public:
 
 signals:
     emits<> finished;
+    emits<> deleteUser;
 };
 

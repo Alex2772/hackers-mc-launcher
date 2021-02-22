@@ -28,6 +28,7 @@ MainWindow::MainWindow():
                 },
                 mUserConfigureButton = _new<AButton>() let {
                     it->addAssName(".configure");
+                    it->setDisabled();
                     connect(it->clicked, this, [&] {
                         showUserConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
                     });
@@ -62,12 +63,16 @@ MainWindow::MainWindow():
         },
     });
 
+
 }
 
 void MainWindow::showUserConfigureDialogFor(unsigned int index) {
     _new<AccountWindow>(&UsersRepository::inst().getModel()->at(index)) let {
         connect(it->finished, this, [&, index] {
             UsersRepository::inst().getModel()->invalidate(index);
+        });
+        connect(it->deleteUser, this, [&, index] {
+            UsersRepository::inst().getModel()->removeAt(index);
         });
         it->show();
     };

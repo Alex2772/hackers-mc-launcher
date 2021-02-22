@@ -6,6 +6,8 @@
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/AButton.h>
 #include <Repository/UsersRepository.h>
+#include <AUI/Platform/AMessageBox.h>
+#include <AUI/Traits/strings.h>
 #include "AccountWindow.h"
 
 AccountWindow::AccountWindow(User* user):
@@ -24,6 +26,17 @@ AccountWindow::AccountWindow(User* user):
                 {"Password"_as, _new<ATextField>() && mBinding(&User::token) && mBinding(&User::isOnlineAccount, &ATextField::setEnabled) },
                 }),
             Horizontal {
+                user ? (_new<AButton>("Delete user").connect(&AView::clicked, this, [&, user] {
+                    if (AMessageBox::show(this,
+                                      "Delete user",
+                                      "Do you really want to delete user \"{}\"? "
+                                      "The operation is unrecoverable!"_as.format(user->username),
+                                      AMessageBox::I_INFO,
+                                      AMessageBox::B_YES | AMessageBox::B_CANCEL) == AMessageBox::B_YES) {
+                        close();
+                        emit deleteUser();
+                    }
+                })) : nullptr,
                 _new<ASpacer>(),
                 (user ?
                     _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
