@@ -13,6 +13,7 @@ private:
 
 public:
     UsersRepository();
+    ~UsersRepository();
 
     const _<AListModel<User>>& getModel() const {
         return mModel;
