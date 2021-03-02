@@ -31,6 +31,15 @@ struct Style {
                 Padding { {}, 4_dp },
                 Expanding { {}, 1 },
             },
+            {
+                c(".title"),
+                Padding { 4_dp, 0 },
+                FontSize { 20_pt },
+            },
+            {
+                c(".import_version_offset"),
+                Margin { {}, {}, {}, 30_dp },
+            },
         });
     }
 } s;

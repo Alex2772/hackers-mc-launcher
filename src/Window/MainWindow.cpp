@@ -10,6 +10,7 @@
 #include <Repository/UsersRepository.h>
 #include "MainWindow.h"
 #include "AccountWindow.h"
+#include "ImportVersionWindow.h"
 
 MainWindow::MainWindow():
     AWindow("Hacker's Minecraft Launcher", 600_dp, 140_dp)
@@ -50,7 +51,9 @@ MainWindow::MainWindow():
             Horizontal {
                 _new<ALabel>("Version:"),
                 _new<ASpacer>(),
-                _new<AButton>("Import version") let {
+                _new<AButton>("Import version").connect(&AView::clicked, this, [] {
+                    _new<ImportVersionWindow>()->show();
+                }) let {
                     it->addAssName(".plus");
                     it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
                 },
