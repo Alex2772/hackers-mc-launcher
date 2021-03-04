@@ -31,8 +31,8 @@ AccountWindow::AccountWindow(User* user):
                                       "Delete user",
                                       "Do you really want to delete user \"{}\"? "
                                       "The operation is unrecoverable!"_as.format(user->username),
-                                      AMessageBox::I_INFO,
-                                      AMessageBox::B_YES | AMessageBox::B_CANCEL) == AMessageBox::B_YES) {
+                                      AMessageBox::Icon::INFO,
+                                      AMessageBox::Button::YES_NO) == AMessageBox::ResultButton::YES) {
                         close();
                         emit deleteUser();
                     }
