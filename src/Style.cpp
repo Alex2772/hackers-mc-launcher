@@ -3,6 +3,7 @@
 //
 
 #include <AUI/ASS/ASS.h>
+#include <AUI/View/AButton.h>
 
 using namespace ass;
 
@@ -39,6 +40,10 @@ struct Style {
             {
                 c(".import_version_offset"),
                 Margin { {}, {}, {}, 30_dp },
+            },
+            {
+                c(".import_version_offset") >> t<AButton>(),
+                Margin { 0 },
             },
         });
     }
