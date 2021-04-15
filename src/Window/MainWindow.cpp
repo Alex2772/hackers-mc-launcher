@@ -8,9 +8,11 @@
 #include <AUI/View/AListView.h>
 #include <AUI/Model/AListModelAdapter.h>
 #include <Repository/UsersRepository.h>
+#include <Repository/GameProfilesRepository.h>
 #include "MainWindow.h"
 #include "AccountWindow.h"
 #include "ImportVersionWindow.h"
+#include "LauncherSettingsWindow.h"
 
 MainWindow::MainWindow():
     AWindow("Hacker's Minecraft Launcher", 600_dp, 140_dp)
@@ -57,11 +59,35 @@ MainWindow::MainWindow():
                     it->addAssName(".plus");
                     it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
                 },
-                _new<AButton>() << ".configure",
+                mGameProfileConfigureButton = _new<AButton>() let {
+                    it->addAssName(".configure");
+                    it->setDisabled();
+                    connect(it->clicked, this, [&] {
+                    // mGameProfilesListView->getSelectionModel().one().getRow()
+                    });
+                },
             },
-            //_new<AListView>(mProfilesModel),
+            _new<AListView>(AAdapter::make<GameProfile>(GameProfilesRepository::inst().getModel(), [](const GameProfile& profile) {
+                return profile.getName();
+            })) let {
+                connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
+                    mGameProfilesListView->setEnabled(!e.empty());
+                });
+                connect(it->itemDoubleClicked, this, [&](unsigned i) {
+                    showUserConfigureDialogFor(i);
+                });
+            },
         } << ".column",
-        Stacked{
+        Stacked {
+            Vertical {
+                Horizontal {
+                    _new<ASpacer>(),
+                    _new<AButton>().connect(&AView::clicked, this, [&] {
+                        _new<LauncherSettingsWindow>()->show();
+                    }) << "#settings",
+                } let {it->setExpanding({2, 2});},
+                _new<ASpacer>(),
+            } let {it->setExpanding({2, 2});},
             _new<AButton>() << "#play" let { it->setDefault(); },
         },
     });

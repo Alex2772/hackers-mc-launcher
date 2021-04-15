@@ -45,5 +45,45 @@ private:
 
 public:
     static void fromJson(GameProfile& dst, const AString& name, const AJsonObject& json);
+
+    const AString& getName() const {
+        return mName;
+    }
+
+    const AString& getMainClass() const {
+        return mMainClass;
+    }
+
+    const AString& getAssetsIndex() const {
+        return mAssetsIndex;
+    }
+
+    const AVector<DownloadEntry>& getDownloads() const {
+        return mDownloads;
+    }
+
+    const AVector<GameArg>& getGameArgs() const {
+        return mGameArgs;
+    }
+
+    const AVector<JavaArg>& getJavaArgs() const {
+        return mJavaArgs;
+    }
+
+    const AVector<AString>& getClasspath() const {
+        return mClasspath;
+    }
+
+    bool isFullscreen() const {
+        return mIsFullscreen;
+    }
+
+    unsigned short getWindowWidth() const {
+        return mWindowWidth;
+    }
+
+    unsigned short getWindowHeight() const {
+        return mWindowHeight;
+    }
 };
 

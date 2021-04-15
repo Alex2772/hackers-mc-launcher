@@ -2,7 +2,6 @@
 // Created by alex2772 on 3/2/21.
 //
 
-#include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AComboBox.h>
@@ -14,6 +13,8 @@
 #include <Model/GameProfile.h>
 #include "ImportVersionWindow.h"
 
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <Repository/GameProfilesRepository.h>
 
 struct Version {
     AString id;
@@ -77,7 +78,6 @@ ImportVersionWindow::ImportVersionWindow():
         Horizontal {
             _new<ASpacer>(),
             mImportButton = _new<AButton>("Import").connect(&AView::clicked, this, [&] {
-                mImportButton->setDisabled();
                 switch (mRadioGroup->getSelectedId()) {
                     case 0: // official repo
                         doImportFromMinecraftRepo();
@@ -112,12 +112,18 @@ ImportVersionWindow::ImportVersionWindow():
 }
 
 void ImportVersionWindow::doImportFromMinecraftRepo() {
+    mImportButton->setDisabled();
     for (const auto& row : mMinecraftRepoList->getSelectionModel()) {
         Version version = mVersionModel->listItemAt(row.getIndex().getRow());
 
         async {
-            GameProfile p;
-            GameProfile::fromJson(p, version.id, AJson::read(_new<ACurl>(version.url)).asObject());
+            try {
+                GameProfile p;
+                GameProfile::fromJson(p, version.id, AJson::read(_new<ACurl>(version.url)).asObject());
+                GameProfilesRepository::inst().addGameProfile(p);
+            } catch (...) {
+            }
+            close();
         };
     }
 }

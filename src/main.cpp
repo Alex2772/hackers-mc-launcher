@@ -8,6 +8,8 @@
 
 AUI_ENTRY {
     aui::importPlugin("image");
-    _new<MainWindow>()->show();
+    auto w = _new<MainWindow>();
+    Autumn::put(w);
+    w->show();
     return 0;
 };

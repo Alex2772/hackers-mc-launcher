@@ -7,7 +7,9 @@
 class MainWindow: public AWindow {
 private:
     _<AButton> mUserConfigureButton;
+    _<AButton> mGameProfileConfigureButton;
     _<AListView> mUsersListView;
+    _<AListView> mGameProfilesListView;
 
     void showUserConfigureDialogFor(unsigned index);
 public:

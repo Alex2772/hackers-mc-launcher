@@ -17,6 +17,12 @@ struct Style {
                 FixedSize { 80_dp },
             },
             {
+                c("#settings"),
+                BackgroundImage { ":svg/cog.svg", 0xccffffff_argb, {}, Sizing::FIT_PADDING },
+                FixedSize { 26_dp },
+                Padding { 2_dp },
+            },
+            {
                 c(".plus"),
                 Padding { 4_dp },
             },

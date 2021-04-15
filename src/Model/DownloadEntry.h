@@ -4,7 +4,6 @@
 #include <AUI/Common/AString.h>
 
 struct DownloadEntry {
-
     AString mLocalPath;
     AString mUrl;
     uint64_t mSize = 0;
