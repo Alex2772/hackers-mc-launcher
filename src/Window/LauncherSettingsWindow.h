@@ -8,6 +8,8 @@
 #include <AUI/Platform/AWindow.h>
 
 class LauncherSettingsWindow: public AWindow {
+private:
+
 public:
     LauncherSettingsWindow();
 };
