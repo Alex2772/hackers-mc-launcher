@@ -6,11 +6,14 @@
 
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/View/AButton.h>
 
 class LauncherSettingsWindow: public AWindow {
 private:
+    _<AButton> mResetButton;
 
 public:
+
     LauncherSettingsWindow();
 };
 

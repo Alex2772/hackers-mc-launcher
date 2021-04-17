@@ -12,6 +12,7 @@
 #include <AUI/View/ARadioButton.h>
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>
+#include <AUI/Platform/AMessageBox.h>
 
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
@@ -29,7 +30,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 Horizontal {
                                     _new<ANumberPicker>() && binding(&Settings::width),
                                     _new<ALabel>("x"),
-                                    _new<ANumberPicker>() && binding(&Settings::height),
+                                    _new<ANumberPicker>()&& binding(&Settings::height),
                                     _new<ACheckBox>("Fullscreen") && binding(&Settings::is_fullscreen),
                                 }
                             },
@@ -39,19 +40,36 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
             },
             _new<ASpacer>(),
             Horizontal {
-                _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this, binding] {
+                mResetButton = _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this, binding] {
                     Settings::reset();
                     binding->setModel(Settings::inst());
-                    close();
+                    mResetButton->setDisabled();
                 }),
                 _new<ASpacer>(),
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this, binding] {
                     Settings::inst() = binding->getModel();
+                    auto s = Settings::inst();
                     Settings::save();
                     close();
                 }) let { it->setDefault(); },
-                _new<AButton>("Cancel").connect(&AView::clicked, me::close),
+                _new<AButton>("Cancel").connect(&AView::clicked, this, [this, binding] {
+                    if (binding->getEditableModel() != Settings::inst()) {
+                        auto result = AMessageBox::show(this,
+                                                        "Unsaved settings",
+                                                        "You have an unsaved changes. Do you wish to continue?",
+                                                        AMessageBox::Icon::WARNING,
+                                                        AMessageBox::Button::YES_NO);
+                        if (result == AMessageBox::ResultButton::YES) {
+                            close();
+                        }
+                    } else {
+                        close();
+                    }
+                }),
             }
         }
     );
+    connect(binding->modelChanged, [&, binding] {
+        mResetButton->enable();
+    });
 }
