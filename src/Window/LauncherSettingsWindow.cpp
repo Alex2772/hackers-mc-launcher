@@ -13,7 +13,9 @@
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>
 #include <AUI/Platform/AMessageBox.h>
+#include <AUI/ASS/ASS.h>
 
+using namespace ass;
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
         AWindow("Settings", 400_dp, 300_dp, Autumn::get<MainWindow>().get(), WS_DIALOG) {
@@ -21,6 +23,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
     setContents(
         Vertical {
             _new<ATabView>() let {
+                // GAME TAB ============================================================================================
                 it->addTab(
                     Vertical{
                         _form({
@@ -36,6 +39,41 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             },
                         }),
                     }, "Game"
+                );
+
+                // ABOUT TAB ===========================================================================================
+                it->addTab(
+                    Vertical{
+                        _new<ALabel>("Hacker's Minecraft Launcher") let {
+                            it->setCustomAss({
+                                FontSize { 19_pt },
+                                Margin { 8_dp, 0, 4_dp },
+                                TextAlign::CENTER,
+                            });
+                        },
+                        _new<ALabel>("Version 1.0.0") let {
+                            it->setCustomAss({
+                                FontSize { 8_pt },
+                                Margin { 0, 0, 4_dp },
+                                TextAlign::CENTER,
+                                TextColor { 0x444444_rgb },
+                            });
+                        },
+                        _new<ALabel>("This is open source free Minecraft launcher. This launcher is designed to be "
+                                     "independent of any third-party commercial organizations (Minecraft servers, "
+                                     "hostings, launcher-based projects, even official Minecraft newsletter), do not "
+                                     "be filled with terrible ads of these companies.")
+                                     let {
+                            it->setMultiline(true);
+                        },
+                        _new<ALabel>("Contributors: Alex2772") let {
+                            it->setMultiline(true);
+                        },
+                        Horizontal {
+                            _new<ASpacer>(),
+                            _new<AButton>("Check for updates..."),
+                        }
+                    }, "About"
                 );
             },
             _new<ASpacer>(),
