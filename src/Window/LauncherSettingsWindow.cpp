@@ -18,7 +18,7 @@
 using namespace ass;
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
-        AWindow("Settings", 400_dp, 300_dp, Autumn::get<MainWindow>().get(), WS_DIALOG) {
+        AWindow("Settings", 400_dp, 350_dp, Autumn::get<MainWindow>().get(), WS_DIALOG) {
     auto binding = _new<ADataBinding<Settings>>(Settings::inst());
     setContents(
         Vertical {
@@ -33,7 +33,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 Horizontal {
                                     _new<ANumberPicker>() && binding(&Settings::width),
                                     _new<ALabel>("x"),
-                                    _new<ANumberPicker>()&& binding(&Settings::height),
+                                    _new<ANumberPicker>() && binding(&Settings::height),
                                     _new<ACheckBox>("Fullscreen") && binding(&Settings::is_fullscreen),
                                 }
                             },

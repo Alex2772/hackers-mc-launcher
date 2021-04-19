@@ -85,5 +85,9 @@ public:
     unsigned short getWindowHeight() const {
         return mWindowHeight;
     }
+
+    void save();
+
+    AJsonElement toJson();
 };
 

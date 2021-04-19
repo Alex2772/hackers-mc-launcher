@@ -3,8 +3,10 @@
 //
 
 #include <Util/VariableHelper.h>
+#include <AUI/IO/FileOutputStream.h>
 #include "GameProfile.h"
 #include "DownloadEntry.h"
+#include "Settings.h"
 
 DownloadEntry downloadEntryFromJson(const AString& path, const AJsonObject& v)
 {
@@ -424,5 +426,102 @@ void GameProfile::fromJson(GameProfile& dst, const AString& name, const AJsonObj
 }
 
 void GameProfile::makeClean() {
+}
 
+void GameProfile::save() {
+    auto f = Settings::inst().game_folder.file("versions").file(mName).file(mName + ".hackers.json");
+    f.parent().makeDirs();
+    AJson::write(_new<FileOutputStream>(f), toJson());
+}
+
+AJsonElement GameProfile::toJson() {
+    AJsonObject object;
+
+    object["mainClass"] = mMainClass;
+    object["assets"] = mAssetsIndex;
+
+    // export to minecraft legacy launcher format is not supported
+    object["hackers-mc"] = true;
+
+    // Downloads
+    AJsonArray downloads;
+    for (auto& d : mDownloads)
+    {
+        AJsonObject entry;
+        entry["local"] = d.mLocalPath;
+        entry["url"] = d.mUrl;
+        entry["size"] = int(d.mSize);
+        entry["sha1"] = d.mHash;
+        entry["extract"] = d.mExtract;
+
+        downloads << entry;
+    }
+    object["downloads"] = downloads;
+
+    // game args
+    AJsonArray gameArgs;
+    for (auto& d : mGameArgs)
+    {
+        AJsonObject entry;
+        entry["name"] = d.mName;
+        entry["value"] = d.mValue;
+
+        AJsonArray conditions;
+
+        for (auto& c : d.mConditions)
+        {
+            AJsonArray e;
+            e << AJsonValue(c.first);
+            e << c.second;
+            conditions << e;
+        }
+        if (!conditions.empty())
+            entry["conditions"] = conditions;
+
+        gameArgs << entry;
+    }
+    object["game_args"] = gameArgs;
+
+    // java args
+    AJsonArray javaArgs;
+    for (auto& d : mJavaArgs)
+    {
+        AJsonObject entry;
+        entry["name"] = d.mName;
+
+        AJsonArray conditions;
+
+        for (auto& c : d.mConditions)
+        {
+            AJsonArray e;
+            e << AJsonValue(c.first);
+            e << c.second;
+            conditions << e;
+        }
+        if (!conditions.empty())
+            entry["conditions"] = conditions;
+
+        javaArgs << entry;
+    }
+    object["java_args"] = javaArgs;
+
+
+    // Classpath
+    AJsonArray classpath;
+    for (auto& lib : mClasspath)
+    {
+        classpath << AJsonValue(lib);
+    }
+    object["classpath"] = classpath;
+
+    // Settings
+    AJsonObject settings;
+
+    settings["window_width"] = mWindowWidth;
+    settings["window_height"] = mWindowHeight;
+    settings["fullscreen"] = mIsFullscreen;
+
+    object["settings"] = settings;
+
+    return object;
 }
