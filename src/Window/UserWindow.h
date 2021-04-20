@@ -5,7 +5,7 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/Util/ADataBinding.h>
 
-class AccountWindow: public AWindow {
+class UserWindow: public AWindow {
 private:
     _<ATextField> mUsername;
 
@@ -14,7 +14,7 @@ private:
 
 public:
 
-    AccountWindow(User* user);
+    UserWindow(User* user);
 
 signals:
     emits<> finished;

@@ -11,10 +11,11 @@ class GameProfilesRepository {
 private:
     _<AListModel<GameProfile>> mModel;
 
+
 public:
     GameProfilesRepository();
 
-    [[nodiscard]] const _<AListModel<GameProfile>>& getModel() const {
+    [[nodiscard]] _<AListModel<GameProfile>>& getModel() {
         return mModel;
     }
 

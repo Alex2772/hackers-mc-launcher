@@ -15,6 +15,7 @@
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <Repository/GameProfilesRepository.h>
+#include <AUI/Util/ARandom.h>
 
 struct Version {
     AString id;
@@ -119,8 +120,9 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
         async {
             try {
                 GameProfile p;
-                GameProfile::fromJson(p, version.id, AJson::read(_new<ACurl>(version.url)).asObject());
+                GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::read(_new<ACurl>(version.url)).asObject());
                 GameProfilesRepository::inst().addGameProfile(p);
+                p.save();
             } catch (...) {
             }
             close();

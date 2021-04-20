@@ -15,7 +15,7 @@ public:
     UsersRepository();
     ~UsersRepository();
 
-    const _<AListModel<User>>& getModel() const {
+    _<AListModel<User>>& getModel() {
         return mModel;
     }
 

@@ -4,6 +4,7 @@
 
 #include <Util/VariableHelper.h>
 #include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/FileInputStream.h>
 #include "GameProfile.h"
 #include "DownloadEntry.h"
 #include "Settings.h"
@@ -40,7 +41,8 @@ AString javaLibNameToPath(const AString& name)
     return "INVALID:" + name;
 }
 
-void GameProfile::fromJson(GameProfile& dst, const AString& name, const AJsonObject& json) {
+void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJsonObject& json) {
+    dst.mUuid = uuid;
     bool cleanupNeeded = false;
 
     bool isHackersMcFormat = json.contains("hackers-mc");
@@ -64,10 +66,12 @@ void GameProfile::fromJson(GameProfile& dst, const AString& name, const AJsonObj
             entry.mName = d["name"].asString();
             entry.mValue = d["value"].asString();
 
-            for (auto& c : d["conditions"].asArray())
-            {
-                entry.mConditions << std::pair<AString, AVariant>{c.asArray()[0].asString(), c.asArray()[1].asVariant()};
-            }
+            try {
+                for (auto& c : d["conditions"].asArray()) {
+                    entry.mConditions
+                            << std::pair<AString, AVariant>{c.asArray()[0].asString(), c.asArray()[1].asVariant()};
+                }
+            } catch (...) {}
 
             dst.mGameArgs << entry;
         }
@@ -77,10 +81,12 @@ void GameProfile::fromJson(GameProfile& dst, const AString& name, const AJsonObj
             JavaArg entry;
             entry.mName = d["name"].asString();
 
-            for (auto& c : d["conditions"].asArray())
-            {
-                entry.mConditions << std::pair<AString, AVariant>{c.asArray()[0].asString(), c.asArray()[1].asVariant()};
-            }
+            try {
+                for (auto& c : d["conditions"].asArray()) {
+                    entry.mConditions
+                            << std::pair<AString, AVariant>{c.asArray()[0].asString(), c.asArray()[1].asVariant()};
+                }
+            } catch (...) {}
 
             dst.mJavaArgs << entry;
         }
@@ -524,4 +530,16 @@ AJsonElement GameProfile::toJson() {
     object["settings"] = settings;
 
     return object;
+}
+
+GameProfile GameProfile::fromName(const AUuid& uuid, const AString& name) {
+    _<FileInputStream> fis;
+    try {
+        fis = _new<FileInputStream>(Settings::inst().game_folder.file("versions").file(name).file(name + ".hackers.json"));
+    } catch (...) {
+        fis = _new<FileInputStream>(Settings::inst().game_folder.file("versions").file(name).file(name + ".json"));
+    }
+    GameProfile p;
+    fromJson(p, uuid, name, AJson::read(fis).asObject());
+    return p;
 }

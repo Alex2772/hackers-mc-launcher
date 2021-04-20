@@ -5,9 +5,11 @@
 #pragma once
 
 #include <AUI/Common/AString.h>
+#include <AUI/Common/AUuid.h>
 
 
 struct User {
+    AUuid uuid;
     AString username;
     bool isOnlineAccount = false;
     AString token;

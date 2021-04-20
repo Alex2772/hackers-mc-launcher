@@ -3,9 +3,11 @@
 
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJsonElement.h>
+#include <AUI/Common/AUuid.h>
 #include "DownloadEntry.h"
 
 class GameProfile {
+    friend class GameProfileWindow;
 public:
     class GameArg
     {
@@ -27,6 +29,7 @@ public:
     
 private:
 
+    AUuid mUuid;
     AString mName;
     AString mMainClass;
     AString mAssetsIndex;
@@ -44,50 +47,56 @@ private:
     void makeClean();
 
 public:
-    static void fromJson(GameProfile& dst, const AString& name, const AJsonObject& json);
+    static void fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJsonObject& json);
 
-    const AString& getName() const {
+    [[nodiscard]] const AUuid& getUuid() const {
+        return mUuid;
+    }
+
+    [[nodiscard]] const AString& getName() const {
         return mName;
     }
 
-    const AString& getMainClass() const {
+    [[nodiscard]] const AString& getMainClass() const {
         return mMainClass;
     }
 
-    const AString& getAssetsIndex() const {
+    [[nodiscard]] const AString& getAssetsIndex() const {
         return mAssetsIndex;
     }
 
-    const AVector<DownloadEntry>& getDownloads() const {
+    [[nodiscard]] const AVector<DownloadEntry>& getDownloads() const {
         return mDownloads;
     }
 
-    const AVector<GameArg>& getGameArgs() const {
+    [[nodiscard]] const AVector<GameArg>& getGameArgs() const {
         return mGameArgs;
     }
 
-    const AVector<JavaArg>& getJavaArgs() const {
+    [[nodiscard]] const AVector<JavaArg>& getJavaArgs() const {
         return mJavaArgs;
     }
 
-    const AVector<AString>& getClasspath() const {
+    [[nodiscard]] const AVector<AString>& getClasspath() const {
         return mClasspath;
     }
 
-    bool isFullscreen() const {
+    [[nodiscard]] bool isFullscreen() const {
         return mIsFullscreen;
     }
 
-    unsigned short getWindowWidth() const {
+    [[nodiscard]] unsigned short getWindowWidth() const {
         return mWindowWidth;
     }
 
-    unsigned short getWindowHeight() const {
+    [[nodiscard]] unsigned short getWindowHeight() const {
         return mWindowHeight;
     }
 
     void save();
 
     AJsonElement toJson();
+
+    static GameProfile fromName(const AUuid& uuid, const AString& name);
 };
 

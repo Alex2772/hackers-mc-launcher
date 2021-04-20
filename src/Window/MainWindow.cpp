@@ -9,10 +9,12 @@
 #include <AUI/Model/AListModelAdapter.h>
 #include <Repository/UsersRepository.h>
 #include <Repository/GameProfilesRepository.h>
+#include <Source/LegacyLauncherJsonSource.h>
 #include "MainWindow.h"
-#include "AccountWindow.h"
+#include "UserWindow.h"
 #include "ImportVersionWindow.h"
 #include "LauncherSettingsWindow.h"
+#include "GameProfileWindow.h"
 
 MainWindow::MainWindow():
     AWindow("Hacker's Minecraft Launcher", 600_dp, 140_dp)
@@ -26,7 +28,7 @@ MainWindow::MainWindow():
                     it->addAssName(".plus");
                     it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
                     connect(it->clicked, this, [&] {
-                        _new<AccountWindow>(nullptr)->show();
+                        _new<UserWindow>(nullptr)->show();
                     });
                 },
                 mUserConfigureButton = _new<AButton>() let {
@@ -62,19 +64,20 @@ MainWindow::MainWindow():
                 mGameProfileConfigureButton = _new<AButton>() let {
                     it->addAssName(".configure");
                     it->setDisabled();
+
                     connect(it->clicked, this, [&] {
-                    // mGameProfilesListView->getSelectionModel().one().getRow()
+                        showGameProfileConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
                     });
                 },
             },
-            _new<AListView>(AAdapter::make<GameProfile>(GameProfilesRepository::inst().getModel(), [](const GameProfile& profile) {
+            mGameProfilesListView = _new<AListView>(AAdapter::make<GameProfile>(GameProfilesRepository::inst().getModel(), [](const GameProfile& profile) {
                 return profile.getName();
             })) let {
                 connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
                     mGameProfilesListView->setEnabled(!e.empty());
                 });
                 connect(it->itemDoubleClicked, this, [&](unsigned i) {
-                    showUserConfigureDialogFor(i);
+                    showGameProfileConfigureDialogFor(i);
                 });
             },
         } << ".column",
@@ -96,7 +99,7 @@ MainWindow::MainWindow():
 }
 
 void MainWindow::showUserConfigureDialogFor(unsigned int index) {
-    _new<AccountWindow>(&UsersRepository::inst().getModel()->at(index)) let {
+    _new<UserWindow>(&UsersRepository::inst().getModel()->at(index)) let {
         connect(it->finished, this, [&, index] {
             UsersRepository::inst().getModel()->invalidate(index);
         });
@@ -106,3 +109,8 @@ void MainWindow::showUserConfigureDialogFor(unsigned int index) {
         it->show();
     };
 }
+
+void MainWindow::showGameProfileConfigureDialogFor(unsigned int index) {
+    _new<GameProfileWindow>(GameProfilesRepository::inst().getModel()->at(index))->show();
+}
+

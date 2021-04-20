@@ -8,9 +8,10 @@
 #include <Repository/UsersRepository.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Traits/strings.h>
-#include "AccountWindow.h"
+#include <AUI/Util/ARandom.h>
+#include "UserWindow.h"
 
-AccountWindow::AccountWindow(User* user):
+UserWindow::UserWindow(User* user):
     AWindow(user == nullptr ? "New user" : "Edit user", 200, 100, AWindow::current(), WS_DIALOG)
 {
 
@@ -46,7 +47,9 @@ AccountWindow::AccountWindow(User* user):
                     })
                         :
                     _new<AButton>("Create").connect(&AView::clicked, this, [&] {
-                        UsersRepository::inst().addUser(mBinding->getModel());
+                        auto user = mBinding->getModel();
+                        user.uuid = Autumn::get<ARandom>()->nextUuid();
+                        UsersRepository::inst().addUser(user);
                         close();
                     })) let { it->setDefault(); },
                 _new<AButton>("Cancel").connect(&AView::clicked, me::close)

@@ -12,8 +12,8 @@ private:
     _<AListView> mGameProfilesListView;
 
     void showUserConfigureDialogFor(unsigned index);
+    void showGameProfileConfigureDialogFor(unsigned index);
 public:
-
     MainWindow();
 };
 
