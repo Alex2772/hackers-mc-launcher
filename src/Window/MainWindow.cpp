@@ -10,90 +10,132 @@
 #include <Repository/UsersRepository.h>
 #include <Repository/GameProfilesRepository.h>
 #include <Source/LegacyLauncherJsonSource.h>
+#include <AUI/ASS/ASS.h>
+#include <Launcher.h>
 #include "MainWindow.h"
 #include "UserWindow.h"
 #include "ImportVersionWindow.h"
 #include "LauncherSettingsWindow.h"
 #include "GameProfileWindow.h"
 
+using namespace ass;
+
 MainWindow::MainWindow():
-    AWindow("Hacker's Minecraft Launcher", 600_dp, 140_dp)
+    AWindow("Hacker's Minecraft Launcher", 600_dp, 180_dp)
 {
-    setContents(Horizontal {
+    setContents(
         Vertical {
             Horizontal {
-                _new<ALabel>("Username:"),
-                _new<ASpacer>(),
-                _new<AButton>("Add user") let {
-                    it->addAssName(".plus");
-                    it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
-                    connect(it->clicked, this, [&] {
-                        _new<UserWindow>(nullptr)->show();
-                    });
+                Vertical {
+                    Horizontal {
+                        _new<ALabel>("Username:"),
+                        _new<ASpacer>(),
+                        _new<AButton>("Add user") let {
+                            it->addAssName(".plus");
+                            it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
+                            connect(it->clicked, this, [&] {
+                                _new<UserWindow>(nullptr)->show();
+                            });
+                        },
+                        mUserConfigureButton = _new<AButton>() let {
+                            it->addAssName(".configure");
+                            it->setDisabled();
+                            connect(it->clicked, this, [&] {
+                                showUserConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
+                            });
+                        },
+                    },
+                    mUsersListView = _new<AListView>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
+                        return u.username;
+                    })) let {
+                        connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
+                            mUserConfigureButton->setEnabled(!e.empty());
+                        });
+                        connect(it->itemDoubleClicked, this, [&](unsigned i) {
+                            showUserConfigureDialogFor(i);
+                        });
+                    },
+
+                } << ".column",
+                Vertical {
+                    Horizontal {
+                        _new<ALabel>("Version:"),
+                        _new<ASpacer>(),
+                        _new<AButton>("Import version").connect(&AView::clicked, this, [] {
+                            _new<ImportVersionWindow>()->show();
+                        }) let {
+                            it->addAssName(".plus");
+                            it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
+                        },
+                        mGameProfileConfigureButton = _new<AButton>() let {
+                            it->addAssName(".configure");
+                            it->setDisabled();
+
+                            connect(it->clicked, this, [&] {
+                                showGameProfileConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
+                            });
+                        },
+                    },
+                    mGameProfilesListView = _new<AListView>(AAdapter::make<GameProfile>(GameProfilesRepository::inst().getModel(), [](const GameProfile& profile) {
+                        return profile.getName();
+                    })) let {
+                        connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
+                            mGameProfileConfigureButton->setEnabled(!e.empty());
+                        });
+                        connect(it->itemDoubleClicked, this, [&](unsigned i) {
+                            showGameProfileConfigureDialogFor(i);
+                        });
+                    },
+                } << ".column",
+                Stacked {
+                    Vertical {
+                        Horizontal {
+                            _new<ASpacer>(),
+                            _new<AButton>().connect(&AView::clicked, this, [&] {
+                                _new<LauncherSettingsWindow>()->show();
+                            }) << "#settings",
+                        } let {it->setExpanding({2, 2});},
+                        _new<ASpacer>(),
+                    } let {it->setExpanding({2, 2});},
+                    mPlayButton = _new<AButton>().connect(&AButton::clicked, this, [&] {
+                        mPlayButton->disable();
+                        mDownloadingPanel->setVisibility(Visibility::VISIBLE);
+                        async {
+                            auto launcher = _new<Launcher>();
+                            connect(launcher->statusLabel, slot(mStatusLabel)::setText);
+                            launcher->play(
+                                    UsersRepository::inst().getModel()->at(mUsersListView->getSelectionModel().one().getRow()),
+                                    GameProfilesRepository::inst().getModel()->at(mGameProfilesListView->getSelectionModel().one().getRow())
+                                    );
+                        };
+                    }) << "#play" let { it->setDefault(); },
                 },
-                mUserConfigureButton = _new<AButton>() let {
-                    it->addAssName(".configure");
-                    it->setDisabled();
-                    connect(it->clicked, this, [&] {
-                        showUserConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
-                    });
-                },
-            },
-            mUsersListView = _new<AListView>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
-                return u.username;
-            })) let {
-                connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
-                    mUserConfigureButton->setEnabled(!e.empty());
-                });
-                connect(it->itemDoubleClicked, this, [&](unsigned i) {
-                    showUserConfigureDialogFor(i);
-                });
             },
 
-        } << ".column",
-        Vertical {
-            Horizontal {
-                _new<ALabel>("Version:"),
-                _new<ASpacer>(),
-                _new<AButton>("Import version").connect(&AView::clicked, this, [] {
-                    _new<ImportVersionWindow>()->show();
-                }) let {
-                    it->addAssName(".plus");
-                    it->setIcon(AImageLoaderRegistry::inst().loadDrawable(":svg/plus.svg"));
-                },
-                mGameProfileConfigureButton = _new<AButton>() let {
-                    it->addAssName(".configure");
-                    it->setDisabled();
 
-                    connect(it->clicked, this, [&] {
-                        showGameProfileConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
-                    });
-                },
-            },
-            mGameProfilesListView = _new<AListView>(AAdapter::make<GameProfile>(GameProfilesRepository::inst().getModel(), [](const GameProfile& profile) {
-                return profile.getName();
-            })) let {
-                connect(it->selectionChanged, this, [&](const AModelSelection<AString>& e) {
-                    mGameProfilesListView->setEnabled(!e.empty());
-                });
-                connect(it->itemDoubleClicked, this, [&](unsigned i) {
-                    showGameProfileConfigureDialogFor(i);
-                });
-            },
-        } << ".column",
-        Stacked {
-            Vertical {
-                Horizontal {
+            // downloading panel
+            mDownloadingPanel = Vertical {
+                Horizontal{
+                    mStatusLabel = _new<ALabel>("Running...") let {
+                        it->setCustomAss({
+                            FontSize { 20_pt },
+                            TextColor { 0_rgb },
+                        });
+                     },
+
                     _new<ASpacer>(),
-                    _new<AButton>().connect(&AView::clicked, this, [&] {
-                        _new<LauncherSettingsWindow>()->show();
-                    }) << "#settings",
-                } let {it->setExpanding({2, 2});},
-                _new<ASpacer>(),
-            } let {it->setExpanding({2, 2});},
-            _new<AButton>() << "#play" let { it->setDefault(); },
-        },
-    });
+
+                    _new<ALabel>("Жопа") let {
+                        it->setCustomAss({
+                            TextColor { 0x444444_rgb },
+                        });
+                    },
+                },
+            } let {
+                it->setVisibility(Visibility::GONE);
+            }
+        }
+    );
 
 
 }
