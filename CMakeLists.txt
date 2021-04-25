@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14.4)
 
-project(hackers-ms-launcher)
+project(hackers-mc-launcher)
 
 set(AUI_USE_OLD_WAY false CACHE BOOL "The old linking way to AUI")
 
@@ -17,17 +17,19 @@ find_package(ZLIB REQUIRED)
 AUI_Deploy_Library(AUI.Svg)
 AUI_Deploy_Library(AUI.Image)
 
-AUI_Executable_Advanced(hackers-ms-launcher "${ADDITIONAL_SRCS}")
+AUI_Executable_Advanced(hackers-mc-launcher "${ADDITIONAL_SRCS}")
 
-AUI_Compile_Assets(hackers-ms-launcher)
+AUI_Compile_Assets(hackers-mc-launcher)
 
-target_link_libraries(hackers-ms-launcher PRIVATE AUI.Core)
-target_link_libraries(hackers-ms-launcher PRIVATE AUI.Data)
-target_link_libraries(hackers-ms-launcher PRIVATE AUI.Views)
-target_link_libraries(hackers-ms-launcher PRIVATE AUI.Crypt)
-target_link_libraries(hackers-ms-launcher PRIVATE AUI.Curl)
-target_link_libraries(hackers-ms-launcher PRIVATE AUI.Json)
-#AUI_Static_Link(hackers-ms-launcher minizip)
+target_compile_definitions(hackers-mc-launcher PUBLIC HACKERS_MC_VERSION="1.0.0")
+
+target_link_libraries(hackers-mc-launcher PRIVATE AUI.Core)
+target_link_libraries(hackers-mc-launcher PRIVATE AUI.Data)
+target_link_libraries(hackers-mc-launcher PRIVATE AUI.Views)
+target_link_libraries(hackers-mc-launcher PRIVATE AUI.Crypt)
+target_link_libraries(hackers-mc-launcher PRIVATE AUI.Curl)
+target_link_libraries(hackers-mc-launcher PRIVATE AUI.Json)
+#AUI_Static_Link(hackers-mc-launcher minizip)
 #target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
 
 if (MSVC)

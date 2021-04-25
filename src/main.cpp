@@ -7,6 +7,7 @@
 #include <AUI/Common/Plugin.h>
 #include <Source/LegacyLauncherJsonSource.h>
 #include <AUI/Util/ARandom.h>
+#include <Model/Settings.h>
 
 AUI_ENTRY {
     aui::importPlugin("image");

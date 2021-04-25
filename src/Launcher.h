@@ -9,9 +9,13 @@ private:
     void download(const DownloadEntry& e);
 
 public:
-    void play(const User& user, const GameProfile& profile);
+    void play(const User& user, const GameProfile& profile, bool doUpdate = false);
 
 signals:
-    emits<AString> statusLabel;
+    emits<AString> updateStatus;
+    emits<size_t> updateDownloadedSize;
+    emits<size_t> updateTotalDownloadSize;
+    emits<AString> updateTargetFile;
+    emits<AString> errorOccurred;
 };
 

@@ -14,10 +14,14 @@ private:
 
     _<AViewContainer> mDownloadingPanel;
     _<ALabel> mStatusLabel;
+    _<ALabel> mDownloadedLabel;
+    _<ALabel> mTotalLabel;
+    _<ALabel> mTargetFileLabel;
 
     void showUserConfigureDialogFor(unsigned index);
     void showGameProfileConfigureDialogFor(unsigned index);
 public:
+
     MainWindow();
 };
 

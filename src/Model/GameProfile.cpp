@@ -125,25 +125,22 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                                 auto x = kv.second.asObject();
                                 for (auto& var : x)
                                 {
-                                    if (VariableHelper::getVariableValue(kv.first + '.' + var.first).toString() != var.second
-                                            .
-                                                    asVariant()
-                                            .
-                                                    toString()
-                                            )
+                                    /*
+                                    if ()
                                     {
                                         rulePassed = false;
                                         break;
-                                    }
+                                    }*/
                                 }
                             }
                             else
                             {
+                                /*
                                 if (VariableHelper::getVariableValue(kv.first).toString() != kv.second
                                         .asVariant().toString())
                                 {
                                     rulePassed = false;
-                                }
+                                }*/
                             }
                             if (!rulePassed)
                                 break;

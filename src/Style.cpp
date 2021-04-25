@@ -51,6 +51,10 @@ struct Style {
                 c(".import_version_offset") >> t<AButton>(),
                 Margin { 0 },
             },
+            {
+                c(".secondary"),
+                TextColor { 0x444444_rgb },
+            },
         });
     }
 } s;

@@ -51,7 +51,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 TextAlign::CENTER,
                             });
                         },
-                        _new<ALabel>("Version 1.0.0") let {
+                        _new<ALabel>("Version " HACKERS_MC_VERSION) let {
                             it->setCustomAss({
                                 FontSize { 8_pt },
                                 Margin { 0, 0, 4_dp },

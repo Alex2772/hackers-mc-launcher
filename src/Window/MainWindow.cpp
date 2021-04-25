@@ -12,6 +12,8 @@
 #include <Source/LegacyLauncherJsonSource.h>
 #include <AUI/ASS/ASS.h>
 #include <Launcher.h>
+#include <AUI/Util/APrettyFormatter.h>
+#include <AUI/Platform/AMessageBox.h>
 #include "MainWindow.h"
 #include "UserWindow.h"
 #include "ImportVersionWindow.h"
@@ -100,13 +102,31 @@ MainWindow::MainWindow():
                     mPlayButton = _new<AButton>().connect(&AButton::clicked, this, [&] {
                         mPlayButton->disable();
                         mDownloadingPanel->setVisibility(Visibility::VISIBLE);
+                        mDownloadedLabel->setText("0");
+                        mTotalLabel->setText("0");
+                        mTargetFileLabel->setText("");
                         async {
                             auto launcher = _new<Launcher>();
-                            connect(launcher->statusLabel, slot(mStatusLabel)::setText);
+                            connect(launcher->updateStatus, slot(mStatusLabel)::setText);
+                            connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
+                            connect(launcher->errorOccurred, [&](const AString& message) {
+                                mDownloadingPanel->setVisibility(Visibility::GONE);
+                                mPlayButton->enable();
+                                AMessageBox::show(this, "Could not run game", message, AMessageBox::Icon::CRITICAL);
+                            });
+                            connect(launcher->updateTotalDownloadSize, [&](size_t s) {
+                                mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
+                            });
+                            connect(launcher->updateDownloadedSize, [&](size_t s) {
+                                mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
+                            });
                             launcher->play(
                                     UsersRepository::inst().getModel()->at(mUsersListView->getSelectionModel().one().getRow()),
-                                    GameProfilesRepository::inst().getModel()->at(mGameProfilesListView->getSelectionModel().one().getRow())
+                                    GameProfilesRepository::inst().getModel()->at(mGameProfilesListView->getSelectionModel().one().getRow()),
+                                    true
                                     );
+                            mPlayButton->enable();
+                            mDownloadingPanel->setVisibility(Visibility::GONE);
                         };
                     }) << "#play" let { it->setDefault(); },
                 },
@@ -115,7 +135,7 @@ MainWindow::MainWindow():
 
             // downloading panel
             mDownloadingPanel = Vertical {
-                Horizontal{
+                Horizontal {
                     mStatusLabel = _new<ALabel>("Running...") let {
                         it->setCustomAss({
                             FontSize { 20_pt },
@@ -125,12 +145,11 @@ MainWindow::MainWindow():
 
                     _new<ASpacer>(),
 
-                    _new<ALabel>("Жопа") let {
-                        it->setCustomAss({
-                            TextColor { 0x444444_rgb },
-                        });
-                    },
+                    mDownloadedLabel = _new<ALabel>() << ".secondary",
+                    _new<ALabel>("of") << ".secondary",
+                    mTotalLabel = _new<ALabel>() << ".secondary",
                 },
+                    mTargetFileLabel = _new<ALabel>() << ".secondary",
             } let {
                 it->setVisibility(Visibility::GONE);
             }

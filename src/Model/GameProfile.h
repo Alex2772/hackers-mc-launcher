@@ -37,7 +37,7 @@ private:
     AVector<DownloadEntry> mDownloads;
     AVector<GameArg> mGameArgs;
     AVector<JavaArg> mJavaArgs;
-    AVector<AString> mClasspath;
+    AStringVector mClasspath;
 
 
     bool mIsFullscreen = false;
@@ -77,7 +77,7 @@ public:
         return mJavaArgs;
     }
 
-    [[nodiscard]] const AVector<AString>& getClasspath() const {
+    [[nodiscard]] const AStringVector& getClasspath() const {
         return mClasspath;
     }
 
