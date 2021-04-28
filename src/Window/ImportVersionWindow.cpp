@@ -18,6 +18,7 @@
 #include <AUI/Util/ARandom.h>
 #include <Model/Settings.h>
 #include <AUI/IO/FileInputStream.h>
+#include <AUI/Platform/AMessageBox.h>
 
 struct Version {
     AString id;
@@ -128,7 +129,8 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
                 GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::read(_new<FileInputStream>(file)).asObject());
                 GameProfilesRepository::inst().addGameProfile(p);
                 p.save();
-            } catch (...) {
+            } catch (const AException& e) {
+                AMessageBox::show(this, "Could not import version", e.getMessage(), AMessageBox::Icon::CRITICAL);
             }
             close();
         };

@@ -160,17 +160,17 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                 dst.mDownloads << downloadEntryFromJson("libraries/" + v["downloads"]["artifact"]["path"].asString(),
                                                       v["downloads"]["artifact"].asObject());
 
-                bool extract = v.contains("extract");
-                dst.mDownloads.last().mExtract = extract;
 
-                try {
-                    auto k = v["downloads"]["classifiers"]["natives-windows"];
-                    dst.mDownloads.last().mExtract = false;
-                    dst.mDownloads << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
-                    dst.mDownloads.last().mExtract = extract;
-                    dst.mClasspath << "libraries/" + k["path"].asString();
-                } catch (...) {
+                for (auto keyName : {"natives-osx", "natives-windows", "natives-linux"}) {
+                    try {
+                        auto k = v["downloads"]["classifiers"][keyName];
 
+                        dst.mDownloads << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
+                        dst.mDownloads.last().mExtract = true;
+                        //dst.mClasspath << "libraries/" + k["path"].asString();
+                    } catch (...) {
+
+                    }
                 }
             }
             else

@@ -24,3 +24,14 @@ GameProfilesRepository& GameProfilesRepository::inst() {
     return r;
 }
 
+void GameProfilesRepository::removeGameProfile(const AUuid& uuid) {
+    for (size_t i = 0; i < mModel->size(); ++i) {
+        if (mModel->at(i).getUuid() == uuid) {
+            mModel->removeAt(i);
+            LegacyLauncherJsonSource::save();
+            return;
+        }
+    }
+
+}
+

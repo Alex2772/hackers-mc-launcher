@@ -133,6 +133,7 @@ MainWindow::MainWindow():
             },
 
 
+
             // downloading panel
             mDownloadingPanel = Vertical {
                 Horizontal {

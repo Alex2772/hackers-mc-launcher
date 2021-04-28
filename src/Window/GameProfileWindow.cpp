@@ -6,6 +6,8 @@
 #include <AUI/View/ATabView.h>
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/View/ATextField.h>
+#include <AUI/Platform/AMessageBox.h>
+#include <Repository/GameProfilesRepository.h>
 #include "GameProfileWindow.h"
 #include "MainWindow.h"
 
@@ -34,6 +36,17 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
                     // TODO
                     binding->setModel(mTargetGameProfile);
                     mResetButton->setDisabled();
+                }),
+                _new<AButton>("Delete").connect(&AButton::clicked, this, [this, binding] {
+                    auto result = AMessageBox::show(this,
+                                                    "Delete profile",
+                                                    "This operation is unrecoverable. Do you wish to continue?",
+                                                    AMessageBox::Icon::WARNING,
+                                                    AMessageBox::Button::YES_NO);
+                    if (result == AMessageBox::ResultButton::YES) {
+                        GameProfilesRepository::inst().removeGameProfile(binding->getModel().getUuid());
+                        close();
+                    }
                 }),
                 _new<ASpacer>(),
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this, binding] {

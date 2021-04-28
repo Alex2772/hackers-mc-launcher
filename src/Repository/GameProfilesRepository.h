@@ -22,6 +22,7 @@ public:
     static GameProfilesRepository& inst();
 
     void addGameProfile(const GameProfile& user);
+    void removeGameProfile(const AUuid& uuid);
 };
 
 

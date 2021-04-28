@@ -11,8 +11,11 @@
 #include <AUI/Curl/ACurl.h>
 #include <AUI/Platform/AProcess.h>
 #include <Util/VariableHelper.h>
+#include <unzip.h>
 #include "Launcher.h"
 
+#include <AUI/i18n/AI18n.h>
+#include <AUI/Traits/strings.h>
 
 void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate) {
     try {
@@ -23,6 +26,7 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
         ALogger::info("Profile: " + profile.getName());
 
         const APath gameFolder = Settings::inst().game_folder;
+        const APath extractFolder = gameFolder["bin"][profile.getUuid().toRawString()];
         ALogger::info("Install path: " + gameFolder);
 
         const APath assetsJson = gameFolder["assets"]["indexes"][profile.getAssetsIndex() + ".json"];
@@ -55,8 +59,10 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
             };
 
             AVector<ToDownload> toDownload;
+
             size_t downloadedBytes = 0;
             size_t totalDownloadBytes = 0;
+
 
             // regular downloads
             for (auto& download : profile.getDownloads()) {
@@ -105,7 +111,9 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
             emit updateTotalDownloadSize(totalDownloadBytes);
             emit updateStatus("Downloading...");
 
-            ALogger::info("== BEGIN DOWNLOAD ==");
+            if (!toDownload.empty()) {
+                ALogger::info("== BEGIN DOWNLOAD ==");
+            }
 
             for (auto& d : toDownload) {
                 auto local = gameFolder[d.localPath];
@@ -137,6 +145,87 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
         emit updateTargetFile("");
         emit updateStatus("Preparing to launch...");
 
+        // extract necessary files
+        for (auto& d : profile.getDownloads()) {
+            if (d.mExtract) {
+                ALogger::info("Extracting " + d.mLocalPath);
+
+                struct z {
+                    unzFile unz;
+                    z(unzFile unz): unz(unz) {
+
+                    }
+                    ~z() {
+                        unzClose(unz);
+                    }
+                    operator unzFile() const {
+                        return unz;
+                    }
+                };
+
+                z unzip = unzOpen(gameFolder[d.mLocalPath].toStdString().c_str());
+                unz_global_info info;
+                if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
+                    throw AException("launcher.error.invalid_zip"_as.format(d.mLocalPath));
+                }
+                for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
+                    char fileNameBuf[0x400];
+                    unz_file_info fileInfo;
+                    if (unzGetCurrentFileInfo(unzip, &fileInfo, fileNameBuf, sizeof(fileNameBuf), nullptr, 0, nullptr,
+                                              0) != UNZ_OK) {
+                        throw AException("launcher.error.invalid_zip"_as.format(d.mLocalPath));
+                    }
+                    APath fileName = AString::fromLatin1(fileNameBuf);
+
+                    if (!fileName.startsWith("META-INF/") && !fileName.endsWith(".git") && !fileName.endsWith(".sha1")) {
+                        if (!fileName.empty() && fileName != "/") {
+                            if (fileName.endsWith('/')) {
+                                // folder
+                                try {
+                                    extractFolder.file(fileName).makeDirs();
+                                } catch (const AException& e) {
+                                    ALogger::warn(e.getMessage());
+                                }
+                            } else {
+                                // file
+                                if (unzOpenCurrentFile(unzip) != UNZ_OK) {
+                                    throw AException(
+                                            "launcher.error.unpack"_i18n.format(fileName));
+                                }
+
+
+                                APath dstFile = extractFolder.file(fileName);
+                                dstFile.parent().makeDirs();
+
+                                _<FileOutputStream> fos;
+                                try {
+                                    fos = _new<FileOutputStream>(dstFile);
+                                } catch (...) {
+                                    unzCloseCurrentFile(unzip);
+                                    throw AException(
+                                            "launcher.error.out_of_space"_i18n.format(
+                                                    fileName));
+                                }
+
+                                uint64_t total = 0;
+                                char buf[0x800];
+                                for (int read; (read = unzReadCurrentFile(unzip, buf, sizeof(buf))) > 0;) {
+                                    fos->write(buf, read);
+                                    total += read;
+                                }
+
+                                unzCloseCurrentFile(unzip);
+                            }
+                        }
+                    }
+                    if ((entryIndex + 1) < info.number_entry) {
+                        if (unzGoToNextFile(unzip) != UNZ_OK)
+                            break;
+                    }
+                }
+            }
+        }
+
         VariableHelper::Context c = {
                 &user,
                 &profile
@@ -145,7 +234,6 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
         // java args
         AStringVector args;
         for (auto& arg : profile.getJavaArgs()) {
-            // TODO conditions
             if (VariableHelper::checkConditions(c, arg.mConditions)) {
                 args << VariableHelper::parseVariables(c, arg.mName);
             }
@@ -155,7 +243,6 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
 
         // game args
         for (auto& arg : profile.getGameArgs()) {
-            // TODO conditions
             if (VariableHelper::checkConditions(c, arg.mConditions)) {
                 args << VariableHelper::parseVariables(c, arg.mName);
                 if (!arg.mValue.empty()) {

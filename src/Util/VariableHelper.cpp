@@ -40,8 +40,10 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "natives_directory",
                     [](const Context& c) -> AVariant
                     {
-                        //return launcher->getSettings()->getGameDir().absoluteFilePath("bin/" + profile.id());
-                        return Settings::inst().game_folder["bin"];
+                        if (c.profile) {
+                            return Settings::inst().game_folder["bin"][c.profile->getUuid().toRawString()];
+                        }
+                        return {};
                     }
             },
             {

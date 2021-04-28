@@ -1,0 +1,2 @@
+launcher.error.invalid_zip=File {} is not a valid zip archive
+launcher.error.unpack=Could not unpack the {} file
