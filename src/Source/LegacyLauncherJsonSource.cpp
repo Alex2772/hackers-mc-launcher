@@ -66,6 +66,7 @@ void LegacyLauncherJsonSource::load() {
                 try {
                     name = entry.second["name"].asString();
                     GameProfilesRepository::inst().getModel() << GameProfile::fromName(entry.first, name);
+                    ALogger::info("Imported profile: " + name);
                 } catch (const AException& e) {
                     ALogger::warn("Unable to load game profile " + name + " from launcher_profiles.json: " + e.getMessage());
                 }

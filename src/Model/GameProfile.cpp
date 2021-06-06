@@ -154,47 +154,44 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             }
 
             AString name = v["name"].asString();
+            try {
+                if (v["downloads"].isObject()) {
+                    dst.mDownloads
+                            << downloadEntryFromJson("libraries/" + v["downloads"]["artifact"]["path"].asString(),
+                                                     v["downloads"]["artifact"].asObject());
 
-            if (v["downloads"].isObject())
-            {
-                dst.mDownloads << downloadEntryFromJson("libraries/" + v["downloads"]["artifact"]["path"].asString(),
-                                                      v["downloads"]["artifact"].asObject());
 
+                    for (auto keyName : {"natives-osx", "natives-windows", "natives-linux"}) {
+                        try {
+                            auto k = v["downloads"]["classifiers"][keyName];
 
-                for (auto keyName : {"natives-osx", "natives-windows", "natives-linux"}) {
+                            dst.mDownloads << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
+                            dst.mDownloads.last().mExtract = true;
+                            //dst.mClasspath << "libraries/" + k["path"].asString();
+                        } catch (...) {
+
+                        }
+                    }
+                } else {
+                    // Minecraft Forge-style entry
+                    AString url = "https://libraries.minecraft.net/";
                     try {
-                        auto k = v["downloads"]["classifiers"][keyName];
-
-                        dst.mDownloads << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
-                        dst.mDownloads.last().mExtract = true;
-                        //dst.mClasspath << "libraries/" + k["path"].asString();
-                    } catch (...) {
-
-                    }
+                        url = v["url"].asString();
+                        if (!url.endsWith("/")) {
+                            url += "/";
+                        }
+                    } catch (...) {}
+                    dst.mDownloads << DownloadEntry{
+                            "libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
+                    };
                 }
-            }
-            else
-            {
-                // Minecraft Forge-style entry
-                AString url = "https://libraries.minecraft.net/";
-                try {
-                    url = v["url"].asString();
-                    if (!url.endsWith("/"))
-                    {
-                        url += "/";
-                    }
-                } catch (...) {}
-                dst.mDownloads << DownloadEntry {
-                        "libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
-                };
-            }
 
-            if (v["downloads"].isObject()) {
-                dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
-            }
-            else {
-                dst.mClasspath << "libraries/" + javaLibNameToPath(name);
-            }
+                if (v["downloads"].isObject()) {
+                    dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
+                } else {
+                    dst.mClasspath << "libraries/" + javaLibNameToPath(name);
+                }
+            } catch (...) {}
         }
 
 
@@ -337,30 +334,24 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         }
 
         // JVM args
-        for (const auto& a : args["jvm"].asArray())
-        {
-            if (a.isString())
-            {
-                dst.mJavaArgs << JavaArg{a.asString()};
-            }
-            else if (a.isObject())
-            {
-                AVector<std::pair<AString, AVariant>> conditions;
-                parseConditions(conditions, a["rules"]);
+        try {
+            for (const auto &a : args["jvm"].asArray()) {
+                if (a.isString()) {
+                    dst.mJavaArgs << JavaArg{a.asString()};
+                } else if (a.isObject()) {
+                    AVector<std::pair<AString, AVariant>> conditions;
+                    parseConditions(conditions, a["rules"]);
 
-                if (a["value"].isString())
-                {
-                    dst.mJavaArgs << JavaArg{a["value"].asString(), conditions};
-                }
-                else if (a["value"].isArray())
-                {
-                    for (auto& i : a["value"].asArray())
-                    {
-                        dst.mJavaArgs << JavaArg{i.asString(), conditions};
+                    if (a["value"].isString()) {
+                        dst.mJavaArgs << JavaArg{a["value"].asString(), conditions};
+                    } else if (a["value"].isArray()) {
+                        for (auto &i : a["value"].asArray()) {
+                            dst.mJavaArgs << JavaArg{i.asString(), conditions};
+                        }
                     }
                 }
             }
-        }
+        } catch (...) {}
 
         if (dst.mJavaArgs.empty())
         {
@@ -413,18 +404,22 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         // client jar
         {
             auto path = "versions/" + json["id"].asString() + '/' + json["id"].asString() + ".jar";
-            dst.mDownloads << downloadEntryFromJson(path, json["downloads"].asObject()["client"].asObject());
+            try {
+                dst.mDownloads << downloadEntryFromJson(path, json["downloads"].asObject()["client"].asObject());
+            } catch (...) {}
             dst.mClasspath << path;
         }
 
         // Asset index
-        dst.mDownloads << DownloadEntry {
-                "assets/indexes/" + dst.mAssetsIndex + ".json",
-                json["assetIndex"].asObject()["url"].asString(),
-                uint64_t(json["assetIndex"].asObject()["size"].asInt()),
-                false,
-                json["assetIndex"].asObject()["sha1"].asString()
-        };
+        try {
+            dst.mDownloads << DownloadEntry{
+                    "assets/indexes/" + dst.mAssetsIndex + ".json",
+                    json["assetIndex"].asObject()["url"].asString(),
+                    uint64_t(json["assetIndex"].asObject()["size"].asInt()),
+                    false,
+                    json["assetIndex"].asObject()["sha1"].asString()
+            };
+        } catch (...) {}
     }
 }
 
