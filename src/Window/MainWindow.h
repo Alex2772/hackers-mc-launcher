@@ -20,8 +20,13 @@ private:
 
     void showUserConfigureDialogFor(unsigned index);
     void showGameProfileConfigureDialogFor(unsigned index);
+
+    void checkForDiskProfileUpdates();
+
 public:
 
     MainWindow();
+
+    void onMouseMove(glm::ivec2 pos) override;
 };
 

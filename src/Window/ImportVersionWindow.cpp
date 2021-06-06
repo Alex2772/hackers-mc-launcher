@@ -26,7 +26,7 @@ struct Version {
 };
 
 ImportVersionWindow::ImportVersionWindow():
-    AWindow("Import version", 500_dp, 400_dp, AWindow::current(), WS_DIALOG)
+    AWindow("Import version", 500_dp, 400_dp, AWindow::current(), WindowStyle::DIALOG)
 {
     _<AView> minecraftRepoListWrap = Horizontal {/*
         Vertical {
@@ -48,10 +48,6 @@ ImportVersionWindow::ImportVersionWindow():
     };
 
 
-    auto vanillaLauncherProfile = _new<AComboBox>() let {
-        it->addAssName(".import_version_offset");
-    };
-
     auto importFromFile = Vertical {
             _new<ALabel>("You can import a profile packed into the zip file sent you by your friend or downloaded from "
                          "the internet.") let { it->setMultiline(true); },
@@ -68,11 +64,6 @@ ImportVersionWindow::ImportVersionWindow():
         },
         minecraftRepoListWrap,
 
-        _new<ARadioButton>("Vanilla launcher profile") let {
-            mRadioGroup->addRadioButton(it);
-            connect(it->checked, vanillaLauncherProfile, &AView::setEnabled);
-        },
-        vanillaLauncherProfile,
         _new<ARadioButton>("Zip archive") let {
             mRadioGroup->addRadioButton(it);
             connect(it->checked, importFromFile, &AView::setEnabled);

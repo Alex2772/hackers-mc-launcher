@@ -12,11 +12,13 @@
 #include "UserWindow.h"
 
 UserWindow::UserWindow(User* user):
-    AWindow(user == nullptr ? "New user" : "Edit user", 200, 100, AWindow::current(), WS_DIALOG)
+    AWindow(user == nullptr ? "New user" : "Edit user", 200, 100, AWindow::current(), WindowStyle::DIALOG)
 {
 
     if (user) {
         mBinding->setModel(*user);
+    } else {
+        mBinding->setModel(User{});
     }
 
     setContents(

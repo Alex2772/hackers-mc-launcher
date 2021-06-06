@@ -9,6 +9,9 @@
 #include <Repository/GameProfilesRepository.h>
 #include "LegacyLauncherJsonSource.h"
 
+
+bool LegacyLauncherJsonSource::ourDoSave = true;
+
 APath LegacyLauncherJsonSource::getVersionsJsonFilePath() {
     return Settings::inst().game_folder.file("launcher_profiles.json");
 }
@@ -81,6 +84,9 @@ void LegacyLauncherJsonSource::load() {
 }
 
 void LegacyLauncherJsonSource::save() {
+    if (!ourDoSave) {
+        return;
+    }
     try {
         AJsonObject config;
 
@@ -126,4 +132,32 @@ void LegacyLauncherJsonSource::save() {
     } catch (const AException& e) {
         ALogger::warn("Could not save launcher_profiles.json: " + e.getMessage());
     }
+}
+
+void LegacyLauncherJsonSource::reload() {
+    ourDoSave = false;
+    UsersRepository::inst().getModel()->clear();
+    GameProfilesRepository::inst().getModel()->clear();
+    load();
+    ourDoSave = true;
+}
+
+ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
+    ASet<AUuid> s;
+    try {
+        auto config = AJson::read(_new<FileInputStream>(getVersionsJsonFilePath()));
+
+        // try to load game profiles
+        try {
+            for (auto& entry : config["profiles"].asObject()) {
+                s << entry.first;
+            }
+        } catch (const AException& e) {
+            ALogger::warn("Unable to load users from launcher_profiles.json: " + e.getMessage());
+        }
+
+    } catch (const AException& e) {
+        ALogger::warn("Could not load launcher_profiles.json: " + e.getMessage());
+    }
+    return s;
 }

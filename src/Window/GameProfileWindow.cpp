@@ -12,7 +12,7 @@
 #include "MainWindow.h"
 
 GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
-    AWindow("Game profile", 500_dp, 300_dp, Autumn::get<MainWindow>().get(), WS_DIALOG),
+    AWindow("Game profile", 500_dp, 300_dp, Autumn::get<MainWindow>().get(), WindowStyle::DIALOG),
     mTargetGameProfile(targetGameProfile)
 {
     auto binding = _new<ADataBinding<GameProfile>>(targetGameProfile);

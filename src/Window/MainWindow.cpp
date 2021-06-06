@@ -2,7 +2,6 @@
 // Created by alex2772 on 2/15/21.
 //
 
-#include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/View/AListView.h>
@@ -19,6 +18,9 @@
 #include "ImportVersionWindow.h"
 #include "LauncherSettingsWindow.h"
 #include "GameProfileWindow.h"
+#include <chrono>
+#include <AUI/Util/kAUI.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 
 using namespace ass;
 
@@ -160,6 +162,11 @@ MainWindow::MainWindow():
 
 }
 
+void MainWindow::onMouseMove(glm::ivec2 pos) {
+    AWindow::onMouseMove(pos);
+    checkForDiskProfileUpdates();
+}
+
 void MainWindow::showUserConfigureDialogFor(unsigned int index) {
     _new<UserWindow>(&UsersRepository::inst().getModel()->at(index)) let {
         connect(it->finished, this, [&, index] {
@@ -174,5 +181,35 @@ void MainWindow::showUserConfigureDialogFor(unsigned int index) {
 
 void MainWindow::showGameProfileConfigureDialogFor(unsigned int index) {
     _new<GameProfileWindow>(GameProfilesRepository::inst().getModel()->at(index))->show();
+}
+
+void MainWindow::checkForDiskProfileUpdates() {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+
+    // check for new profiles every 5 secs when cursor moves
+    static milliseconds lastCheckTime = 0ms;
+    if (high_resolution_clock::now().time_since_epoch() - lastCheckTime > 5s) {
+        async {
+            // load actual set of profiles
+            ASet<AUuid> actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
+            ASet<AUuid> loadedProfiles;
+
+            // fill "loadedProfiles"
+            for (GameProfile& p : GameProfilesRepository::inst().getModel()) { loadedProfiles << p.getUuid(); }
+
+            // and compare it with actual profiles
+            if (actualProfiles != loadedProfiles) {
+                // found new game profile!
+                ALogger::info("Detected changes in launcher_profiles.json, reloading");
+                ui {
+                    LegacyLauncherJsonSource::reload();
+                };
+            }
+        };
+
+        lastCheckTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    }
+
 }
 

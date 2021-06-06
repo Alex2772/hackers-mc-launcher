@@ -18,7 +18,7 @@
 using namespace ass;
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
-        AWindow("Settings", 400_dp, 350_dp, Autumn::get<MainWindow>().get(), WS_DIALOG) {
+        AWindow("Settings", 400_dp, 350_dp, Autumn::get<MainWindow>().get(), WindowStyle::DIALOG) {
     auto binding = _new<ADataBinding<Settings>>(Settings::inst());
     setContents(
         Vertical {
