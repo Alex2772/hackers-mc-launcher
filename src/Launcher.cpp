@@ -16,6 +16,7 @@
 
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Traits/strings.h>
+#include <AUI/Traits/platform.h>
 
 void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate) {
     try {
@@ -251,7 +252,13 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
             }
         }
 
-        auto java = APath::locate("java");
+        auto javaLocations = APath::find(aui::platform::current::is_windows() ? "java.exe" : "java",
+                                         {"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"},
+                                         PathFinder::SINGLE | PathFinder::RECURSIVE | PathFinder::USE_SYSTEM_PATHS);
+        if (javaLocations.empty()) {
+            throw AException("Java not found");
+        }
+        auto java = javaLocations.first();
         ALogger::info(java + " " + args.join(' '));
         int status = AProcess::execute(java, args.join(' '), Settings::inst().game_folder);
         ALogger::info("Child process exit with status "_as + AString::number(status));

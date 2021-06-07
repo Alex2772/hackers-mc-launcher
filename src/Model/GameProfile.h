@@ -97,6 +97,6 @@ public:
 
     AJsonElement toJson();
 
-    static GameProfile fromName(const AUuid& uuid, const AString& name);
+    static void fromName(GameProfile& dst, const AUuid& uuid, const AString& name);
 };
 

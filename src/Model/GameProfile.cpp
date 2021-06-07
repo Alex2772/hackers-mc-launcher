@@ -173,25 +173,26 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                         }
                     }
                 } else {
-                    // Minecraft Forge-style entry
+                    // maybe its a minecraft forge-style entry?
                     AString url = "https://libraries.minecraft.net/";
                     try {
                         url = v["url"].asString();
                         if (!url.endsWith("/")) {
                             url += "/";
                         }
+                        dst.mDownloads << DownloadEntry{
+                                "libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
+                        };
                     } catch (...) {}
-                    dst.mDownloads << DownloadEntry{
-                            "libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
-                    };
                 }
 
-                if (v["downloads"].isObject()) {
-                    dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
-                } else {
-                    dst.mClasspath << "libraries/" + javaLibNameToPath(name);
-                }
             } catch (...) {}
+
+            if (v["downloads"].isObject()) {
+                dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
+            } else {
+                dst.mClasspath << "libraries/" + javaLibNameToPath(name);
+            }
         }
 
 
@@ -366,24 +367,22 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
     // classpath order fix for Optifine 1.15.2
     if (json.contains("inheritsFrom"))
     {
-        /*
+
         auto tmp1 = dst.mJavaArgs;
         auto tmp2 = dst.mGameArgs;
-        launcher->tryLoadProfile(p, json["inheritsFrom"].asString());
+        dst.mJavaArgs.clear();
+        dst.mGameArgs.clear();
+        fromName(dst, uuid, json["inheritsFrom"].asString());
         dst.mJavaArgs << tmp1;
         dst.mGameArgs << tmp2;
 
-        // if the profile does not have it's own main jar file, we can copy it from
-        // the inherited profile.
+        // if the current profile does not have it's own main jar file, we can copy it from the inherited profile.
         // in theory, it would work recursively too.
-        auto mainJarAbsPath = launcher->getSettings()->getGameDir().absoluteFilePath(
-                "versions/" + name + "/" + name + ".jar");
-        if (!QFile(mainJarAbsPath).exists())
+        auto mainJarAbsolutePath = Settings::inst().game_folder["versions"][name][name + ".jar"];
+        if (!mainJarAbsolutePath.isRegularFileExists())
         {
-            QFile::copy(
-                    launcher->getSettings()->getGameDir().absoluteFilePath("versions/" + dst.mName + "/" + dst.mName + ".jar"),
-                    mainJarAbsPath);
-        }*/
+            APath::copy(Settings::inst().game_folder["versions"][dst.mName][dst.mName + ".jar"], mainJarAbsolutePath);
+        }
     }
 
     if (cleanupNeeded)
@@ -524,14 +523,12 @@ AJsonElement GameProfile::toJson() {
     return object;
 }
 
-GameProfile GameProfile::fromName(const AUuid& uuid, const AString& name) {
+void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
     _<FileInputStream> fis;
     try {
         fis = _new<FileInputStream>(Settings::inst().game_folder.file("versions").file(name).file(name + ".hackers.json"));
     } catch (...) {
         fis = _new<FileInputStream>(Settings::inst().game_folder.file("versions").file(name).file(name + ".json"));
     }
-    GameProfile p;
-    fromJson(p, uuid, name, AJson::read(fis).asObject());
-    return p;
+    fromJson(dst, uuid, name, AJson::read(fis).asObject());
 }

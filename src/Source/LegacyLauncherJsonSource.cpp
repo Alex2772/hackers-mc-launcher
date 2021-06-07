@@ -67,8 +67,15 @@ void LegacyLauncherJsonSource::load() {
             for (auto& entry : config["profiles"].asObject()) {
                 AString name = "unknown";
                 try {
-                    name = entry.second["name"].asString();
-                    GameProfilesRepository::inst().getModel() << GameProfile::fromName(entry.first, name);
+                    // optifine fix
+                    try {
+                        name = entry.second["lastVersionId"].asString();
+                    } catch (...) {
+                        name = entry.second["name"].asString();
+                    }
+                    GameProfile p;
+                    GameProfile::fromName(p, safeUuid(entry.first), name);
+                    GameProfilesRepository::inst().getModel() << p;
                     ALogger::info("Imported profile: " + name);
                 } catch (const AException& e) {
                     ALogger::warn("Unable to load game profile " + name + " from launcher_profiles.json: " + e.getMessage());
@@ -150,7 +157,7 @@ ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
         // try to load game profiles
         try {
             for (auto& entry : config["profiles"].asObject()) {
-                s << entry.first;
+                s << safeUuid(entry.first);
             }
         } catch (const AException& e) {
             ALogger::warn("Unable to load users from launcher_profiles.json: " + e.getMessage());
@@ -160,4 +167,8 @@ ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
         ALogger::warn("Could not load launcher_profiles.json: " + e.getMessage());
     }
     return s;
+}
+
+AUuid LegacyLauncherJsonSource::safeUuid(const AString& uuid) {
+    return AUuid::fromString(uuid);
 }
