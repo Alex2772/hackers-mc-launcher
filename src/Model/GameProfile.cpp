@@ -43,6 +43,7 @@ AString javaLibNameToPath(const AString& name)
 
 void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJsonObject& json) {
     dst.mUuid = uuid;
+
     bool cleanupNeeded = false;
 
     bool isHackersMcFormat = json.contains("hackers-mc");
@@ -364,17 +365,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         cleanupNeeded = true;
     }
 
-    // classpath order fix for Optifine 1.15.2
+    // optifine 1.15.2 classpath order fix
     if (json.contains("inheritsFrom"))
     {
-
-        auto tmp1 = dst.mJavaArgs;
-        auto tmp2 = dst.mGameArgs;
-        dst.mJavaArgs.clear();
-        dst.mGameArgs.clear();
         fromName(dst, uuid, json["inheritsFrom"].asString());
-        dst.mJavaArgs << tmp1;
-        dst.mGameArgs << tmp2;
 
         // if the current profile does not have it's own main jar file, we can copy it from the inherited profile.
         // in theory, it would work recursively too.
