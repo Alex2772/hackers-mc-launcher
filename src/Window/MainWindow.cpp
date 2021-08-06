@@ -76,7 +76,9 @@ MainWindow::MainWindow():
                             it->setDisabled();
 
                             connect(it->clicked, this, [&] {
-                                showGameProfileConfigureDialogFor(mUsersListView->getSelectionModel().one().getRow());
+                                if (!mGameProfilesListView->getSelectionModel().empty()) {
+                                    showGameProfileConfigureDialogFor(mGameProfilesListView->getSelectionModel().one().getRow());
+                                }
                             });
                         },
                     },

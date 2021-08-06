@@ -17,6 +17,7 @@
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Traits/platform.h>
+#include <AUI/Platform/Dll.h>
 
 void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate) {
     try {
@@ -178,7 +179,35 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
                     }
                     APath fileName = AString::fromLatin1(fileNameBuf);
 
-                    if (!fileName.startsWith("META-INF/") && !fileName.endsWith(".git") && !fileName.endsWith(".sha1")) {
+                    auto checks = [&] {
+                        // filter
+                        if (fileName.endsWith(".sha1")) {
+                            return false;
+                        }
+                        if (fileName.endsWith(".git")) {
+                            return false;
+                        }
+                        if (fileName.startsWith("META-INF/")) {
+                            return false;
+                        }
+
+                        bool isDylib = fileName.endsWith(".dylib");
+                        bool isSo = fileName.endsWith(".so");
+                        bool isDll = fileName.endsWith(".dll");
+
+                        if (isDylib || isSo || isDll) {
+                            if (fileName.endsWith("." + Dll::getDllExtension())) {
+                                /*
+                                if (!fileName.endsWith("64." + Dll::getDllExtension())) {
+                                    return false;
+                                }*/
+                            } else {
+                                return false;
+                            }
+                        }
+                        return true;
+                    };
+                    if (checks()) {
                         if (!fileName.empty() && fileName != "/") {
                             if (fileName.endsWith('/')) {
                                 // folder
@@ -235,7 +264,7 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
         // java args
         AStringVector args;
         for (auto& arg : profile.getJavaArgs()) {
-            if (VariableHelper::checkConditions(c, arg.mConditions)) {
+            if (VariableHelper::checkRules(c, arg.mConditions)) {
                 args << VariableHelper::parseVariables(c, arg.mName);
             }
         }
@@ -244,21 +273,27 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
 
         // game args
         for (auto& arg : profile.getGameArgs()) {
-            if (VariableHelper::checkConditions(c, arg.mConditions)) {
+            if (VariableHelper::checkRules(c, arg.mConditions)) {
+                /*
                 args << VariableHelper::parseVariables(c, arg.mName);
                 if (!arg.mValue.empty()) {
                     args << VariableHelper::parseVariables(c, arg.mValue);
+                }*/
+
+                if (arg.mValue.empty()) {
+                    args << VariableHelper::parseVariables(c, arg.mName);
+                } else {
+                    args << VariableHelper::parseVariables(c, arg.mName) + "=" + VariableHelper::parseVariables(c, arg.mValue);
                 }
             }
         }
 
-        auto javaLocations = APath::find(aui::platform::current::is_windows() ? "java.exe" : "java",
-                                         {"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"},
-                                         PathFinder::SINGLE | PathFinder::RECURSIVE | PathFinder::USE_SYSTEM_PATHS);
-        if (javaLocations.empty()) {
-            throw AException("Java not found");
+
+        auto java = Settings::inst().java_executable;
+        if (!java.isRegularFileExists()) {
+            throw AException("invalid java executable path");
         }
-        auto java = javaLocations.first();
+
         ALogger::info(java + " " + args.join(' '));
         int status = AProcess::execute(java, args.join(' '), Settings::inst().game_folder);
         ALogger::info("Child process exit with status "_as + AString::number(status));

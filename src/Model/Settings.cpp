@@ -6,6 +6,7 @@
 #include <AUI/IO/FileOutputStream.h>
 #include <Util.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Traits/platform.h>
 #include "Settings.h"
 
 const auto SETTINGS_PATH = Util::getSettingsDir().file("settings.json");
@@ -39,5 +40,17 @@ void Settings::initEmptyFields() {
 void Settings::reset() {
     inst() = {};
     save();
+}
+
+APath Settings::findJava() {
+    auto javaLocations = APath::find(aui::platform::current::is_windows() ? "java.exe" : "java",
+                                     aui::platform::current::is_windows()
+                                     ? AVector<APath>{"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"}
+                                     : AVector<APath>{"/usr/lib/jvm/jdk-16.0.2", "/usr/lib/jvm"},
+                                     PathFinder::SINGLE | PathFinder::RECURSIVE | PathFinder::USE_SYSTEM_PATHS);
+    if (javaLocations.empty()) {
+        return {};
+    }
+    return javaLocations.first();
 }
 

@@ -14,7 +14,7 @@ public:
     public:
         AString mName;
         AString mValue;
-        AVector<std::pair<AString, AVariant>> mConditions;
+        Rules mConditions;
     };
 
     /**
@@ -24,7 +24,7 @@ public:
     {
     public:
         AString mName;
-        AVector<std::pair<AString, AVariant>> mConditions;
+        Rules mConditions;
     };
     
 private:

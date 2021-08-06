@@ -12,7 +12,7 @@
 #include "UserWindow.h"
 
 UserWindow::UserWindow(User* user):
-    AWindow(user == nullptr ? "New user" : "Edit user", 200, 100, AWindow::current(), WindowStyle::DIALOG)
+    AWindow(user == nullptr ? "New user" : "Edit user", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::DIALOG)
 {
 
     if (user) {
@@ -43,6 +43,13 @@ UserWindow::UserWindow(User* user):
                 _new<ASpacer>(),
                 (user ?
                     _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
+                        if (mBinding->getModel().username.empty()) {
+                            AMessageBox::show(this,
+                                              "Username is empty",
+                                              "Please enter some nonempty username.",
+                                              AMessageBox::Icon::INFO,
+                                              AMessageBox::Button::OK);
+                        }
                         *user = mBinding->getModel();
                         emit finished();
                         close();

@@ -12,7 +12,7 @@ public:
     };
 
     static AVariant getVariableValue(const Context& c, const AString& name);
-    static bool checkConditions(const Context& c, const AVector<std::pair<AString, AVariant>>& conditions);
+    static bool checkRules(const Context& c, const Rules& rules);
     static AString parseVariables(const Context& c, const AString& s);
 };
 

@@ -26,7 +26,7 @@ struct Version {
 };
 
 ImportVersionWindow::ImportVersionWindow():
-    AWindow("Import version", 500_dp, 400_dp, AWindow::current(), WindowStyle::DIALOG)
+    AWindow("Import version", 500_dp, 400_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::DIALOG)
 {
     _<AView> minecraftRepoListWrap = Horizontal {/*
         Vertical {
@@ -116,6 +116,7 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
                 GameProfile p;
                 auto file = Settings::inst().game_folder["versions"][version.id][version.id + ".json"];
                 file.parent().makeDirs();
+                ALogger::info("Importing {}"_as.format(version.url));
                 _new<ACurl>(version.url) >> _new<FileOutputStream>(file);
                 GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::read(_new<FileInputStream>(file)).asObject());
                 GameProfilesRepository::inst().addGameProfile(p);

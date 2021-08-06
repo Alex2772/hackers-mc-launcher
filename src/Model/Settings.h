@@ -5,8 +5,8 @@
 
 struct Settings {
 public:
-
     APath game_folder;
+    APath java_executable = findJava();
     uint16_t width = 854;
     uint16_t height = 500;
     bool is_fullscreen = false;
@@ -29,4 +29,5 @@ public:
 private:
     Settings();
     void initEmptyFields();
+    static APath findJava();
 };

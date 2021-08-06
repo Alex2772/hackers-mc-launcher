@@ -41,6 +41,10 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
                     [](const Context& c) -> AVariant
                     {
                         if (c.profile) {
+
+                            // add java's lib folder to java library path
+                            auto javaLibFolder = Settings::inst().java_executable.parent()["lib"];
+
                             return Settings::inst().game_folder["bin"][c.profile->getUuid().toRawString()];
                         }
                         return {};
@@ -196,13 +200,21 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
     return "null";
 }
 
-bool VariableHelper::checkConditions(const Context& c, const AVector<std::pair<AString, AVariant>>& conditions) {
-    for (auto& v : conditions) {
-        if (getVariableValue(c, v.first) != v.second) {
-            return false;
+bool VariableHelper::checkRules(const Context& c, const Rules& rules) {
+    Rule::Action action = Rule::Action::ALLOW;
+    for (auto& v : rules) {
+        bool t = true;
+        for (auto& cond : v.conditions) {
+            if (getVariableValue(c, cond.first) != cond.second) {
+                t = false;
+                break;
+            }
+        }
+        if (t) {
+            action = v.action;
         }
     }
-    return true;
+    return action == Rule::Action::ALLOW;
 }
 
 AString VariableHelper::parseVariables(const Context& c, const AString& s) {

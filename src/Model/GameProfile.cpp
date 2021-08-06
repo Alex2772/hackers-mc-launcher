@@ -5,6 +5,7 @@
 #include <Util/VariableHelper.h>
 #include <AUI/IO/FileOutputStream.h>
 #include <AUI/IO/FileInputStream.h>
+#include <AUI/Logging/ALogger.h>
 #include "GameProfile.h"
 #include "DownloadEntry.h"
 #include "Settings.h"
@@ -48,6 +49,45 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
     bool isHackersMcFormat = json.contains("hackers-mc");
 
+    auto parseConditions = [](Rules& dst, const AJsonElement& in)
+    {
+        // find positive conditions
+
+        for (auto& r : in.asArray())
+        {
+            Rule myRule;
+            auto rule = r.asObject();
+            myRule.action = rule["action"].asString() == "allow" ? Rule::Action::ALLOW : Rule::Action::DISALLOW;
+            for (auto& r : rule)
+            {
+                if (r.first == "features")
+                {
+                    auto features = r.second.asObject();
+                    for (auto& feature : features)
+                    {
+                        myRule.conditions << std::pair<AString, AVariant>{feature.first, feature.second.asVariant()};
+                    }
+                }
+                else if (r.first != "action")
+                {
+                    if (r.second.isObject())
+                    {
+                        auto sub = r.second.asObject();
+                        for (auto& subKey : sub)
+                        {
+                            myRule.conditions << std::pair<AString, AVariant>{r.first + '.' + subKey.first, subKey.second.asVariant()};
+                        }
+                    }
+                    else
+                    {
+                        myRule.conditions << std::pair<AString, AVariant>{r.first, r.second.asVariant()};
+                    }
+                }
+            }
+
+            dst << std::move(myRule);
+        }
+    };
     if (isHackersMcFormat)
     {
         // hackers-mc format
@@ -68,10 +108,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             entry.mValue = d["value"].asString();
 
             try {
-                for (auto& c : d["conditions"].asArray()) {
-                    entry.mConditions
-                            << std::pair<AString, AVariant>{c.asArray()[0].asString(), c.asArray()[1].asVariant()};
-                }
+                entry.mConditions = aui::from_json<Rules>(d["conditions"]);
             } catch (...) {}
 
             dst.mGameArgs << entry;
@@ -83,10 +120,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             entry.mName = d["name"].asString();
 
             try {
-                for (auto& c : d["conditions"].asArray()) {
-                    entry.mConditions
-                            << std::pair<AString, AVariant>{c.asArray()[0].asString(), c.asArray()[1].asVariant()};
-                }
+                entry.mConditions = aui::from_json<Rules>(d["conditions"]);
             } catch (...) {}
 
             dst.mJavaArgs << entry;
@@ -110,57 +144,22 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         // Java libraries
         for (auto& v : json["libraries"].asArray())
         {
+            Rules conditions;
             if (v.asObject().contains("rules"))
             {
-                bool allowed = false;
-                for (auto& r : v["rules"].asArray())
-                {
-                    const auto& rule = r.asObject();
-                    bool rulePassed = true;
-                    for (auto& kv : rule)
-                    {
-                        if (kv.first != "action")
-                        {
-                            if (kv.second.isObject())
-                            {
-                                auto x = kv.second.asObject();
-                                for (auto& var : x)
-                                {
-                                    /*
-                                    if ()
-                                    {
-                                        rulePassed = false;
-                                        break;
-                                    }*/
-                                }
-                            }
-                            else
-                            {
-                                /*
-                                if (VariableHelper::getVariableValue(kv.first).toString() != kv.second
-                                        .asVariant().toString())
-                                {
-                                    rulePassed = false;
-                                }*/
-                            }
-                            if (!rulePassed)
-                                break;
-                        }
-                    }
-                    if (rulePassed)
-                        allowed = rule["action"].asString() == "allow";
-                }
-                if (!allowed)
-                    continue;
+                parseConditions(conditions, v["rules"]);
             }
 
             AString name = v["name"].asString();
             try {
                 if (v["downloads"].isObject()) {
-                    dst.mDownloads
-                            << downloadEntryFromJson("libraries/" + v["downloads"]["artifact"]["path"].asString(),
-                                                     v["downloads"]["artifact"].asObject());
+                    try {
+                        auto s = v["downloads"]["artifact"]["path"].asString();
 
+                        dst.mDownloads
+                                << downloadEntryFromJson("libraries/" + s,
+                                                         v["downloads"]["artifact"].asObject());
+                    } catch (...) {}
 
                     for (auto keyName : {"natives-osx", "natives-windows", "natives-linux"}) {
                         try {
@@ -168,6 +167,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
                             dst.mDownloads << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
                             dst.mDownloads.last().mExtract = true;
+                            dst.mDownloads.last().mConditions = conditions;
                             //dst.mClasspath << "libraries/" + k["path"].asString();
                         } catch (...) {
 
@@ -184,61 +184,22 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                         dst.mDownloads << DownloadEntry{
                                 "libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
                         };
+                        dst.mDownloads.last().mConditions = conditions;
                     } catch (...) {}
                 }
 
             } catch (...) {}
-
-            if (v["downloads"].isObject()) {
-                dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
-            } else {
-                dst.mClasspath << "libraries/" + javaLibNameToPath(name);
-            }
+            try {
+                if (v["downloads"].isObject()) {
+                    dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
+                } else {
+                    dst.mClasspath << "libraries/" + javaLibNameToPath(name);
+                }
+            } catch (...) {}
         }
-
-
-        auto args = json["arguments"].asObject();
 
         unsigned counter = 0;
 
-        auto parseConditions = [](AVector<std::pair<AString, AVariant>>& dst, const AJsonElement& in)
-        {
-            // find positive conditions
-
-            for (auto& r : in.asArray())
-            {
-                auto rule = r.asObject();
-                if (rule["action"].asString() == "allow")
-                {
-                    for (auto& r : rule)
-                    {
-                        if (r.first == "features")
-                        {
-                            auto features = r.second.asObject();
-                            for (auto& feature : features)
-                            {
-                                dst << std::pair<AString, AVariant>{feature.first, feature.second.asVariant()};
-                            }
-                        }
-                        else if (r.first != "action")
-                        {
-                            if (r.second.isObject())
-                            {
-                                auto sub = r.second.asObject();
-                                for (auto& subKey : sub)
-                                {
-                                    dst << std::pair<AString, AVariant>{r.first + '.' + subKey.first, subKey.second.asVariant()};
-                                }
-                            }
-                            else
-                            {
-                                dst << std::pair<AString, AVariant>{r.first, r.second.asVariant()};
-                            }
-                        }
-                    }
-                }
-            }
-        };
 
         // Game args
         {
@@ -281,6 +242,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             }
             else
             {
+                auto args = json["arguments"].asObject();
                 for (const auto& a : args["game"].asArray())
                 {
                     if (a.isString())
@@ -337,11 +299,12 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
         // JVM args
         try {
+            auto args = json["arguments"].asObject();
             for (const auto &a : args["jvm"].asArray()) {
                 if (a.isString()) {
                     dst.mJavaArgs << JavaArg{a.asString()};
                 } else if (a.isObject()) {
-                    AVector<std::pair<AString, AVariant>> conditions;
+                    Rules conditions;
                     parseConditions(conditions, a["rules"]);
 
                     if (a["value"].isString()) {
@@ -457,17 +420,7 @@ AJsonElement GameProfile::toJson() {
         entry["name"] = d.mName;
         entry["value"] = d.mValue;
 
-        AJsonArray conditions;
-
-        for (auto& c : d.mConditions)
-        {
-            AJsonArray e;
-            e << AJsonValue(c.first);
-            e << c.second;
-            conditions << e;
-        }
-        if (!conditions.empty())
-            entry["conditions"] = conditions;
+        entry["conditions"] = aui::to_json(d.mConditions);
 
         gameArgs << entry;
     }
@@ -482,15 +435,7 @@ AJsonElement GameProfile::toJson() {
 
         AJsonArray conditions;
 
-        for (auto& c : d.mConditions)
-        {
-            AJsonArray e;
-            e << AJsonValue(c.first);
-            e << c.second;
-            conditions << e;
-        }
-        if (!conditions.empty())
-            entry["conditions"] = conditions;
+        entry["conditions"] = aui::to_json(d.mConditions);
 
         javaArgs << entry;
     }
