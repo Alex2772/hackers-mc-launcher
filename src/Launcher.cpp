@@ -147,9 +147,17 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
         emit updateTargetFile("");
         emit updateStatus("Preparing to launch...");
 
+        VariableHelper::Context c = {
+                &user,
+                &profile
+        };
+
         // extract necessary files
         for (auto& d : profile.getDownloads()) {
             if (d.mExtract) {
+                if (!VariableHelper::checkRules(c, d.mConditions)) {
+                    continue;
+                }
                 ALogger::info("Extracting " + d.mLocalPath);
 
                 struct z {
@@ -255,11 +263,6 @@ void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate)
                 }
             }
         }
-
-        VariableHelper::Context c = {
-                &user,
-                &profile
-        };
 
         // java args
         AStringVector args;

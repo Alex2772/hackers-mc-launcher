@@ -55,9 +55,9 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
         for (auto& r : in.asArray())
         {
-            Rule myRule;
+            LauncherRule myRule;
             auto rule = r.asObject();
-            myRule.action = rule["action"].asString() == "allow" ? Rule::Action::ALLOW : Rule::Action::DISALLOW;
+            myRule.action = rule["action"].asString() == "allow" ? LauncherRule::Action::ALLOW : LauncherRule::Action::DISALLOW;
             for (auto& r : rule)
             {
                 if (r.first == "features")
@@ -98,6 +98,9 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             auto o = d.asObject();
             dst.mDownloads << downloadEntryFromJson(o["local"].asString(), o);
             dst.mDownloads.last().mExtract = o["extract"].asBool();
+            if (o.contains("conditions")) {
+                dst.mDownloads.last().mConditions = aui::from_json<Rules>(o["conditions"]);
+            }
         }
 
         // game args
@@ -407,6 +410,7 @@ AJsonElement GameProfile::toJson() {
         entry["size"] = int(d.mSize);
         entry["sha1"] = d.mHash;
         entry["extract"] = d.mExtract;
+        entry["conditions"] = aui::to_json(d.mConditions);
 
         downloads << entry;
     }

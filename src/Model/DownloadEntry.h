@@ -5,7 +5,7 @@
 #include <AUI/Common/AVariant.h>
 #include <AUI/Json/AJson.h>
 
-struct Rule {
+struct LauncherRule {
     enum class Action {
         ALLOW,
         DISALLOW
@@ -17,23 +17,23 @@ struct Rule {
 
 namespace aui::json::conv {
     template<>
-    struct conv<Rule::Action> {
-        static AJsonElement to_json(const Rule::Action& rule) {
+    struct conv<LauncherRule::Action> {
+        static AJsonElement to_json(const LauncherRule::Action& rule) {
             switch (rule) {
-                case Rule::Action::ALLOW: return AJsonValue("allow");
-                case Rule::Action::DISALLOW: return AJsonValue("disallow");
+                case LauncherRule::Action::ALLOW: return AJsonValue("allow");
+                case LauncherRule::Action::DISALLOW: return AJsonValue("disallow");
             }
         }
-        static Rule::Action from_json(const AJsonElement& e) {
+        static LauncherRule::Action from_json(const AJsonElement& e) {
             if (e.asString() == "disallow") {
-                return Rule::Action::DISALLOW;
+                return LauncherRule::Action::DISALLOW;
             }
-            return Rule::Action::ALLOW;
+            return LauncherRule::Action::ALLOW;
         }
     };
 }
 
-using Rules = AVector<Rule>;
+using Rules = AVector<LauncherRule>;
 
 struct DownloadEntry {
     AString mLocalPath;

@@ -201,7 +201,10 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
 }
 
 bool VariableHelper::checkRules(const Context& c, const Rules& rules) {
-    Rule::Action action = Rule::Action::ALLOW;
+    if (rules.empty()) {
+        return true;
+    }
+    LauncherRule::Action action = LauncherRule::Action::DISALLOW;
     for (auto& v : rules) {
         bool t = true;
         for (auto& cond : v.conditions) {
@@ -214,7 +217,7 @@ bool VariableHelper::checkRules(const Context& c, const Rules& rules) {
             action = v.action;
         }
     }
-    return action == Rule::Action::ALLOW;
+    return action == LauncherRule::Action::ALLOW;
 }
 
 AString VariableHelper::parseVariables(const Context& c, const AString& s) {
