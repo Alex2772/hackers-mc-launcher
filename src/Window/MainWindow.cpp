@@ -204,7 +204,7 @@ void MainWindow::checkForDiskProfileUpdates() {
             if (actualProfiles != loadedProfiles) {
                 // found new game profile!
                 ALogger::info("Detected changes in launcher_profiles.json, reloading");
-                ui {
+                ui_thread {
                     LegacyLauncherJsonSource::reload();
                 };
             }

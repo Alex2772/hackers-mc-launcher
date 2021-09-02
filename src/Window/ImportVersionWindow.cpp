@@ -99,7 +99,7 @@ ImportVersionWindow::ImportVersionWindow():
             });
         }
 
-        ui {
+        ui_thread {
             minecraftRepoListWrap->setEnabled();
             mMinecraftRepoList->setModel(AAdapter::make<Version>(mVersionModel, [](const Version& v) { return v.id; }));
         };
