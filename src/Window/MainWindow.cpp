@@ -23,6 +23,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AImageView.h>
+#include <View/AccountsComboBox.h>
 
 using namespace ass;
 
@@ -44,12 +45,12 @@ MainWindow::MainWindow():
             }) with_style { MinSize { 300_dp } },
             Horizontal {
                 Vertical {
-                    mUsersListView = _new<AComboBox>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
+                    mUsersListView = _new<AccountsComboBox>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
                         return u.username;
-                    })),
+                    })) with_style { MinSize { 100_dp, {} } },
 
                 },
-                Horizontal {
+                Stacked {
                     mPlayButton = _new<AButton>().connect(&AButton::clicked, this, [&] {
                         mPlayButton->disable();
                         mDownloadingPanel->setVisibility(Visibility::VISIBLE);
@@ -81,7 +82,7 @@ MainWindow::MainWindow():
                             mDownloadingPanel->setVisibility(Visibility::GONE);
                         };
                     }) << "#play" let { it->setDefault(); },
-                },
+                } with_style { Expanding { 2 } },
                 _new<AButton>().connect(&AView::clicked, this, [&] {
                     _new<LauncherSettingsWindow>()->show();
                 }) << "#settings"
@@ -165,4 +166,5 @@ void MainWindow::checkForDiskProfileUpdates() {
     }
 
 }
+
 

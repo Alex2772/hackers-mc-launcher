@@ -19,14 +19,14 @@ private:
     _<ALabel> mTotalLabel;
     _<ALabel> mTargetFileLabel;
 
-    void showUserConfigureDialogFor(unsigned index);
-    void showGameProfileConfigureDialogFor(unsigned index);
-
     void checkForDiskProfileUpdates();
 
 public:
 
     MainWindow();
+
+    void showUserConfigureDialogFor(unsigned index);
+    void showGameProfileConfigureDialogFor(unsigned index);
 
     void onMouseMove(glm::ivec2 pos) override;
 };

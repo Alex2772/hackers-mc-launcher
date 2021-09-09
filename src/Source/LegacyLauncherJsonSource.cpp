@@ -73,10 +73,12 @@ void LegacyLauncherJsonSource::load() {
                     } catch (...) {
                         name = entry.second["name"].asString();
                     }
-                    GameProfile p;
-                    GameProfile::fromName(p, safeUuid(entry.first), name);
-                    GameProfilesRepository::inst().getModel() << p;
-                    ALogger::info("Imported profile: " + name);
+                    if (!name.startsWith("latest-")) {
+                        GameProfile p;
+                        GameProfile::fromName(p, safeUuid(entry.first), name);
+                        GameProfilesRepository::inst().getModel() << p;
+                        ALogger::info("Imported profile: " + name);
+                    }
                 } catch (const AException& e) {
                     ALogger::warn("Unable to load game profile " + name + " from launcher_profiles.json: " + e.getMessage());
                 }
