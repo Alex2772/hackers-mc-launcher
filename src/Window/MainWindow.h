@@ -9,8 +9,8 @@ private:
     _<AButton> mUserConfigureButton;
     _<AButton> mGameProfileConfigureButton;
     _<AButton> mPlayButton;
-    _<AListView> mUsersListView;
-    _<AListView> mGameProfilesListView;
+    _<AComboBox> mUsersListView;
+    _<AComboBox> mGameProfilesListView;
 
     _<AViewContainer> mDownloadingPanel;
     _<ALabel> mStatusLabel;

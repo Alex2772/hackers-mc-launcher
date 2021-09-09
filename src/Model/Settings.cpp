@@ -47,7 +47,7 @@ APath Settings::findJava() {
                                      aui::platform::current::is_windows()
                                      ? AVector<APath>{"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"}
                                      : AVector<APath>{"/usr/lib/jvm/jdk-16.0.2", "/usr/lib/jvm"},
-                                     PathFinder::SINGLE | PathFinder::RECURSIVE | PathFinder::USE_SYSTEM_PATHS);
+                                     PathFinder::SINGLE | PathFinder::RECURSIVE);
     if (javaLocations.empty()) {
         return {};
     }

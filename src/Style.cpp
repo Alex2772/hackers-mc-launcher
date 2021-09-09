@@ -4,6 +4,7 @@
 
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/AButton.h>
+#include <AUI/View/AImageView.h>
 
 using namespace ass;
 
@@ -54,6 +55,33 @@ struct Style {
             {
                 c(".secondary"),
                 TextColor { 0x444444_rgb },
+            },
+            {
+                c(".version_item"),
+                Padding { 8_dp },
+                Margin { 0 },
+            },
+            {
+                c::hover(".version_item"),
+                BackgroundSolid { 0x10000000_argb },
+            },
+            {
+                c(".version_item")["selected"],
+                BackgroundSolid { 0x22000000_argb },
+                Border { 1_px, 0x40000000_argb },
+            },
+            {
+                c(".version_item_wrap") > t<AImageView>(),
+                MinSize { 48_dp },
+            },
+            {
+                c(".version_item_wrap"),
+                MinSize { 48_dp },
+            },
+            {
+                c(".version_item") > t<ALabel>(),
+                TextAlign::CENTER,
+                Margin { 10_dp, 0, 0, 0 },
             },
         });
     }
