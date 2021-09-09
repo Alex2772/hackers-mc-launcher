@@ -71,11 +71,12 @@ MainWindow::MainWindow():
                             connect(launcher->updateDownloadedSize, [&](size_t s) {
                                 mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
                             });
+                            /*
                             launcher->play(
                                     UsersRepository::inst().getModel()->at(mUsersListView->getSelectionModel().one().getRow()),
                                     GameProfilesRepository::inst().getModel()->at(mGameProfilesListView->getSelectionModel().one().getRow()),
                                     true
-                                    );
+                                    );*/
                             mPlayButton->enable();
                             mDownloadingPanel->setVisibility(Visibility::GONE);
                         };

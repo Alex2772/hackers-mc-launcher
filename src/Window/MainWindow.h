@@ -3,6 +3,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
+#include <AUI/View/AComboBox.h>
 
 class MainWindow: public AWindow {
 private:
