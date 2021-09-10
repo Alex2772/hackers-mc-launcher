@@ -15,7 +15,14 @@ struct Style {
                 c("#play"),
                 BackgroundImage { ":svg/play.svg", 0xccffffff_argb, {}, Sizing::FIT_PADDING },
                 Padding { 16_dp },
-                FixedSize { 80_dp },
+                FixedSize { 200_dp, 40_dp },
+            },
+            {
+                c("#downloading_panel"),
+                Border { 1_px, 0x888888_rgb },
+                BorderRadius { 4_dp },
+                Expanding {},
+                Margin {2_dp, 4_dp},
             },
             {
                 c("#settings"),
@@ -66,7 +73,7 @@ struct Style {
                 BackgroundSolid { 0x10000000_argb },
             },
             {
-                c(".version_item")["selected"],
+                c(".version_item_selected"),
                 BackgroundSolid { 0x22000000_argb },
                 Border { 1_px, 0x40000000_argb },
             },

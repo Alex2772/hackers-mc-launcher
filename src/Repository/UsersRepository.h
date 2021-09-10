@@ -5,23 +5,23 @@
 #pragma once
 
 #include <AUI/Model/AListModel.h>
-#include <Model/User.h>
+#include <Model/Account.h>
 
 class UsersRepository {
 private:
-    _<AListModel<User>> mModel;
+    _<AListModel<Account>> mModel;
 
 public:
     UsersRepository();
     ~UsersRepository();
 
-    _<AListModel<User>>& getModel() {
+    _<AListModel<Account>>& getModel() {
         return mModel;
     }
 
     static UsersRepository& inst();
 
-    void addUser(const User& user);
+    void addUser(const Account& user);
 };
 
 

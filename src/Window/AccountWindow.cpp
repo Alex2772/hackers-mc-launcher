@@ -9,27 +9,27 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Util/ARandom.h>
-#include "UserWindow.h"
+#include "AccountWindow.h"
 
-UserWindow::UserWindow(User* user):
-    AWindow(user == nullptr ? "New user" : "Edit user", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::DIALOG)
+AccountWindow::AccountWindow(Account* user):
+    AWindow(user == nullptr ? "New account" : "Modify account", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::DIALOG)
 {
 
     if (user) {
         mBinding->setModel(*user);
     } else {
-        mBinding->setModel(User{});
+        mBinding->setModel(Account{});
     }
 
     setContents(
         Vertical {
             _form({
-                {"Username"_as, mUsername = _new<ATextField>() let { it->focus(); it && mBinding(&User::username); }},
-                {{},            _new<ACheckBox>("Online account on minecraft.net") && mBinding(&User::isOnlineAccount)},
-                {"Password"_as, _new<ATextField>() && mBinding(&User::token) && mBinding(&User::isOnlineAccount, &ATextField::setEnabled) },
+                {"Username:"_as, mUsername = _new<ATextField>() let { it->focus(); it && mBinding(&Account::username); }},
+                {{},            _new<ACheckBox>("Online account on minecraft.net") && mBinding(&Account::isOnlineAccount)},
+                {"Password:"_as, _new<ATextField>() && mBinding(&Account::token) && mBinding(&Account::isOnlineAccount, &ATextField::setEnabled) },
                 }),
             Horizontal {
-                user ? (_new<AButton>("Delete user").connect(&AView::clicked, this, [&, user] {
+                user ? (_new<AButton>("Delete account").connect(&AView::clicked, this, [&, user] {
                     if (AMessageBox::show(this,
                                       "Delete user",
                                       "Do you really want to delete user \"{}\"? "

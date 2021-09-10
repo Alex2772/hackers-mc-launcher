@@ -8,7 +8,7 @@
 #include <AUI/Common/AUuid.h>
 
 
-struct User {
+struct Account {
     AUuid uuid;
     AString username;
     bool isOnlineAccount = false;

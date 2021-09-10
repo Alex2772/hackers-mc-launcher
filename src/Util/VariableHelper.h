@@ -2,12 +2,12 @@
 
 #include <AUI/Common/AVariant.h>
 #include <Model/GameProfile.h>
-#include <Model/User.h>
+#include <Model/Account.h>
 
 class VariableHelper {
 public:
     struct Context {
-        const User* user = nullptr;
+        const Account* user = nullptr;
         const GameProfile* profile = nullptr;
     };
 

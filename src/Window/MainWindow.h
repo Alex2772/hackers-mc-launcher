@@ -4,6 +4,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AComboBox.h>
+#include <View/GameProfilesView.h>
 
 class MainWindow: public AWindow {
 private:
@@ -11,7 +12,7 @@ private:
     _<AButton> mGameProfileConfigureButton;
     _<AButton> mPlayButton;
     _<AComboBox> mUsersListView;
-    _<AComboBox> mGameProfilesListView;
+    _<GameProfilesView> mGameProfilesView;
 
     _<AViewContainer> mDownloadingPanel;
     _<ALabel> mStatusLabel;
@@ -29,5 +30,11 @@ public:
     void showGameProfileConfigureDialogFor(unsigned index);
 
     void onMouseMove(glm::ivec2 pos) override;
+
+    void onPlayButtonClicked();
+
+    void showPlayButton();
+
+    void showDownloadingPanel();
 };
 

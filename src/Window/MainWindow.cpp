@@ -14,7 +14,7 @@
 #include <AUI/Util/APrettyFormatter.h>
 #include <AUI/Platform/AMessageBox.h>
 #include "MainWindow.h"
-#include "UserWindow.h"
+#include "AccountWindow.h"
 #include "ImportVersionWindow.h"
 #include "LauncherSettingsWindow.h"
 #include "GameProfileWindow.h"
@@ -24,6 +24,8 @@
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AImageView.h>
 #include <View/AccountsComboBox.h>
+#include <View/GameProfilesView.h>
+#include <AUI/View/AHDividerView.h>
 
 using namespace ass;
 
@@ -34,86 +36,96 @@ MainWindow::MainWindow():
         Vertical {
             (_new<AScrollArea>() let {
                 it->getContentContainer()->setLayout(_new<AVerticalLayout>());
-                it->getContentContainer()->addView(ui_for(profile, GameProfilesRepository::inst().getModel(), AWordWrappingLayout) {
-                    return Vertical {
-                        Stacked{
-                            _new<AImageView>(":profile_icons/default.png"_url),
-                        } << ".version_item_wrap",
-                        _new<ALabel>(profile.getName()),
-                    } << ".version_item";
-                });
+                it->getContentContainer()->addView(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel()));
             }) with_style { MinSize { 300_dp } },
-            Horizontal {
-                Vertical {
-                    mUsersListView = _new<AccountsComboBox>(AAdapter::make<User>(UsersRepository::inst().getModel(), [](const User& u) {
-                        return u.username;
-                    })) with_style { MinSize { 100_dp, {} } },
-
-                },
-                Stacked {
-                    mPlayButton = _new<AButton>().connect(&AButton::clicked, this, [&] {
-                        mPlayButton->disable();
-                        mDownloadingPanel->setVisibility(Visibility::VISIBLE);
-                        mDownloadedLabel->setText("0");
-                        mTotalLabel->setText("0");
-                        mTargetFileLabel->setText("");
-                        async {
-                            auto launcher = _new<Launcher>();
-                            connect(launcher->updateStatus, slot(mStatusLabel)::setText);
-                            connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
-                            connect(launcher->errorOccurred, [&](const AString& message) {
-                                mDownloadingPanel->setVisibility(Visibility::GONE);
-                                mPlayButton->enable();
-                                AMessageBox::show(this, "Could not run game", message, AMessageBox::Icon::CRITICAL);
-                            });
-                            connect(launcher->updateTotalDownloadSize, [&](size_t s) {
-                                mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
-                            });
-                            connect(launcher->updateDownloadedSize, [&](size_t s) {
-                                mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
-                            });
-                            /*
-                            launcher->play(
-                                    UsersRepository::inst().getModel()->at(mUsersListView->getSelectionModel().one().getRow()),
-                                    GameProfilesRepository::inst().getModel()->at(mGameProfilesListView->getSelectionModel().one().getRow()),
-                                    true
-                                    );*/
-                            mPlayButton->enable();
-                            mDownloadingPanel->setVisibility(Visibility::GONE);
-                        };
-                    }) << "#play" let { it->setDefault(); },
-                } with_style { Expanding { 2 } },
-                _new<AButton>().connect(&AView::clicked, this, [&] {
-                    _new<LauncherSettingsWindow>()->show();
-                }) << "#settings"
-            },
-
-
-
-            // downloading panel
-            mDownloadingPanel = Vertical {
+            _new<AHDividerView>(),
+            Stacked {
                 Horizontal {
-                    mStatusLabel = _new<ALabel>("Running...") let {
-                        it->setCustomAss({
-                            FontSize { 20_pt },
-                            TextColor { 0_rgb },
-                        });
-                     },
-
+                    Vertical {
+                        _new<ALabel>("Account:"),
+                        mUsersListView = _new<AccountsComboBox>(AAdapter::make<Account>(UsersRepository::inst().getModel(), [](const Account& u) {
+                            return u.username;
+                        })) with_style { MinSize { 100_dp, {} } },
+                    },
                     _new<ASpacer>(),
+                    _new<AButton>().connect(&AView::clicked, this, [&] {
+                        _new<LauncherSettingsWindow>()->show();
+                    }) << "#settings",
+                } with_style { Expanding{} },
 
-                    mDownloadedLabel = _new<ALabel>() << ".secondary",
-                    _new<ALabel>("of") << ".secondary",
-                    mTotalLabel = _new<ALabel>() << ".secondary",
+                // Play button / download panel
+                Stacked {
+                    // downloading panel
+                    mDownloadingPanel = Vertical {
+                        Horizontal {
+                            mStatusLabel = _new<ALabel>("Running...") let {
+                                it->setCustomAss({
+                                    FontSize { 12_pt },
+                                    TextColor { 0_rgb },
+                                });
+                            },
+
+                            _new<ASpacer>(),
+
+                            mDownloadedLabel = _new<ALabel>() << ".secondary",
+                            _new<ALabel>("of") << ".secondary",
+                            mTotalLabel = _new<ALabel>() << ".secondary",
+                        },
+                        mTargetFileLabel = _new<ALabel>() << ".secondary",
+                    } let {
+                        it->setVisibility(Visibility::GONE);
+                        it << "#downloading_panel";
+                    },
+
+                    // download button
+                    mPlayButton = _new<AButton>("Play").connect(&AButton::clicked, me::onPlayButtonClicked) << "#play" let { it->setDefault(); },
                 },
-                    mTargetFileLabel = _new<ALabel>() << ".secondary",
-            } let {
-                it->setVisibility(Visibility::GONE);
-            }
+            },
         }
     );
 
 
+}
+
+void MainWindow::onPlayButtonClicked() {
+    showDownloadingPanel();
+    mDownloadedLabel->setText("0");
+    mTotalLabel->setText("0");
+    mTargetFileLabel->setText("");
+    asyncX [this] {
+        auto launcher = _new<Launcher>();
+        connect(launcher->updateStatus, slot(mStatusLabel)::setText);
+        connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
+        connect(launcher->errorOccurred, [&](const AString& message) {
+            showPlayButton();
+            AMessageBox::show(this, "Could not run game", message, AMessageBox::Icon::CRITICAL);
+        });
+        connect(launcher->updateTotalDownloadSize, [&](size_t s) {
+            mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
+        });
+        connect(launcher->updateDownloadedSize, [&](size_t s) {
+            mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
+        });
+        AThread::sleep(1000);
+
+        launcher->play(
+                UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId()),
+                GameProfilesRepository::inst().getModel()->at(mGameProfilesView->getSelectedProfileIndex()),
+                true
+                );
+        mPlayButton->enable();
+        showPlayButton();
+    };
+}
+
+void MainWindow::showDownloadingPanel() {
+    mPlayButton->setVisibility(Visibility::GONE);
+    mDownloadingPanel->setVisibility(Visibility::VISIBLE);
+}
+
+void MainWindow::showPlayButton() {
+    mDownloadingPanel->setVisibility(Visibility::GONE);
+    mPlayButton->setVisibility(Visibility::VISIBLE);
 }
 
 void MainWindow::onMouseMove(glm::ivec2 pos) {
@@ -122,7 +134,7 @@ void MainWindow::onMouseMove(glm::ivec2 pos) {
 }
 
 void MainWindow::showUserConfigureDialogFor(unsigned int index) {
-    _new<UserWindow>(&UsersRepository::inst().getModel()->at(index)) let {
+    _new<AccountWindow>(&UsersRepository::inst().getModel()->at(index)) let {
         connect(it->finished, this, [&, index] {
             UsersRepository::inst().getModel()->invalidate(index);
         });

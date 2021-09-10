@@ -19,7 +19,7 @@
 #include <AUI/Traits/platform.h>
 #include <AUI/Platform/Dll.h>
 
-void Launcher::play(const User& user, const GameProfile& profile, bool doUpdate) {
+void Launcher::play(const Account& user, const GameProfile& profile, bool doUpdate) {
     try {
         emit updateStatus("Scanning files to download");
 

@@ -56,7 +56,7 @@ void LegacyLauncherJsonSource::load() {
         // try to load users
         try {
             for (auto& entry : config["authenticationDatabase"].asObject()) {
-                UsersRepository::inst().getModel() << User{entry.first, entry.second["username"].asString()};
+                UsersRepository::inst().getModel() << Account{entry.first, entry.second["username"].asString()};
             }
         } catch (const AException& e) {
             ALogger::warn("Unable to load users from launcher_profiles.json: " + e.getMessage());
@@ -115,7 +115,7 @@ void LegacyLauncherJsonSource::save() {
         {
             AJsonObject authenticationDatabase;
 
-            for (const User& u : UsersRepository::inst().getModel()) {
+            for (const Account& u : UsersRepository::inst().getModel()) {
                 AJsonObject user;
                 user["username"] = u.username;
 

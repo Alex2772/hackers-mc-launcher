@@ -10,6 +10,7 @@ public:
 protected:
     void onComboBoxWindowCreated() override;
 
+    void updateText() override;
 };
 
 

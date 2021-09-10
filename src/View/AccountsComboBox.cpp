@@ -8,7 +8,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <Window/MainWindow.h>
 #include <Window/GameProfileWindow.h>
-#include <Window/UserWindow.h>
+#include <Window/AccountWindow.h>
 #include <Repository/UsersRepository.h>
 
 void AccountsComboBox::onComboBoxWindowCreated() {
@@ -19,7 +19,7 @@ void AccountsComboBox::onComboBoxWindowCreated() {
                     destroyWindow();
                     ABasicListEditor::Builder(getModel())
                         .withNewButton([] {
-                            _new<UserWindow>(nullptr)->show();
+                            _new<AccountWindow>(nullptr)->show();
                         })
                         .withModifyButton([](const AModelIndex& index) {
                             Autumn::get<MainWindow>()->showUserConfigureDialogFor(index.getRow());
@@ -28,13 +28,20 @@ void AccountsComboBox::onComboBoxWindowCreated() {
                 }) let { it->setExpanding(); },
         _new<AButton>("New...").connect(&AView::clicked, this, [this] {
             destroyWindow();
-            _new<UserWindow>(nullptr)->show();
+            _new<AccountWindow>(nullptr)->show();
         }) let { it->setExpanding(); },
     });
 }
 
 AccountsComboBox::AccountsComboBox(const _<IListModel<AString>>& model) : AComboBox(model) {
+
+}
+
+void AccountsComboBox::updateText() {
+    AComboBox::updateText();
+
     if (getModel()->listSize() == 0) {
         setText("<no accounts>");
     }
 }
+
