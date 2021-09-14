@@ -2,13 +2,8 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-if(AUI_DIR)
-    set(AUI_DIR "AUI_DIR" CACHE PATH "AUI DIR PATH")
-    add_subdirectory(${AUI_DIR} build)
-else()
-    message("Using new way to link AUI")
-    find_package(AUI REQUIRED)
-endif()
+include(aui.boot/aui.boot.cmake)
+auib_import(AUI GIT_REPOSITORY https://github.com/aui-framework/aui)
 
 AUI_Deploy_Library(AUI.Svg)
 AUI_Deploy_Library(AUI.Image)

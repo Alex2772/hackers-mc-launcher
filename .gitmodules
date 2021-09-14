@@ -1,0 +1,3 @@
+[submodule "aui.boot"]
+	path = aui.boot
+	url = https://github.com/aui-framework/aui.boot
