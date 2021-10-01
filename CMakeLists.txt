@@ -2,31 +2,28 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-include(aui.boot/aui.boot.cmake)
-auib_import(AUI GIT_REPOSITORY https://github.com/aui-framework/aui)
+file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake aui.boot.cmake)
+include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
+#auib_import(AUI https://github.com/aui-framework/aui)
 
-AUI_Deploy_Library(AUI.Svg)
-AUI_Deploy_Library(AUI.Image)
+find_package(aui REQUIRED
+                 HINTS C:/Users/Alex2772/CLionProjects/aui/b/prefix
+                 COMPONENTS core views)
 
-AUI_Executable_Advanced(hackers-mc-launcher "${ADDITIONAL_SRCS}")
+aui_deploy_library(AUI.Svg)
+aui_deploy_library(AUI.Image)
 
-AUI_Compile_Assets(hackers-mc-launcher)
+aui_executable_advanced(hackers-mc-launcher "${ADDITIONAL_SRCS}")
+
+aui_compile_assets(hackers-mc-launcher)
 
 target_compile_definitions(hackers-mc-launcher PUBLIC HACKERS_MC_VERSION="1.0.0")
 
-target_link_libraries(hackers-mc-launcher PRIVATE AUI.Core)
-target_link_libraries(hackers-mc-launcher PRIVATE AUI.Data)
-target_link_libraries(hackers-mc-launcher PRIVATE AUI.Views)
-target_link_libraries(hackers-mc-launcher PRIVATE AUI.Crypt)
-target_link_libraries(hackers-mc-launcher PRIVATE AUI.Curl)
-target_link_libraries(hackers-mc-launcher PRIVATE AUI.Json)
-AUI_Static_Link(hackers-mc-launcher minizip)
-if (TARGET zlibstatic)
-    target_link_libraries(minizip PUBLIC zlibstatic)
-else()
-    find_package(ZLIB REQUIRED)
-    target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
-endif()
+#target_link_libraries(hackers-mc-launcher PRIVATE aui::core)
+
+aui_static_link(hackers-mc-launcher minizip)
+#find_package(ZLIB REQUIRED)
+#target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
 
 if (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
