@@ -2,13 +2,11 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake aui.boot.cmake)
-include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
-#auib_import(AUI https://github.com/aui-framework/aui)
-
-find_package(aui REQUIRED
-                 HINTS C:/Users/Alex2772/CLionProjects/aui/b/prefix
-                 COMPONENTS core views)
+file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake ${CMAKE_CURRENT_SOURCE_DIR}/aui.boot.cmake)
+#include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
+include(aui.boot.cmake)
+auib_import(AUI https://github.com/aui-framework/aui
+            COMPONENTS aui.core aui.views)
 
 aui_deploy_library(AUI.Svg)
 aui_deploy_library(AUI.Image)
