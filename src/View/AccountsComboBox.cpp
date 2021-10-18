@@ -13,6 +13,7 @@
 
 void AccountsComboBox::onComboBoxWindowCreated() {
     AComboBox::onComboBoxWindowCreated();
+    /*
     getComboBoxWindow()->addView(Horizontal {
         _new<AButton>("Manage...")
                 .connect(&AView::clicked, this, [this] {
@@ -30,7 +31,7 @@ void AccountsComboBox::onComboBoxWindowCreated() {
             destroyWindow();
             _new<AccountWindow>(nullptr)->show();
         }) let { it->setExpanding(); },
-    });
+    });*/
 }
 
 AccountsComboBox::AccountsComboBox(const _<IListModel<AString>>& model) : AComboBox(model) {

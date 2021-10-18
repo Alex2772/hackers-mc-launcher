@@ -35,8 +35,8 @@ MainWindow::MainWindow():
     setContents(
         Vertical {
             (_new<AScrollArea>() let {
-                it->getContentContainer()->setLayout(_new<AVerticalLayout>());
-                it->getContentContainer()->addView(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel()));
+                //it->getContentContainer()->setLayout(_new<AVerticalLayout>());
+                //it->getContentContainer()->addView(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel()));
             }) with_style { MinSize { 300_dp } },
             _new<AHDividerView>(),
             Stacked {

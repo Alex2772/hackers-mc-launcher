@@ -6,7 +6,7 @@ file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boo
 #include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
 include(aui.boot.cmake)
 auib_import(AUI https://github.com/aui-framework/aui
-            COMPONENTS aui.core aui.views)
+            COMPONENTS core crypt views curl json)
 
 aui_deploy_library(AUI.Svg)
 aui_deploy_library(AUI.Image)
@@ -17,11 +17,11 @@ aui_compile_assets(hackers-mc-launcher)
 
 target_compile_definitions(hackers-mc-launcher PUBLIC HACKERS_MC_VERSION="1.0.0")
 
-#target_link_libraries(hackers-mc-launcher PRIVATE aui::core)
+target_link_libraries(hackers-mc-launcher PRIVATE aui)
 
 aui_static_link(hackers-mc-launcher minizip)
-#find_package(ZLIB REQUIRED)
-#target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
+find_package(ZLIB REQUIRED)
+target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
 
 if (MSVC)
     set(CMAKE_EXE_LINKER_FLAGS    "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO")
