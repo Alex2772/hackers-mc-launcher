@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake ${CMAKE_CURRENT_SOURCE_DIR}/aui.boot.cmake)
-#include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
-include(aui.boot.cmake)
+file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake aui.boot.cmake)
+include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
 auib_import(AUI https://github.com/aui-framework/aui
-            COMPONENTS core crypt views curl json)
+            COMPONENTS core views crypt json curl)
+
+find_package(ZLIB REQUIRED)
 
 aui_deploy_library(AUI.Svg)
 aui_deploy_library(AUI.Image)
@@ -18,9 +19,7 @@ aui_compile_assets(hackers-mc-launcher)
 target_compile_definitions(hackers-mc-launcher PUBLIC HACKERS_MC_VERSION="1.0.0")
 
 target_link_libraries(hackers-mc-launcher PRIVATE aui)
-
 aui_static_link(hackers-mc-launcher minizip)
-find_package(ZLIB REQUIRED)
 target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
 
 if (MSVC)
