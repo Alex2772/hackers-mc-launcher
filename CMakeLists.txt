@@ -9,16 +9,13 @@ auib_import(AUI https://github.com/aui-framework/aui
 
 find_package(ZLIB REQUIRED)
 
-aui_deploy_library(AUI.Svg)
-aui_deploy_library(AUI.Image)
-
 aui_executable_advanced(hackers-mc-launcher "${ADDITIONAL_SRCS}")
 
 aui_compile_assets(hackers-mc-launcher)
 
 target_compile_definitions(hackers-mc-launcher PUBLIC HACKERS_MC_VERSION="1.0.0")
 
-target_link_libraries(hackers-mc-launcher PRIVATE aui)
+target_link_libraries(hackers-mc-launcher PRIVATE aui::views aui::json aui::crypt aui::curl)
 aui_static_link(hackers-mc-launcher minizip)
 target_link_libraries(minizip PUBLIC ZLIB::ZLIB)
 
