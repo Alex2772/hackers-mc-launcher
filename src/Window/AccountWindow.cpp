@@ -12,7 +12,7 @@
 #include "AccountWindow.h"
 
 AccountWindow::AccountWindow(Account* user):
-    AWindow(user == nullptr ? "New account" : "Modify account", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::DIALOG)
+    AWindow(user == nullptr ? "New account" : "Modify account", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL)
 {
 
     if (user) {

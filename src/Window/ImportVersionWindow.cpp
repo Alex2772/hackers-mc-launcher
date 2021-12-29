@@ -5,7 +5,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AComboBox.h>
-#include <AUI/View/AImageView.h>
+#include <AUI/View/AText.h>
 #include <AUI/Curl/ACurl.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Model/AListModelAdapter.h>
@@ -26,7 +26,7 @@ struct Version {
 };
 
 ImportVersionWindow::ImportVersionWindow():
-    AWindow("Import version", 500_dp, 400_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::DIALOG)
+    AWindow("Import version", 500_dp, 400_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL)
 {
     _<AView> minecraftRepoListWrap = Horizontal {/*
         Vertical {
@@ -49,14 +49,14 @@ ImportVersionWindow::ImportVersionWindow():
 
 
     auto importFromFile = Vertical {
-            _new<ALabel>("You can import a profile packed into the zip file sent you by your friend or downloaded from "
-                         "the internet.") let { it->setMultiline(true); },
+            AText::fromString("You can import a profile packed into the zip file sent you by your friend or "
+                              "downloaded from the internet."),
             _new<AButton>("Choose file")
     } << ".import_version_offset";
 
     setContents(Vertical {
         _new<ALabel>("Import version") << ".title",
-        _new<ALabel>("Please choose where do you want import version from:") let { it->setMultiline(true); },
+        AText::fromString("Please choose where do you want import version from:"),
 
         _new<ARadioButton>("Official Minecraft repository") let {
             mRadioGroup->addRadioButton(it);
@@ -114,7 +114,7 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
         async {
             try {
                 GameProfile p;
-                auto file = Settings::inst().game_folder["versions"][version.id][version.id + ".json"];
+                auto file = Settings::inst().game_dir["versions"][version.id][version.id + ".json"];
                 file.parent().makeDirs();
                 ALogger::info("Importing {}"_as.format(version.url));
                 _new<ACurl>(version.url) >> _new<FileOutputStream>(file);

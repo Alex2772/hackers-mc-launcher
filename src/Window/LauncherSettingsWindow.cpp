@@ -6,6 +6,7 @@
 #include "MainWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATabView.h>
+#include <AUI/View/AText.h>
 #include <AUI/View/APathChooserView.h>
 #include <AUI/Json/AJson.h>
 #include <Model/Settings.h>
@@ -13,12 +14,13 @@
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>
 #include <AUI/Platform/AMessageBox.h>
+#include <AUI/Platform/ADesktop.h>
 #include <AUI/ASS/ASS.h>
 
 using namespace ass;
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
-        AWindow("Settings", 400_dp, 350_dp, Autumn::get<MainWindow>().get(), WindowStyle::DIALOG) {
+        AWindow("Settings", 400_dp, 400_dp, Autumn::get<MainWindow>().get(), WindowStyle::MODAL | WindowStyle::NO_RESIZE) {
     auto binding = _new<ADataBinding<Settings>>(Settings::inst());
     setContents(
         Vertical {
@@ -27,7 +29,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                 it->addTab(
                     Vertical{
                         _form({
-                            {"Game folder:"_as, _new<APathChooserView>() && binding(&Settings::game_folder)},
+                            {"Game folder:"_as, _new<APathChooserView>() && binding(&Settings::game_dir)},
                             {
                                 "Display:"_as,
                                 Horizontal {
@@ -54,23 +56,31 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                         _new<ALabel>("Version " HACKERS_MC_VERSION) let {
                             it->setCustomAss({
                                 FontSize { 8_pt },
+                                //Margin { 0, 0, 4_dp },
+                                TextAlign::CENTER,
+                                TextColor { 0x444444_rgb },
+                            });
+                        },
+                        _new<ALabel>("Distributed under GNU General Public License v3") let {
+                            it->setCustomAss({
+                                FontSize { 8_pt },
                                 Margin { 0, 0, 4_dp },
                                 TextAlign::CENTER,
                                 TextColor { 0x444444_rgb },
                             });
                         },
-                        _new<ALabel>("This is open source free Minecraft launcher. This launcher is designed to be "
-                                     "independent of any third-party commercial organizations (Minecraft servers, "
-                                     "hostings, launcher-based projects, even official Minecraft newsletter), do not "
-                                     "be filled with terrible ads of these companies.")
-                                     let {
-                            it->setMultiline(true);
-                        },
-                        _new<ALabel>("Contributors: Alex2772") let {
-                            it->setMultiline(true);
-                        },
+                        AText::fromString("Open source free Minecraft launcher that's designed to be independent of "
+                                          "any third-party commercial organizations like Minecraft servers, hostings, "
+                                          "launcher-based projects, even official Minecraft. Do not allow to feed "
+                                          "yourself with terrible bullshit filled with annoying ads!"),
+                        AText::fromString("The launcher is distributed under GNU General Public License (v3) and "
+                                          "powered by open source software: zlib, minizip, Freetype, Boost, AUI."),
+                        AText::fromString("Contributors: Alex2772"),
                         Horizontal {
                             _new<ASpacer>(),
+                            _new<AButton>("View GNU General Public License v3").connect(&AButton::clicked, this, [] {
+                                ADesktop::openUrl("https://www.gnu.org/licenses/gpl-3.0.html");
+                            }),
                             _new<AButton>("Check for updates..."),
                         }
                     }, "About"

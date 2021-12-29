@@ -3,19 +3,26 @@
 //
 
 #include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/View/AImageView.h>
+#include <AUI/View/ADrawableView.h>
+#include <AUI/View/AText.h>
+#include <AUI/View/ATextField.h>
 #include "GameProfilesView.h"
 
 GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
     mModel(model)
 {
     setContents(Vertical {
+        Horizontal {
+            _new<ASpacer>(),
+            _new<ALabel>("Search:"),
+            _new<ATextField>() let { it->focus(); },
+        },
         ui_for(profile, model, AWordWrappingLayout) {
             auto item = Vertical {
                     Stacked{
-                        _new<AImageView>(":profile_icons/default.png"_url),
+                        _new<ADrawableView>(":profile_icons/default.png"_url),
                     } << ".version_item_wrap",
-                    _new<ALabel>(profile.getName()),
+                    AText::fromString(profile.getName(), { WordBreak::BREAK_ALL }),
             } << ".version_item";
             auto it = item.get();
 

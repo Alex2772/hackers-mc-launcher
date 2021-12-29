@@ -22,23 +22,27 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AScrollArea.h>
-#include <AUI/View/AImageView.h>
 #include <View/AccountsComboBox.h>
 #include <View/GameProfilesView.h>
 #include <AUI/View/AHDividerView.h>
+#include <AUI/View/ASpinner.h>
+#include <AUI/View/ADrawableView.h>
 
 using namespace ass;
 
 MainWindow::MainWindow():
-    AWindow("Hacker's Minecraft Launcher", 600_dp, 180_dp)
+    AWindow("Hacker's Minecraft Launcher", 600_dp, 380_dp)
 {
     setContents(
         Vertical {
-            (_new<AScrollArea>() let {
-                //it->getContentContainer()->setLayout(_new<AVerticalLayout>());
-                //it->getContentContainer()->addView(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel()));
-            }) with_style { MinSize { 300_dp } },
-            _new<AHDividerView>(),
+            Centered::Expanding {
+                (_new<AScrollArea>() let {
+                    it->getContentContainer()->setLayout(_new<AVerticalLayout>());
+                    it->getContentContainer()->addView(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel()));
+                }) with_style { MinSize { 300_dp } },
+                mSpinnerView = _new<ASpinner>(),
+            },
+            _new<AView>() with_style { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
             Stacked {
                 Horizontal {
                     Vertical {
@@ -48,9 +52,11 @@ MainWindow::MainWindow():
                         })) with_style { MinSize { 100_dp, {} } },
                     },
                     _new<ASpacer>(),
-                    _new<AButton>().connect(&AView::clicked, this, [&] {
-                        _new<LauncherSettingsWindow>()->show();
-                    }) << "#settings",
+                    Centered{
+                        _new<AButton>().connect(&AView::clicked, this, [&] {
+                            _new<LauncherSettingsWindow>()->show();
+                        }) << "#settings"
+                    },
                 } with_style { Expanding{} },
 
                 // Play button / download panel
@@ -78,13 +84,29 @@ MainWindow::MainWindow():
                     },
 
                     // download button
-                    mPlayButton = _new<AButton>("Play").connect(&AButton::clicked, me::onPlayButtonClicked) << "#play" let { it->setDefault(); },
+                    mPlayButton = Centered { Horizontal {
+                        _new<ADrawableView>(":svg/play.svg"),
+                        _new<ALabel>("Play"),
+                    }} let {
+                        it << "#play" << ".btn" << ".btn_default";
+                        connect(it->clicked, me::onPlayButtonClicked);
+                    },
                 },
-            },
+            } with_style { Padding { 8_dp } },
         }
     );
-
-
+    showProfileLoading();
+    async {
+        LegacyLauncherJsonSource::load();
+        ui {
+            hideProfileLoading();
+            connect(reloadProfiles, [&] {
+                showProfileLoading();
+                LegacyLauncherJsonSource::reload();
+                hideProfileLoading();
+            });
+        };
+    };
 }
 
 void MainWindow::onPlayButtonClicked() {
@@ -158,25 +180,29 @@ void MainWindow::checkForDiskProfileUpdates() {
     if (high_resolution_clock::now().time_since_epoch() - lastCheckTime > 5s) {
         async {
             // load actual set of profiles
-            ASet<AUuid> actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
-            ASet<AUuid> loadedProfiles;
-
-            // fill "loadedProfiles"
-            for (GameProfile& p : GameProfilesRepository::inst().getModel()) { loadedProfiles << p.getUuid(); }
+            decltype(auto) actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
+            decltype(auto) loadedProfiles = GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles();
 
             // and compare it with actual profiles
             if (actualProfiles != loadedProfiles) {
                 // found new game profile!
                 ALogger::info("Detected changes in launcher_profiles.json, reloading");
-                ui_thread {
-                    LegacyLauncherJsonSource::reload();
-                };
+                emit reloadProfiles();
             }
         };
 
         lastCheckTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     }
 
+}
+
+void MainWindow::showProfileLoading() {
+    mGameProfilesView->setCustomAss({ Opacity { 0.1f } });
+    mSpinnerView->setVisibility(Visibility::VISIBLE);
+}
+void MainWindow::hideProfileLoading() {
+    mGameProfilesView->setCustomAss({ Opacity { 1.f } });
+    mSpinnerView->setVisibility(Visibility::GONE);
 }
 
 

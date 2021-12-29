@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake aui.boot.cmake)
+file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake ${CMAKE_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
 auib_import(AUI https://github.com/aui-framework/aui
-            COMPONENTS core views crypt json curl)
+            COMPONENTS core views crypt json curl uitests)
 
 find_package(ZLIB REQUIRED)
 
-aui_executable_advanced(hackers-mc-launcher "${ADDITIONAL_SRCS}")
+aui_executable(hackers-mc-launcher)
 
 aui_compile_assets(hackers-mc-launcher)
 
@@ -24,3 +24,5 @@ if (MSVC)
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 endif()
+
+aui_enable_tests()

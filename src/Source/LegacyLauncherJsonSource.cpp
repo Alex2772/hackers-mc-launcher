@@ -13,7 +13,7 @@
 bool LegacyLauncherJsonSource::ourDoSave = true;
 
 APath LegacyLauncherJsonSource::getVersionsJsonFilePath() {
-    return Settings::inst().game_folder.file("launcher_profiles.json");
+    return Settings::inst().game_dir.file("launcher_profiles.json");
 }
 
 void LegacyLauncherJsonSource::load() {
@@ -52,6 +52,7 @@ void LegacyLauncherJsonSource::load() {
 }
 	 */
         auto config = AJson::read(_new<FileInputStream>(getVersionsJsonFilePath()));
+        GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles().clear();
 
         // try to load users
         try {
@@ -65,6 +66,8 @@ void LegacyLauncherJsonSource::load() {
         // try to load game profiles
         try {
             for (auto& entry : config["profiles"].asObject()) {
+                auto uuid = safeUuid(entry.first);
+                GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles() << uuid;
                 AString name = "unknown";
                 try {
                     // optifine fix
@@ -75,7 +78,7 @@ void LegacyLauncherJsonSource::load() {
                     }
                     if (!name.startsWith("latest-")) {
                         GameProfile p;
-                        GameProfile::fromName(p, safeUuid(entry.first), name);
+                        GameProfile::fromName(p, uuid, name);
                         GameProfilesRepository::inst().getModel() << p;
                         ALogger::info("Imported profile: " + name);
                     }

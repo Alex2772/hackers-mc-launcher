@@ -27,7 +27,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
         ALogger::info("User: " + user.username);
         ALogger::info("Profile: " + profile.getName());
 
-        const APath gameFolder = Settings::inst().game_folder;
+        const APath gameFolder = Settings::inst().game_dir;
         const APath extractFolder = gameFolder["bin"][profile.getUuid().toRawString()];
         ALogger::info("Install path: " + gameFolder);
 
@@ -298,7 +298,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
         }
 
         ALogger::info(java + " " + args.join(' '));
-        int status = AProcess::execute(java, args.join(' '), Settings::inst().game_folder);
+        int status = AProcess::execute(java, args.join(' '), Settings::inst().game_dir);
         ALogger::info("Child process exit with status "_as + AString::number(status));
 
     } catch (const AException& e) {

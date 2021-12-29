@@ -33,8 +33,8 @@ Settings::Settings() {
 }
 
 void Settings::initEmptyFields() {
-    if (game_folder.empty())
-        game_folder = APath::getDefaultPath(APath::APPDATA).file(".minecraft");
+    if (game_dir.empty())
+        game_dir = APath::getDefaultPath(APath::APPDATA).file(".minecraft");
 }
 
 void Settings::reset() {

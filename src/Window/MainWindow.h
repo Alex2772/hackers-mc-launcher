@@ -10,7 +10,7 @@ class MainWindow: public AWindow {
 private:
     _<AButton> mUserConfigureButton;
     _<AButton> mGameProfileConfigureButton;
-    _<AButton> mPlayButton;
+    _<AView> mPlayButton;
     _<AComboBox> mUsersListView;
     _<GameProfilesView> mGameProfilesView;
 
@@ -20,7 +20,11 @@ private:
     _<ALabel> mTotalLabel;
     _<ALabel> mTargetFileLabel;
 
+    _<AView> mSpinnerView;
+
     void checkForDiskProfileUpdates();
+    void showProfileLoading();
+    void hideProfileLoading();
 
 public:
 
@@ -36,5 +40,9 @@ public:
     void showPlayButton();
 
     void showDownloadingPanel();
+
+signals:
+    emits<> reloadProfiles;
+
 };
 

@@ -4,7 +4,9 @@
 
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/AButton.h>
-#include <AUI/View/AImageView.h>
+#include <AUI/View/ADrawableView.h>
+#include <AUI/View/AText.h>
+#include "Window/MainWindow.h"
 
 using namespace ass;
 
@@ -12,10 +14,25 @@ struct Style {
     Style() {
         AStylesheet::inst().addRules({
             {
+                t<MainWindow>(),
+                Padding { 0 },
+            },
+            {
                 c("#play"),
-                BackgroundImage { ":svg/play.svg", 0xccffffff_argb, {}, Sizing::FIT_PADDING },
                 Padding { 16_dp },
                 FixedSize { 200_dp, 40_dp },
+            },
+            {
+                c("#play") >> t<ADrawableView>(),
+                FixedSize { 20_dp },
+                Margin { 4_dp },
+            },
+            {
+                c("#play") >> t<ALabel>(),
+                FontSize { 16_pt },
+                TextColor { 0xffffff_rgb },
+                Margin { 0, 8_dp },
+                TextAlign::CENTER,
             },
             {
                 c("#downloading_panel"),
@@ -78,7 +95,7 @@ struct Style {
                 Border { 1_px, 0x40000000_argb },
             },
             {
-                c(".version_item_wrap") > t<AImageView>(),
+                c(".version_item_wrap") > t<ADrawableView>(),
                 MinSize { 48_dp },
             },
             {
@@ -86,7 +103,7 @@ struct Style {
                 MinSize { 48_dp },
             },
             {
-                c(".version_item") > t<ALabel>(),
+                c(".version_item") > t<AText>(),
                 TextAlign::CENTER,
                 Margin { 10_dp, 0, 0, 0 },
             },

@@ -11,6 +11,7 @@ class GameProfilesRepository {
 private:
     _<AListModel<GameProfile>> mModel;
 
+    ASet<AUuid> mCurrentlyLoadedSetOfProfiles; // used for profile auto-reload feature
 
 public:
     GameProfilesRepository();
@@ -23,6 +24,10 @@ public:
 
     void addGameProfile(const GameProfile& user);
     void removeGameProfile(const AUuid& uuid);
+
+    ASet<AUuid>& getCurrentlyLoadedSetOfProfiles() {
+        return mCurrentlyLoadedSetOfProfiles;
+    }
 };
 
 

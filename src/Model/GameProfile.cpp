@@ -338,10 +338,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
         // if the current profile does not have it's own main jar file, we can copy it from the inherited profile.
         // in theory, it would work recursively too.
-        auto mainJarAbsolutePath = Settings::inst().game_folder["versions"][name][name + ".jar"];
+        auto mainJarAbsolutePath = Settings::inst().game_dir["versions"][name][name + ".jar"];
         if (!mainJarAbsolutePath.isRegularFileExists())
         {
-            APath::copy(Settings::inst().game_folder["versions"][dst.mName][dst.mName + ".jar"], mainJarAbsolutePath);
+            APath::copy(Settings::inst().game_dir["versions"][dst.mName][dst.mName + ".jar"], mainJarAbsolutePath);
         }
     }
 
@@ -386,7 +386,7 @@ void GameProfile::makeClean() {
 }
 
 void GameProfile::save() {
-    auto f = Settings::inst().game_folder.file("versions").file(mName).file(mName + ".hackers.json");
+    auto f = Settings::inst().game_dir.file("versions").file(mName).file(mName + ".hackers.json");
     f.parent().makeDirs();
     AJson::write(_new<FileOutputStream>(f), toJson());
 }
@@ -469,9 +469,9 @@ AJsonElement GameProfile::toJson() {
 void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
     _<FileInputStream> fis;
     try {
-        fis = _new<FileInputStream>(Settings::inst().game_folder.file("versions").file(name).file(name + ".hackers.json"));
+        fis = _new<FileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".hackers.json"));
     } catch (...) {
-        fis = _new<FileInputStream>(Settings::inst().game_folder.file("versions").file(name).file(name + ".json"));
+        fis = _new<FileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".json"));
     }
     fromJson(dst, uuid, name, AJson::read(fis).asObject());
 }

@@ -45,7 +45,7 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
                             // add java's lib folder to java library path
                             auto javaLibFolder = Settings::inst().java_executable.parent()["lib"];
 
-                            return Settings::inst().game_folder["bin"][c.profile->getUuid().toRawString()];
+                            return Settings::inst().game_dir["bin"][c.profile->getUuid().toRawString()];
                         }
                         return {};
                     }
@@ -129,14 +129,14 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "game_directory",
                     [](const Context& c) -> AVariant
                     {
-                        return Settings::inst().game_folder;
+                        return Settings::inst().game_dir;
                     }
             },
             {
                     "assets_root",
                     [](const Context& c) -> AVariant
                     {
-                        return Settings::inst().game_folder["assets"];
+                        return Settings::inst().game_dir["assets"];
                     }
             },
             {
