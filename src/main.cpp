@@ -8,6 +8,7 @@
 #include <Source/LegacyLauncherJsonSource.h>
 #include <AUI/Util/ARandom.h>
 #include <Model/Settings.h>
+#include <AUI/Logging/ALogger.h>
 
 AUI_ENTRY {
     Autumn::put(_new<ARandom>());

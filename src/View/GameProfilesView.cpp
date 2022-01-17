@@ -6,13 +6,18 @@
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AText.h>
 #include <AUI/View/ATextField.h>
+#include <AUI/View/AButton.h>
 #include "GameProfilesView.h"
+#include "Window/ImportVersionWindow.h"
 
 GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
     mModel(model)
 {
     setContents(Vertical {
         Horizontal {
+            _new<AButton>("Import version...").connect(&AView::clicked, [] {
+                _new<ImportVersionWindow>()->show();
+            }),
             _new<ASpacer>(),
             _new<ALabel>("Search:"),
             _new<ATextField>() let { it->focus(); },

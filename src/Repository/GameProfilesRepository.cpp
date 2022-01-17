@@ -16,7 +16,6 @@ GameProfilesRepository::GameProfilesRepository():
 
 void GameProfilesRepository::addGameProfile(const GameProfile& user) {
     mModel << user;
-    LegacyLauncherJsonSource::save();
 }
 
 GameProfilesRepository& GameProfilesRepository::inst() {

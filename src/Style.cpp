@@ -70,7 +70,7 @@ struct Style {
             },
             {
                 c(".import_version_offset"),
-                Margin { {}, {}, {}, 30_dp },
+                Margin { {}, {}, {}, 22_dp },
             },
             {
                 c(".import_version_offset") >> t<AButton>(),
@@ -83,7 +83,7 @@ struct Style {
             {
                 c(".version_item"),
                 Padding { 8_dp },
-                Margin { 0 },
+                Margin { 4_dp },
             },
             {
                 c::hover(".version_item"),

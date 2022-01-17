@@ -3,7 +3,7 @@
 //
 
 #include <Model/Settings.h>
-#include <AUI/IO/FileInputStream.h>
+#include <AUI/IO/AFileInputStream.h>
 #include <AUI/Logging/ALogger.h>
 #include <Repository/UsersRepository.h>
 #include <Repository/GameProfilesRepository.h>
@@ -51,7 +51,7 @@ void LegacyLauncherJsonSource::load() {
   }
 }
 	 */
-        auto config = AJson::read(_new<FileInputStream>(getVersionsJsonFilePath()));
+        auto config = AJson::read(_new<AFileInputStream>(getVersionsJsonFilePath()));
         GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles().clear();
 
         // try to load users
@@ -140,7 +140,7 @@ void LegacyLauncherJsonSource::save() {
             config["profiles"] = profiles;
         }
 
-        AJson::write(_new<FileOutputStream>(getVersionsJsonFilePath()), config);
+        AJson::write(_new<AFileOutputStream>(getVersionsJsonFilePath()), config);
     } catch (const AException& e) {
         ALogger::warn("Could not save launcher_profiles.json: " + e.getMessage());
     }
@@ -157,7 +157,7 @@ void LegacyLauncherJsonSource::reload() {
 ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
     ASet<AUuid> s;
     try {
-        auto config = AJson::read(_new<FileInputStream>(getVersionsJsonFilePath()));
+        auto config = AJson::read(_new<AFileInputStream>(getVersionsJsonFilePath()));
 
         // try to load game profiles
         try {

@@ -7,9 +7,10 @@
 #include <AUI/Crypt/AHash.h>
 #include <AUI/Traits/iterators.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/IO/FileInputStream.h>
+#include <AUI/IO/AFileInputStream.h>
 #include <AUI/Curl/ACurl.h>
 #include <AUI/Platform/AProcess.h>
+#include <AUI/Platform/AProgramModule.h>
 #include <Util/VariableHelper.h>
 #include <unzip.h>
 #include "Launcher.h"
@@ -17,7 +18,6 @@
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Traits/platform.h>
-#include <AUI/Platform/Dll.h>
 
 void Launcher::play(const Account& user, const GameProfile& profile, bool doUpdate) {
     try {
@@ -46,7 +46,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                         // here we go. download it
                         auto localFile = gameFolder.file(filepath);
                         localFile.parent().makeDirs();
-                        _new<ACurl>(download.mUrl) >> _new<FileOutputStream>(localFile);
+                        _new<ACurl>(download.mUrl) >> _new<AFileOutputStream>(localFile);
                         break;
                     }
                 }
@@ -72,7 +72,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                 if (!localFilePath.isRegularFileExists()) {
                     ALogger::info("[x] To download: " + download.mLocalPath);
                 } else if (doUpdate && (download.mHash.empty() ||
-                                        AHash::sha1(_new<FileInputStream>(localFilePath)).toHexString() !=
+                                        AHash::sha1(_new<AFileInputStream>(localFilePath)).toHexString() !=
                                         download.mHash)) {
                     ALogger::info("[#] To download: " + download.mLocalPath);
                 } else {
@@ -83,7 +83,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
             }
 
             // asset downloads
-            auto assets = AJson::read(_new<FileInputStream>(assetsJson));
+            auto assets = AJson::read(_new<AFileInputStream>(assetsJson));
 
             auto objects = assets["objects"].asObject();
 
@@ -96,7 +96,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
 
                 if (local.isRegularFileExists()) {
                     if (!doUpdate
-                        || AHash::sha1(_new<FileInputStream>(local)).toHexString() == hash // check file's sha1
+                        || AHash::sha1(_new<AFileInputStream>(local)).toHexString() == hash // check file's sha1
                             ) {
                         continue;
                     }
@@ -123,10 +123,10 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                 emit updateTargetFile(d.localPath);
                 local.parent().makeDirs();
                 auto url = _new<ACurl>(d.url);
-                auto fos = _new<FileOutputStream>(local);
+                auto fos = _new<AFileOutputStream>(local);
 
                 char buf[0x8000];
-                for (int r; (r = url->read(buf, sizeof(buf))) > 0;) {
+                for (size_t r; (r = url->read(buf, sizeof(buf))) > 0;) {
                     fos->write(buf, r);
                     downloadedBytes += r;
                     if (AWindow::isRedrawWillBeEfficient()) {
@@ -204,7 +204,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                         bool isDll = fileName.endsWith(".dll");
 
                         if (isDylib || isSo || isDll) {
-                            if (fileName.endsWith("." + Dll::getDllExtension())) {
+                            if (fileName.endsWith("." + AProgramModule::getDllExtension())) {
                                 /*
                                 if (!fileName.endsWith("64." + Dll::getDllExtension())) {
                                     return false;
@@ -235,9 +235,9 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                                 APath dstFile = extractFolder.file(fileName);
                                 dstFile.parent().makeDirs();
 
-                                _<FileOutputStream> fos;
+                                _<AFileOutputStream> fos;
                                 try {
-                                    fos = _new<FileOutputStream>(dstFile);
+                                    fos = _new<AFileOutputStream>(dstFile);
                                 } catch (...) {
                                     unzCloseCurrentFile(unzip);
                                     throw AException(

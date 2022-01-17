@@ -2,8 +2,8 @@
 // Created by alex2772 on 4/16/21.
 //
 
-#include <AUI/IO/FileInputStream.h>
-#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/AFileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include <Util.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/platform.h>
@@ -15,7 +15,7 @@ Settings& Settings::inst() {
     static Settings s;
     do_once {
         try {
-            s.readJson(AJson::read(_new<FileInputStream>(SETTINGS_PATH)));
+            s.readJson(AJson::read(_new<AFileInputStream>(SETTINGS_PATH)));
         } catch (...) {
 
         }
@@ -25,7 +25,7 @@ Settings& Settings::inst() {
 
 void Settings::save() {
     inst().initEmptyFields();
-    AJson::write(_new<FileOutputStream>(SETTINGS_PATH), inst().toJson());
+    AJson::write(_new<AFileOutputStream>(SETTINGS_PATH), inst().toJson());
 }
 
 Settings::Settings() {

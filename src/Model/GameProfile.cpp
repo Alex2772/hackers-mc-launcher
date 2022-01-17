@@ -3,8 +3,8 @@
 //
 
 #include <Util/VariableHelper.h>
-#include <AUI/IO/FileOutputStream.h>
-#include <AUI/IO/FileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
+#include <AUI/IO/AFileInputStream.h>
 #include <AUI/Logging/ALogger.h>
 #include "GameProfile.h"
 #include "DownloadEntry.h"
@@ -388,7 +388,7 @@ void GameProfile::makeClean() {
 void GameProfile::save() {
     auto f = Settings::inst().game_dir.file("versions").file(mName).file(mName + ".hackers.json");
     f.parent().makeDirs();
-    AJson::write(_new<FileOutputStream>(f), toJson());
+    AJson::write(_new<AFileOutputStream>(f), toJson());
 }
 
 AJsonElement GameProfile::toJson() {
@@ -467,11 +467,11 @@ AJsonElement GameProfile::toJson() {
 }
 
 void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
-    _<FileInputStream> fis;
+    _<AFileInputStream> fis;
     try {
-        fis = _new<FileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".hackers.json"));
+        fis = _new<AFileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".hackers.json"));
     } catch (...) {
-        fis = _new<FileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".json"));
+        fis = _new<AFileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".json"));
     }
     fromJson(dst, uuid, name, AJson::read(fis).asObject());
 }
