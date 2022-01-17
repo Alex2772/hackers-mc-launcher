@@ -98,7 +98,7 @@ MainWindow::MainWindow():
     showProfileLoading();
     async {
         LegacyLauncherJsonSource::load();
-        ui {
+        ui_thread {
             hideProfileLoading();
             connect(reloadProfiles, [&] {
                 showProfileLoading();
