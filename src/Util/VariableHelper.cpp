@@ -7,7 +7,7 @@
 #include <AUI/Traits/platform.h>
 #include <Model/Settings.h>
 #include <AUI/Autumn/Autumn.h>
-#include <AUI/IO/StringStream.h>
+#include <AUI/IO/AStringStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include "VariableHelper.h"
 
@@ -224,7 +224,7 @@ AString VariableHelper::parseVariables(const Context& c, const AString& s) {
     std::string r;
     r.reserve(s.length());
 
-    ATokenizer tokenizer(_new<StringStream>(s));
+    ATokenizer tokenizer(_new<AStringStream>(s));
     try {
         for (;;) {
             tokenizer.readStringUntilUnescaped(r, '$');

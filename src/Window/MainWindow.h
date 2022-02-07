@@ -20,6 +20,8 @@ private:
     _<ALabel> mTotalLabel;
     _<ALabel> mTargetFileLabel;
 
+    AFuture<> mTask;
+
     _<AView> mSpinnerView;
 
     void checkForDiskProfileUpdates();

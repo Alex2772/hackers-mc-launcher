@@ -46,7 +46,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                         // here we go. download it
                         auto localFile = gameFolder.file(filepath);
                         localFile.parent().makeDirs();
-                        _new<ACurl>(download.mUrl) >> _new<AFileOutputStream>(localFile);
+                        ACurl(ACurl::Builder(download.mUrl).withOutputStream(_new<AFileOutputStream>(localFile))).run();
                         break;
                     }
                 }
@@ -122,17 +122,16 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                 ALogger::info("Downloading: " + d.url + " > " + local);
                 emit updateTargetFile(d.localPath);
                 local.parent().makeDirs();
-                auto url = _new<ACurl>(d.url);
-                auto fos = _new<AFileOutputStream>(local);
-
-                char buf[0x8000];
-                for (size_t r; (r = url->read(buf, sizeof(buf))) > 0;) {
-                    fos->write(buf, r);
-                    downloadedBytes += r;
+                AFileOutputStream fos(local);
+                ACurl curl(ACurl::Builder(d.url).withWriteCallback([&](const AByteBufferRef& b) {
+                    fos << b;
+                    downloadedBytes += b.size();
                     if (AWindow::isRedrawWillBeEfficient()) {
                         emit updateDownloadedSize(downloadedBytes);
                     }
-                }
+                    return b.size();
+                }));
+                curl.run();
             }
         };
 

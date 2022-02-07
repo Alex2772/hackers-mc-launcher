@@ -36,6 +36,7 @@ private:
     _<ATextField> mSearchTextField;
     VersionType mVersionTypeValue = VersionType::NONE;
     ARadioButton::Group mReleaseTypeGroup;
+    AFuture<> mImportTask;
 
     void doImportFromMinecraftRepo();
 
@@ -44,5 +45,6 @@ private:
 public:
 
     ImportVersionWindow();
+
 };
 

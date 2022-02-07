@@ -101,8 +101,8 @@ ImportVersionWindow::ImportVersionWindow():
 
     mVersionModel = _new<AListModel<Version>>();
 
-    async {
-        auto versionManifest = AJson::read(_new<ACurl>("https://launchermeta.mojang.com/mc/game/version_manifest.json"));
+    mImportTask = async {
+        auto versionManifest = AJson::read(ACurl::Builder("https://launchermeta.mojang.com/mc/game/version_manifest.json").toByteBuffer());
         for (auto& version : versionManifest["versions"].asArray()) {
             mVersionModel->push_back({
                 version["id"].asString(),
@@ -136,13 +136,13 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
     for (const auto& row : mMinecraftRepoList->getSelectionModel()) {
         Version version = mVersionModel->listItemAt(row.getIndex().getRow());
 
-        async {
+        mImportTask = async {
             try {
                 GameProfile p;
                 auto file = Settings::inst().game_dir["versions"][version.id][version.id + ".json"];
                 file.parent().makeDirs();
                 ALogger::info("Importing {}"_as.format(version.url));
-                AFileOutputStream(file) << ACurl(version.url);
+                ACurl(ACurl::Builder(version.url).withOutputStream(_new<AFileOutputStream>(file))).run();
                 GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::read(_new<AFileInputStream>(file)).asObject());
                 p.save();
                 ui_thread {

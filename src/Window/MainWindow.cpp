@@ -96,7 +96,7 @@ MainWindow::MainWindow():
         }
     );
     showProfileLoading();
-    async {
+    mTask = async {
         LegacyLauncherJsonSource::load();
         ui_thread {
             hideProfileLoading();
@@ -114,7 +114,7 @@ void MainWindow::onPlayButtonClicked() {
     mDownloadedLabel->setText("0");
     mTotalLabel->setText("0");
     mTargetFileLabel->setText("");
-    asyncX [this] {
+    mTask = asyncX [this] {
         auto launcher = _new<Launcher>();
         connect(launcher->updateStatus, slot(mStatusLabel)::setText);
         connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
@@ -178,7 +178,7 @@ void MainWindow::checkForDiskProfileUpdates() {
     // check for new profiles every 5 secs when cursor moves
     static milliseconds lastCheckTime = 0ms;
     if (high_resolution_clock::now().time_since_epoch() - lastCheckTime > 5s) {
-        async {
+        mTask = async {
             // load actual set of profiles
             decltype(auto) actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
             decltype(auto) loadedProfiles = GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles();
