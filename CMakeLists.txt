@@ -26,3 +26,7 @@ if (MSVC)
 endif()
 
 aui_enable_tests()
+
+aui_app(TARGET hackers-mc-launcher
+        NAME "Hacker's MC Launcher"
+        ICON icon.svg)
