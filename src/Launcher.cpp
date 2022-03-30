@@ -14,25 +14,29 @@
 #include <Util/VariableHelper.h>
 #include <unzip.h>
 #include "Launcher.h"
+#include "Util.h"
 
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Traits/platform.h>
+#include <AUI/IO/AFileOutputStream.h>
+
+static constexpr auto LOG_TAG = "Launcher";
 
 void Launcher::play(const Account& user, const GameProfile& profile, bool doUpdate) {
     try {
         emit updateStatus("Scanning files to download");
 
-        ALogger::info("== PLAY BUTTON PRESSED ==");
-        ALogger::info("User: " + user.username);
-        ALogger::info("Profile: " + profile.getName());
+        ALogger::info(LOG_TAG) << ("== PLAY BUTTON PRESSED ==");
+        ALogger::info(LOG_TAG) << ("User: " + user.username);
+        ALogger::info(LOG_TAG) << ("Profile: " + profile.getName());
 
-        const APath gameFolder = Settings::inst().game_dir;
+        const APath gameFolder = Settings::inst().gameDir;
         const APath extractFolder = gameFolder["bin"][profile.getUuid().toRawString()];
-        ALogger::info("Install path: " + gameFolder);
+        ALogger::info(LOG_TAG) << ("Install path: " + gameFolder);
 
         const APath assetsJson = gameFolder["assets"]["indexes"][profile.getAssetsIndex() + ".json"];
-        ALogger::info("Assets: " + assetsJson);
+        ALogger::info(LOG_TAG) << ("Assets: " + assetsJson);
 
         auto checkAndDownload = [&] {
             // we should have asset indexes on disk in order to determine how much data will we download
@@ -70,11 +74,11 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
             for (auto& download : profile.getDownloads()) {
                 auto localFilePath = gameFolder.file(download.mLocalPath);
                 if (!localFilePath.isRegularFileExists()) {
-                    ALogger::info("[x] To download: " + download.mLocalPath);
+                    ALogger::info(LOG_TAG) << ("[x] To download: " + download.mLocalPath);
                 } else if (doUpdate && (download.mHash.empty() ||
                                         AHash::sha1(_new<AFileInputStream>(localFilePath)).toHexString() !=
                                         download.mHash)) {
-                    ALogger::info("[#] To download: " + download.mLocalPath);
+                    ALogger::info(LOG_TAG) << ("[#] To download: " + download.mLocalPath);
                 } else {
                     continue;
                 }
@@ -83,7 +87,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
             }
 
             // asset downloads
-            auto assets = AJson::read(_new<AFileInputStream>(assetsJson));
+            auto assets = AJson::fromStream(AFileInputStream(assetsJson));
 
             auto objects = assets["objects"].asObject();
 
@@ -102,7 +106,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                     }
                 }
 
-                ALogger::info("[A] To download: " + object.first);
+                ALogger::info(LOG_TAG) << ("[A] To download: " + object.first);
 
                 totalDownloadBytes += object.second["size"].asInt();
                 toDownload << ToDownload{
@@ -114,16 +118,16 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
             emit updateStatus("Downloading...");
 
             if (!toDownload.empty()) {
-                ALogger::info("== BEGIN DOWNLOAD ==");
+                ALogger::info(LOG_TAG) << ("== BEGIN DOWNLOAD ==");
             }
 
             for (auto& d : toDownload) {
                 auto local = gameFolder[d.localPath];
-                ALogger::info("Downloading: " + d.url + " > " + local);
+                ALogger::info(LOG_TAG) << ("Downloading: " + d.url + " > " + local);
                 emit updateTargetFile(d.localPath);
                 local.parent().makeDirs();
                 AFileOutputStream fos(local);
-                ACurl curl(ACurl::Builder(d.url).withWriteCallback([&](const AByteBufferRef& b) {
+                ACurl curl(ACurl::Builder(d.url).withWriteCallback([&](AByteBufferView b) {
                     fos << b;
                     downloadedBytes += b.size();
                     if (AWindow::isRedrawWillBeEfficient()) {
@@ -142,6 +146,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
 
         checkAndDownload();
 
+        //Util::getSettingsDir()["jre-"]
 
         emit updateTargetFile("");
         emit updateStatus("Preparing to launch...");
@@ -157,7 +162,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                 if (!VariableHelper::checkRules(c, d.mConditions)) {
                     continue;
                 }
-                ALogger::info("Extracting " + d.mLocalPath);
+                ALogger::info(LOG_TAG) << ("Extracting " + d.mLocalPath);
 
                 struct z {
                     unzFile unz;
@@ -221,7 +226,7 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
                                 try {
                                     extractFolder.file(fileName).makeDirs();
                                 } catch (const AException& e) {
-                                    ALogger::warn(e.getMessage());
+                                    ALogger::warn(LOG_TAG) << (e.getMessage());
                                 }
                             } else {
                                 // file
@@ -290,18 +295,14 @@ void Launcher::play(const Account& user, const GameProfile& profile, bool doUpda
             }
         }
 
-
-        auto java = Settings::inst().java_executable;
-        if (!java.isRegularFileExists()) {
-            throw AException("invalid java executable path");
-        }
-
-        ALogger::info(java + " " + args.join(' '));
-        int status = AProcess::execute(java, args.join(' '), Settings::inst().game_dir);
-        ALogger::info("Child process exit with status "_as + AString::number(status));
-
+        //ALogger::info(LOG_TAG) << "Command line: " << (java + " " + args.join(' '));
+        //int status = AProcess::execute(java, args.join(' '), Settings::inst().gameDir);
+        //ALogger::info(LOG_TAG) << ("Child process exit with status "_as + AString::number(status));
+        //if (status != 0) {
+        //    throw AException("Game has crashed");
+        //}
     } catch (const AException& e) {
-        ALogger::warn("Error running game: " + e.getMessage());
+        ALogger::warn(LOG_TAG) << ("Error running game: " + e.getMessage());
         emit errorOccurred(e.getMessage());
     }
 }

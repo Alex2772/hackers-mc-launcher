@@ -2,7 +2,7 @@
 
 
 #include <AUI/Common/AString.h>
-#include <AUI/Json/AJsonElement.h>
+#include <AUI/Json/AJson.h>
 #include <AUI/Common/AUuid.h>
 #include "DownloadEntry.h"
 
@@ -47,7 +47,7 @@ private:
     void makeClean();
 
 public:
-    static void fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJsonObject& json);
+    static void fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJson& json);
 
     [[nodiscard]] const AUuid& getUuid() const {
         return mUuid;
@@ -95,7 +95,7 @@ public:
 
     void save();
 
-    AJsonElement toJson();
+    AJson toJson();
 
     static void fromName(GameProfile& dst, const AUuid& uuid, const AString& name);
 };

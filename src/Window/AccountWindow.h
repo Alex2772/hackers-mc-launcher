@@ -17,7 +17,7 @@ public:
     AccountWindow(Account* user);
 
 signals:
-    emits<> finished;
+    emits<> positiveAction;
     emits<> deleteUser;
 };
 

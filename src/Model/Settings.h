@@ -5,16 +5,14 @@
 
 struct Settings {
 public:
-    APath game_dir;
-    APath java_executable = findJava();
-    uint16_t width = 854;
-    uint16_t height = 500;
-    bool is_fullscreen = false;
-    AJSON_FIELDS(game_dir, width, height, is_fullscreen)
+    APath gameDir;
+    int width = 854;
+    int height = 500;
+    bool isFullscreen = false;
 
     bool operator==(const Settings& rhs) const {
-        return std::tie(game_dir, width, height, is_fullscreen) ==
-               std::tie(rhs.game_dir, rhs.width, rhs.height, rhs.is_fullscreen);
+        return std::tie(gameDir, width, height, isFullscreen) ==
+               std::tie(rhs.gameDir, rhs.width, rhs.height, rhs.isFullscreen);
     }
 
     bool operator!=(const Settings& rhs) const {
@@ -26,8 +24,13 @@ public:
     static void save();
     static void reset();
 
-private:
     Settings();
+
+private:
     void initEmptyFields();
-    static APath findJava();
 };
+AJSON_FIELDS(Settings,
+             (gameDir, "game_dir")
+             (width, "width")
+             (height, "height")
+             (isFullscreen, "is_fullscreen"))

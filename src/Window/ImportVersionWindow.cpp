@@ -21,9 +21,11 @@
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ATextField.h>
+#include <AUI/IO/AFileOutputStream.h>
 
 using namespace ass;
 
+static constexpr auto LOG_TAG = "Import";
 
 struct Version {
     AString id;
@@ -99,12 +101,11 @@ ImportVersionWindow::ImportVersionWindow():
 
     minecraftRepoListWrap->setDisabled();
 
-    mVersionModel = _new<AListModel<Version>>();
-
     mImportTask = async {
-        auto versionManifest = AJson::read(ACurl::Builder("https://launchermeta.mojang.com/mc/game/version_manifest.json").toByteBuffer());
+        auto versionManifest = AJson::fromBuffer(ACurl::Builder("https://launchermeta.mojang.com/mc/game/version_manifest.json").toByteBuffer());
+        auto versionModel = _new<AListModel<Version>>();
         for (auto& version : versionManifest["versions"].asArray()) {
-            mVersionModel->push_back({
+            versionModel->push_back({
                 version["id"].asString(),
                 version["url"].asString(),
                 AEnumerate<VersionType>::byName(version["type"].asString()),
@@ -113,7 +114,7 @@ ImportVersionWindow::ImportVersionWindow():
 
         ui_thread {
             minecraftRepoListWrap->setEnabled();
-            auto filterModel = AModels::filter(mVersionModel, [&](const Version& v) {
+            auto filterModel = AModels::filter(versionModel, [&](const Version& v) {
                 if (v.type != mVersionTypeValue) return false;
 
                 auto filterString = mSearchTextField->getText();
@@ -126,7 +127,7 @@ ImportVersionWindow::ImportVersionWindow():
                 return true;
             });
             connect(invalidateSearch, slot(filterModel)::invalidate);
-            mMinecraftRepoList->setModel(AModels::adapt<AString>(filterModel, [](const Version& v) { return v.id; }));
+            mMinecraftRepoList->setModel(AModels::adapt<AString>(mVersionModel = filterModel, [](const Version& v) { return v.id; }));
         };
     };
 }
@@ -139,17 +140,22 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
         mImportTask = async {
             try {
                 GameProfile p;
-                auto file = Settings::inst().game_dir["versions"][version.id][version.id + ".json"];
+                auto file = Settings::inst().gameDir["versions"][version.id][version.id + ".json"];
                 file.parent().makeDirs();
-                ALogger::info("Importing {}"_as.format(version.url));
+                ALogger::info(LOG_TAG) << "Importing " << version.url;
                 ACurl(ACurl::Builder(version.url).withOutputStream(_new<AFileOutputStream>(file))).run();
-                GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::read(_new<AFileInputStream>(file)).asObject());
+                GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::fromStream(AFileInputStream(file)).asObject());
                 p.save();
+                ALogger::info(LOG_TAG) << "Imported " << p.getName();
                 ui_thread {
                     GameProfilesRepository::inst().addGameProfile(p);
                 };
                 LegacyLauncherJsonSource::save();
+            } catch (const AJsonException& e) {
+                ALogger::err(LOG_TAG) << e;
+                AMessageBox::show(this, "Could not import version", "We unable to parse version manifest", AMessageBox::Icon::CRITICAL);
             } catch (const AException& e) {
+                ALogger::err(LOG_TAG) << e;
                 AMessageBox::show(this, "Could not import version", e.getMessage(), AMessageBox::Icon::CRITICAL);
             }
             close();

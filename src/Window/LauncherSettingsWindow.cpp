@@ -22,6 +22,10 @@ using namespace ass;
 LauncherSettingsWindow::LauncherSettingsWindow() :
         AWindow("Settings", 400_dp, 400_dp, Autumn::get<MainWindow>().get(), WindowStyle::MODAL | WindowStyle::NO_RESIZE) {
     auto binding = _new<ADataBinding<Settings>>(Settings::inst());
+
+    _<AView> resolutionView;
+    _<ACheckBox> fullscreenCheckbox;
+
     setContents(
         Vertical {
             _new<ATabView>() let {
@@ -29,14 +33,16 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                 it->addTab(
                     Vertical{
                         _form({
-                            {"Game folder:"_as, _new<APathChooserView>() && binding(&Settings::game_dir)},
+                            {"Game folder:"_as, _new<APathChooserView>() && binding(&Settings::gameDir)},
                             {
                                 "Display:"_as,
                                 Horizontal {
-                                    _new<ANumberPicker>() && binding(&Settings::width),
-                                    _new<ALabel>("x"),
-                                    _new<ANumberPicker>() && binding(&Settings::height),
-                                    _new<ACheckBox>("Fullscreen") && binding(&Settings::is_fullscreen),
+                                    resolutionView = Horizontal{
+                                        _new<ANumberPicker>() && binding(&Settings::width),
+                                        _new<ALabel>("x"),
+                                        _new<ANumberPicker>() && binding(&Settings::height),
+                                    },
+                                    fullscreenCheckbox = _new<ACheckBox>("Fullscreen") && binding(&Settings::isFullscreen),
                                 }
                             },
                         }),
@@ -120,4 +126,5 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
     connect(binding->modelChanged, [&, binding] {
         mResetButton->enable();
     });
+    connect(fullscreenCheckbox->checked, [this, resolutionView](bool g) { resolutionView->setVisibility(g ? Visibility::VISIBLE : Visibility::GONE); updateLayout(); });
 }

@@ -7,13 +7,14 @@
 #include <AUI/Logging/ALogger.h>
 #include <Repository/UsersRepository.h>
 #include <Repository/GameProfilesRepository.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include "LegacyLauncherJsonSource.h"
 
 
 bool LegacyLauncherJsonSource::ourDoSave = true;
 
 APath LegacyLauncherJsonSource::getVersionsJsonFilePath() {
-    return Settings::inst().game_dir.file("launcher_profiles.json");
+    return Settings::inst().gameDir.file("launcher_profiles.json");
 }
 
 void LegacyLauncherJsonSource::load() {
@@ -51,13 +52,16 @@ void LegacyLauncherJsonSource::load() {
   }
 }
 	 */
-        auto config = AJson::read(_new<AFileInputStream>(getVersionsJsonFilePath()));
+        auto config = AJson::fromStream(AFileInputStream(getVersionsJsonFilePath()));
         GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles().clear();
 
         // try to load users
         try {
             for (auto& entry : config["authenticationDatabase"].asObject()) {
-                UsersRepository::inst().getModel() << Account{entry.first, entry.second["username"].asString()};
+                Account account{entry.first, entry.second["username"].asString()};
+                if (UsernameValidator()(account.username)) {
+                    UsersRepository::inst().getModel() << account;
+                }
             }
         } catch (const AException& e) {
             ALogger::warn("Unable to load users from launcher_profiles.json: " + e.getMessage());
@@ -83,7 +87,7 @@ void LegacyLauncherJsonSource::load() {
                         ALogger::info("Imported profile: " + name);
                     }
                 } catch (const AException& e) {
-                    ALogger::warn("Unable to load game profile " + name + " from launcher_profiles.json: " + e.getMessage());
+                    ALogger::err("ProfileLoading") << "Unable to load game profile " << name << " from launcher_profiles.json: " << e.getMessage();
                 }
             }
         } catch (const AException& e) {
@@ -100,47 +104,33 @@ void LegacyLauncherJsonSource::save() {
         return;
     }
     try {
-        AJsonObject config;
-
-        // client token is not supported
-        config["clientToken"] = "";
-
-        // launcher version
-        {
-            AJsonObject launcherVersion;
-            launcherVersion["format"] = 21;
-            launcherVersion["name"] = "";
-            launcherVersion["profilesFormat"] = 2;
-            config["launcherVersion"] = launcherVersion;
-        }
-
-        // users
-        {
-            AJsonObject authenticationDatabase;
-
-            for (const Account& u : UsersRepository::inst().getModel()) {
-                AJsonObject user;
-                user["username"] = u.username;
-
-                authenticationDatabase[u.uuid.toRawString()] = user;
-            }
-
-            config["authenticationDatabase"] = authenticationDatabase;
-        }
-
-        // game profiles
-        {
-            AJsonObject profiles;
-
-            for (const GameProfile& p : GameProfilesRepository::inst().getModel()) {
-                AJsonObject profile;
-                profile["name"] = p.getName();
-                profiles[p.getUuid().toRawString()] = profile;
-            }
-            config["profiles"] = profiles;
-        }
-
-        AJson::write(_new<AFileOutputStream>(getVersionsJsonFilePath()), config);
+        AJson config = {{
+            {"clientToken", ""}, // client token is not supported
+            {"launcherVersion", {
+                {"format", 21},
+                {"name", "hackers-mc"},
+                {"profilesFormat", 2},
+            }},
+            {"authenticationDatabase", [] { // users
+                AJson::Object result;
+                for (const Account& u : UsersRepository::inst().getModel()) {
+                    AJson::Object user;
+                    user["username"] = u.username;
+                    result[u.uuid.toRawString()] = user;
+                }
+                return result;
+            }()},
+            {"profiles", [] { // game profiles
+                AJson::Object profiles;
+                for (const GameProfile& p : GameProfilesRepository::inst().getModel()) {
+                    profiles[p.getUuid().toRawString()] = AJson{
+                        {"name", p.getName()}
+                    };
+                }
+                return profiles;
+            }()},
+        }};
+        AFileOutputStream(getVersionsJsonFilePath()) << config;
     } catch (const AException& e) {
         ALogger::warn("Could not save launcher_profiles.json: " + e.getMessage());
     }
@@ -157,7 +147,7 @@ void LegacyLauncherJsonSource::reload() {
 ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
     ASet<AUuid> s;
     try {
-        auto config = AJson::read(_new<AFileInputStream>(getVersionsJsonFilePath()));
+        auto config = AJson::fromStream(AFileInputStream(getVersionsJsonFilePath()));
 
         // try to load game profiles
         try {

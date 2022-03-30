@@ -32,7 +32,7 @@ private:
     _<ARadioButton::Group> mRadioGroup = _new<ARadioButton::Group>();
     _<AListView> mMinecraftRepoList;
     _<AButton> mImportButton;
-    _<AListModel<Version>> mVersionModel;
+    _<IListModel<Version>> mVersionModel;
     _<ATextField> mSearchTextField;
     VersionType mVersionTypeValue = VersionType::NONE;
     ARadioButton::Group mReleaseTypeGroup;

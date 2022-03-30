@@ -20,7 +20,7 @@ struct Style {
             {
                 c("#play"),
                 Padding { 16_dp },
-                FixedSize { 200_dp, 40_dp },
+                FixedSize { 300_dp, 50_dp },
             },
             {
                 c("#play") >> t<ADrawableView>(),
@@ -36,6 +36,7 @@ struct Style {
             },
             {
                 c("#downloading_panel"),
+                FixedSize { 300_dp, 50_dp },
                 Border { 1_px, 0x888888_rgb },
                 BorderRadius { 4_dp },
                 Expanding {},

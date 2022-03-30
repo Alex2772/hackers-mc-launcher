@@ -11,8 +11,8 @@
 
 void TestUtil::prepareApp() {
     // fake game dir
-    Settings::inst().game_dir = APath("fake_game_dir");
-    Settings::inst().game_dir.removeFileRecursive()
+    Settings::inst().gameDir = APath("fake_game_dir");
+    Settings::inst().gameDir.removeFileRecursive()
                                 .makeDirs();
 
     Autumn::put(_new<ARandom>());

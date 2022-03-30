@@ -10,7 +10,9 @@
 #include "DownloadEntry.h"
 #include "Settings.h"
 
-DownloadEntry downloadEntryFromJson(const AString& path, const AJsonObject& v)
+constexpr auto LOG_TAG = "GameProfile";
+
+DownloadEntry downloadEntryFromJson(const AString& path, const AJson& v)
 {
     return DownloadEntry{
             path, v["url"].asString(),
@@ -42,14 +44,14 @@ AString javaLibNameToPath(const AString& name)
     return "INVALID:" + name;
 }
 
-void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJsonObject& json) {
+void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJson& json) {
     dst.mUuid = uuid;
 
     bool cleanupNeeded = false;
 
     bool isHackersMcFormat = json.contains("hackers-mc");
 
-    auto parseConditions = [](Rules& dst, const AJsonElement& in)
+    auto parseConditions = [](Rules& dst, const AJson& in)
     {
         // find positive conditions
 
@@ -58,29 +60,25 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             LauncherRule myRule;
             auto rule = r.asObject();
             myRule.action = rule["action"].asString() == "allow" ? LauncherRule::Action::ALLOW : LauncherRule::Action::DISALLOW;
-            for (auto& r : rule)
+            for (const auto& r : rule)
             {
                 if (r.first == "features")
                 {
-                    auto features = r.second.asObject();
-                    for (auto& feature : features)
-                    {
-                        myRule.conditions << std::pair<AString, AVariant>{feature.first, feature.second.asVariant()};
-                    }
+                    myRule.conditions << r.second.asObject().toVector([](const AString& key, const AJson& value) {
+                        return std::pair<AString, AString>{key, AJson::toString(value) };
+                    });
                 }
                 else if (r.first != "action")
                 {
                     if (r.second.isObject())
                     {
-                        auto sub = r.second.asObject();
-                        for (auto& subKey : sub)
-                        {
-                            myRule.conditions << std::pair<AString, AVariant>{r.first + '.' + subKey.first, subKey.second.asVariant()};
-                        }
+                        myRule.conditions << r.second.asObject().toVector([&](const AString& key, const AJson& value) {
+                            return std::pair<AString, AString>(r.first + '.' + key, AJson::toString(value));
+                        });
                     }
                     else
                     {
-                        myRule.conditions << std::pair<AString, AVariant>{r.first, r.second.asVariant()};
+                        myRule.conditions << std::pair<AString, AString>{r.first, AJson::toString(r.second)};
                     }
                 }
             }
@@ -165,15 +163,14 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                     } catch (...) {}
 
                     for (auto keyName : {"natives-osx", "natives-windows", "natives-linux"}) {
-                        try {
-                            auto k = v["downloads"]["classifiers"][keyName];
-
-                            dst.mDownloads << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
-                            dst.mDownloads.last().mExtract = true;
-                            dst.mDownloads.last().mConditions = conditions;
-                            //dst.mClasspath << "libraries/" + k["path"].asString();
-                        } catch (...) {
-
+                        auto k = v["downloads"]["classifiers"][keyName];
+                        if (k.isObject()) {
+                            if (k["path"].isString()) {
+                                dst.mDownloads
+                                        << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
+                                dst.mDownloads.last().mExtract = true;
+                                dst.mDownloads.last().mConditions = conditions;
+                            }
                         }
                     }
                 } else {
@@ -338,10 +335,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
         // if the current profile does not have it's own main jar file, we can copy it from the inherited profile.
         // in theory, it would work recursively too.
-        auto mainJarAbsolutePath = Settings::inst().game_dir["versions"][name][name + ".jar"];
+        auto mainJarAbsolutePath = Settings::inst().gameDir["versions"][name][name + ".jar"];
         if (!mainJarAbsolutePath.isRegularFileExists())
         {
-            APath::copy(Settings::inst().game_dir["versions"][dst.mName][dst.mName + ".jar"], mainJarAbsolutePath);
+            APath::copy(Settings::inst().gameDir["versions"][dst.mName][dst.mName + ".jar"], mainJarAbsolutePath);
         }
     }
 
@@ -358,6 +355,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
     if (!isHackersMcFormat)
     {
+        /*
         // again, due to Optifine 1.15.2 load order main game jar should be in the end of classpath load order.
 
         // client jar
@@ -368,6 +366,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             } catch (...) {}
             dst.mClasspath << path;
         }
+        */
 
         // Asset index
         try {
@@ -386,13 +385,13 @@ void GameProfile::makeClean() {
 }
 
 void GameProfile::save() {
-    auto f = Settings::inst().game_dir.file("versions").file(mName).file(mName + ".hackers.json");
+    auto f = Settings::inst().gameDir.file("versions").file(mName).file(mName + ".hackers.json");
     f.parent().makeDirs();
-    AJson::write(_new<AFileOutputStream>(f), toJson());
+    AFileOutputStream(f) << toJson();
 }
 
-AJsonElement GameProfile::toJson() {
-    AJsonObject object;
+AJson GameProfile::toJson() {
+    AJson object;
 
     object["mainClass"] = mMainClass;
     object["assets"] = mAssetsIndex;
@@ -401,43 +400,45 @@ AJsonElement GameProfile::toJson() {
     object["hackers-mc"] = true;
 
     // Downloads
-    AJsonArray downloads;
-    for (auto& d : mDownloads)
     {
-        AJsonObject entry;
-        entry["local"] = d.mLocalPath;
-        entry["url"] = d.mUrl;
-        entry["size"] = int(d.mSize);
-        entry["sha1"] = d.mHash;
-        entry["extract"] = d.mExtract;
-        entry["conditions"] = aui::to_json(d.mConditions);
+        AJson::Array downloads;
+        for (auto& d: mDownloads) {
+            AJson::Object entry;
+            entry["local"] = d.mLocalPath;
+            entry["url"] = d.mUrl;
+            entry["size"] = int(d.mSize);
+            entry["sha1"] = d.mHash;
+            entry["extract"] = d.mExtract;
+            entry["conditions"] = aui::to_json(d.mConditions);
 
-        downloads << entry;
+            downloads << std::move(entry);
+        }
+        object["downloads"] = std::move(downloads);
     }
-    object["downloads"] = downloads;
 
     // game args
-    AJsonArray gameArgs;
-    for (auto& d : mGameArgs)
     {
-        AJsonObject entry;
-        entry["name"] = d.mName;
-        entry["value"] = d.mValue;
+        AJson::Array gameArgs;
+        for (auto& d: mGameArgs) {
+            AJson::Object entry;
+            entry["name"] = d.mName;
+            entry["value"] = d.mValue;
 
-        entry["conditions"] = aui::to_json(d.mConditions);
+            entry["conditions"] = aui::to_json(d.mConditions);
 
-        gameArgs << entry;
+            gameArgs << std::move(entry);
+        }
+        object["game_args"] = std::move(gameArgs);
     }
-    object["game_args"] = gameArgs;
 
     // java args
-    AJsonArray javaArgs;
+    AJson::Array javaArgs;
     for (auto& d : mJavaArgs)
     {
-        AJsonObject entry;
+        AJson::Object entry;
         entry["name"] = d.mName;
 
-        AJsonArray conditions;
+        AJson::Array conditions;
 
         entry["conditions"] = aui::to_json(d.mConditions);
 
@@ -447,15 +448,15 @@ AJsonElement GameProfile::toJson() {
 
 
     // Classpath
-    AJsonArray classpath;
+    AJson::Array classpath;
     for (auto& lib : mClasspath)
     {
-        classpath << AJsonValue(lib);
+        classpath << lib;
     }
     object["classpath"] = classpath;
 
     // Settings
-    AJsonObject settings;
+    AJson::Object settings;
 
     settings["window_width"] = mWindowWidth;
     settings["window_height"] = mWindowHeight;
@@ -467,11 +468,12 @@ AJsonElement GameProfile::toJson() {
 }
 
 void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
-    _<AFileInputStream> fis;
     try {
-        fis = _new<AFileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".hackers.json"));
-    } catch (...) {
-        fis = _new<AFileInputStream>(Settings::inst().game_dir.file("versions").file(name).file(name + ".json"));
+        fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(Settings::inst().gameDir.file("versions").file(name).file(name + ".hackers.json"))).asObject());
+        return;
+    } catch (const AIOException& ignored) {
+    } catch (const AException& e) {
+        ALogger::err("ProfileLoading") << "Failed to load hackers.json profile:" << e;
     }
-    fromJson(dst, uuid, name, AJson::read(fis).asObject());
+    fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(Settings::inst().gameDir.file("versions").file(name).file(name + ".json"))).asObject());
 }

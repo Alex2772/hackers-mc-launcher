@@ -2,21 +2,21 @@
 // Created by alex2772 on 4/15/21.
 //
 
-#include <AUI/Common/AVariant.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Traits/platform.h>
+#include <AUI/Traits/strings.h>
 #include <Model/Settings.h>
 #include <AUI/Autumn/Autumn.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include "VariableHelper.h"
 
-AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
+AString VariableHelper::getVariableValue(const Context& c, const AString& name)
 {
-    static AMap<AString, std::function<AVariant(const Context&)>> m = {
+    static AMap<AString, std::function<AString(const Context&)>> m = {
             {
                     "os.name",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
 
                         return aui::platform::current::name();
@@ -24,59 +24,57 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
             },
             {
                     "os.version",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "unknown";
                     }
             },
             {
                     "os.arch",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "x86";
                     }
             },
             {
                     "natives_directory",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         if (c.profile) {
-
-                            // add java's lib folder to java library path
-                            auto javaLibFolder = Settings::inst().java_executable.parent()["lib"];
-
-                            return Settings::inst().game_dir["bin"][c.profile->getUuid().toRawString()];
+                            return Settings::inst().gameDir["bin"][c.profile->getUuid().toRawString()];
                         }
                         return {};
                     }
             },
             {
                     "launcher_name",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "hackers-mc-launcher";
                     }
             },
             {
                     "launcher_version",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return HACKERS_MC_VERSION;
                     }
             },
             {
                     "classpath",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
+                        constexpr auto SEPARATOR = aui::platform::current::is_unix() ? ':' : ';';
                         if (c.profile) {
-                            return c.profile->getClasspath().join(aui::platform::current::is_unix() ? ':' : ';');
+                            const auto& name = c.profile->getName();
+                            return c.profile->getClasspath().join(SEPARATOR) + SEPARATOR + "versions/{}/{}.jar"_format(name, name);
                         }
                         return {};
                     }
             },
             {
                     "auth_player_name",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         if (c.user) {
                             return c.user->username;
@@ -86,7 +84,7 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
             },
             {
                     "auth_uuid",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         if (c.user) {
                             return c.user->uuid.toRawString();
@@ -96,28 +94,28 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
             },
             {
                     "auth_access_token",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "null";
                     }
             },
             {
                     "user_type",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "legacy";
                     }
             },
             {
                     "version_type",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "release";
                     }
             },
             {
                     "version_name",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         if (c.profile) {
                             return c.profile->getName();
@@ -127,21 +125,21 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
             },
             {
                     "game_directory",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return Settings::inst().game_dir;
+                        return Settings::inst().gameDir;
                     }
             },
             {
                     "assets_root",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return Settings::inst().game_dir["assets"];
+                        return Settings::inst().gameDir["assets"];
                     }
             },
             {
                     "assets_index_name",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         if (c.profile) {
                             return c.profile->getAssetsIndex();
@@ -151,44 +149,44 @@ AVariant VariableHelper::getVariableValue(const Context& c, const AString& name)
             },
             {
                     "user_properties",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
                         return "{}";
                     }
             },
             {
                     "has_custom_resolution",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return true;
+                        return "true";
                     }
             },
             {
                     "resolution_width",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return Settings::inst().width;
+                        return AString::number(Settings::inst().width);
                     }
             },
             {
                     "resolution_height",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return Settings::inst().height;
+                        return AString::number(Settings::inst().height);
                     }
             },
             {
                     "is_fullscreen",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return Settings::inst().is_fullscreen;
+                        return AString::number(Settings::inst().isFullscreen);
                     }
             },
             {
                     "is_demo_user",
-                    [](const Context& c) -> AVariant
+                    [](const Context& c) -> AString
                     {
-                        return false;
+                        return "false";
                     }
             },
     };
@@ -230,7 +228,7 @@ AString VariableHelper::parseVariables(const Context& c, const AString& s) {
             tokenizer.readStringUntilUnescaped(r, '$');
             if (tokenizer.readChar() == '{') {
                 auto name = tokenizer.readStringUntilUnescaped('}');
-                r += getVariableValue(c, name).toString().toStdString();
+                r += getVariableValue(c, name).toStdString();
             } else {
                 r += tokenizer.getLastCharacter();
             }

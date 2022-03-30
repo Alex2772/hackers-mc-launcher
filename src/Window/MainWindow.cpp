@@ -110,33 +110,51 @@ MainWindow::MainWindow():
 }
 
 void MainWindow::onPlayButtonClicked() {
+    Account account;
+    try {
+        account = UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId());
+    } catch (...) {
+        assert(("invalid user id", UsersRepository::inst().getModel()->empty()));
+
+        // ask username
+        auto accountWindow = _new<AccountWindow>(nullptr);
+        connect(accountWindow->positiveAction, me::onPlayButtonClicked);
+        accountWindow->show();
+
+        return;
+    }
+
     showDownloadingPanel();
     mDownloadedLabel->setText("0");
     mTotalLabel->setText("0");
     mTargetFileLabel->setText("");
-    mTask = asyncX [this] {
-        auto launcher = _new<Launcher>();
-        connect(launcher->updateStatus, slot(mStatusLabel)::setText);
-        connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
-        connect(launcher->errorOccurred, [&](const AString& message) {
-            showPlayButton();
-            AMessageBox::show(this, "Could not run game", message, AMessageBox::Icon::CRITICAL);
-        });
-        connect(launcher->updateTotalDownloadSize, [&](size_t s) {
-            mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
-        });
-        connect(launcher->updateDownloadedSize, [&](size_t s) {
-            mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
-        });
-        AThread::sleep(1000);
+    mTask = asyncX [this, account = std::move(account)] {
+        try {
+            auto launcher = _new<Launcher>();
+            connect(launcher->updateStatus, slot(mStatusLabel)::setText);
+            connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
+            connect(launcher->errorOccurred, [&](const AString& message) {
+                showPlayButton();
+                AMessageBox::show(this, "Could not run game", message, AMessageBox::Icon::CRITICAL);
+            });
+            connect(launcher->updateTotalDownloadSize, [&](size_t s) {
+                mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
+            });
+            connect(launcher->updateDownloadedSize, [&](size_t s) {
+                mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
+            });
+            AThread::sleep(1000);
 
-        launcher->play(
-                UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId()),
-                GameProfilesRepository::inst().getModel()->at(mGameProfilesView->getSelectedProfileIndex()),
-                true
-                );
-        mPlayButton->enable();
-        showPlayButton();
+            launcher->play(
+                    UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId()),
+                    GameProfilesRepository::inst().getModel()->at(mGameProfilesView->getSelectedProfileIndex()),
+                    true
+            );
+            mPlayButton->enable();
+            showPlayButton();
+        } catch (const AException& e) {
+            ALogger::err("GameLauncher") << "Failed to launch game: " << e;
+        }
     };
 }
 
@@ -157,7 +175,7 @@ void MainWindow::onMouseMove(glm::ivec2 pos) {
 
 void MainWindow::showUserConfigureDialogFor(unsigned int index) {
     _new<AccountWindow>(&UsersRepository::inst().getModel()->at(index)) let {
-        connect(it->finished, this, [&, index] {
+        connect(it->positiveAction, this, [&, index] {
             UsersRepository::inst().getModel()->invalidate(index);
         });
         connect(it->deleteUser, this, [&, index] {
@@ -178,18 +196,20 @@ void MainWindow::checkForDiskProfileUpdates() {
     // check for new profiles every 5 secs when cursor moves
     static milliseconds lastCheckTime = 0ms;
     if (high_resolution_clock::now().time_since_epoch() - lastCheckTime > 5s) {
-        mTask = async {
-            // load actual set of profiles
-            decltype(auto) actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
-            decltype(auto) loadedProfiles = GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles();
+        if (!mTask.isWaitNeeded()) {
+            mTask = async {
+                // load actual set of profiles
+                decltype(auto) actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
+                decltype(auto) loadedProfiles = GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles();
 
-            // and compare it with actual profiles
-            if (actualProfiles != loadedProfiles) {
-                // found new game profile!
-                ALogger::info("Detected changes in launcher_profiles.json, reloading");
-                emit reloadProfiles();
-            }
-        };
+                // and compare it with actual profiles
+                if (actualProfiles != loadedProfiles) {
+                    // found new game profile!
+                    ALogger::info("Detected changes in launcher_profiles.json, reloading");
+                    emit reloadProfiles();
+                }
+            };
+        }
 
         lastCheckTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     }

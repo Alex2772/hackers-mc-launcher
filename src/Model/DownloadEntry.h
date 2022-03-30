@@ -2,7 +2,6 @@
 
 
 #include <AUI/Common/AString.h>
-#include <AUI/Common/AVariant.h>
 #include <AUI/Json/AJson.h>
 
 struct LauncherRule {
@@ -10,29 +9,28 @@ struct LauncherRule {
         ALLOW,
         DISALLOW
     } action;
-    AVector<std::pair<AString, AVariant>> conditions;
-
-    AJSON_FIELDS(action, conditions)
+    AVector<std::pair<AString, AString>> conditions;
 };
 
-namespace aui::json::conv {
-    template<>
-    struct conv<LauncherRule::Action> {
-        static AJsonElement to_json(const LauncherRule::Action& rule) {
-            switch (rule) {
-                case LauncherRule::Action::ALLOW: return AJsonValue("allow");
-                case LauncherRule::Action::DISALLOW: return AJsonValue("disallow");
-            }
-        }
-        static LauncherRule::Action from_json(const AJsonElement& e) {
-            if (e.asString() == "disallow") {
-                return LauncherRule::Action::DISALLOW;
-            }
-            return LauncherRule::Action::ALLOW;
-        }
-    };
-}
+AJSON_FIELDS(LauncherRule,
+             (action, "action")
+             (conditions, "conditions"))
 
+template<>
+struct AJsonConv<LauncherRule::Action> {
+    static AJson toJson(const LauncherRule::Action& rule) {
+        switch (rule) {
+            case LauncherRule::Action::ALLOW: return "allow";
+            case LauncherRule::Action::DISALLOW: return "disallow";
+        }
+    }
+    static LauncherRule::Action fromJson(const AJson& e) {
+        if (e.asString() == "disallow") {
+            return LauncherRule::Action::DISALLOW;
+        }
+        return LauncherRule::Action::ALLOW;
+    }
+};
 using Rules = AVector<LauncherRule>;
 
 struct DownloadEntry {

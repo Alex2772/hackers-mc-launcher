@@ -15,7 +15,7 @@ Settings& Settings::inst() {
     static Settings s;
     do_once {
         try {
-            s.readJson(AJson::read(_new<AFileInputStream>(SETTINGS_PATH)));
+            s = aui::from_json<Settings>(AJson::fromStream(AFileInputStream(SETTINGS_PATH)));
         } catch (...) {
 
         }
@@ -25,7 +25,7 @@ Settings& Settings::inst() {
 
 void Settings::save() {
     inst().initEmptyFields();
-    AJson::write(_new<AFileOutputStream>(SETTINGS_PATH), inst().toJson());
+    AFileOutputStream(SETTINGS_PATH) << aui::to_json(inst());
 }
 
 Settings::Settings() {
@@ -33,24 +33,11 @@ Settings::Settings() {
 }
 
 void Settings::initEmptyFields() {
-    if (game_dir.empty())
-        game_dir = APath::getDefaultPath(APath::APPDATA).file(".minecraft");
+    if (gameDir.empty())
+        gameDir = APath::getDefaultPath(APath::APPDATA).file(".minecraft");
 }
 
 void Settings::reset() {
     inst() = {};
     save();
 }
-
-APath Settings::findJava() {
-    auto javaLocations = APath::find(aui::platform::current::is_windows() ? "java.exe" : "java",
-                                     aui::platform::current::is_windows()
-                                     ? AVector<APath>{"C:\\Program Files\\Java", "C:\\Program Files (x86)\\Java"}
-                                     : AVector<APath>{"/usr/lib/jvm/jdk-16.0.2", "/usr/lib/jvm"},
-                                     PathFinder::SINGLE | PathFinder::RECURSIVE);
-    if (javaLocations.empty()) {
-        return {};
-    }
-    return javaLocations.first();
-}
-

@@ -43,23 +43,32 @@ AccountWindow::AccountWindow(Account* user):
                 _new<ASpacer>(),
                 (user ?
                     _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
-                        if (mBinding->getModel().username.empty()) {
+                        if (!UsernameValidator()(mBinding->getModel().username)) {
                             AMessageBox::show(this,
-                                              "Username is empty",
-                                              "Please enter some nonempty username.",
+                                              "Username is invalid",
+                                              "Please use latin or numeric characters",
                                               AMessageBox::Icon::INFO,
                                               AMessageBox::Button::OK);
                         }
                         *user = mBinding->getModel();
-                        emit finished();
+                        emit positiveAction();
                         close();
                     })
                         :
                     _new<AButton>("Create").connect(&AView::clicked, this, [&] {
                         auto user = mBinding->getModel();
                         user.uuid = Autumn::get<ARandom>()->nextUuid();
+                        if (!UsernameValidator()(mBinding->getModel().username)) {
+                            AMessageBox::show(this,
+                                              "Username is invalid",
+                                              "Please use latin or numeric characters",
+                                              AMessageBox::Icon::INFO,
+                                              AMessageBox::Button::OK);
+                            return;
+                        }
                         UsersRepository::inst().addUser(user);
                         close();
+                        emit positiveAction();
                     })) let { it->setDefault(); },
                 _new<AButton>("Cancel").connect(&AView::clicked, me::close)
             }

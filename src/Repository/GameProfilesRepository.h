@@ -5,6 +5,7 @@
 #pragma once
 
 
+#include <AUI/Model/AListModel.h>
 #include <Model/GameProfile.h>
 
 class GameProfilesRepository {

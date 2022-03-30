@@ -22,7 +22,7 @@ UI_TEST_CASE(DoesNotAutoreloadOnInvalidProfiles) {
 
     // write a config with invalid profiles
     {
-        FileOutputStream fos(Settings::inst().game_dir["launcher_profiles.json"]);
+        FileOutputStream fos(Settings::inst().gameDir["launcher_profiles.json"]);
         const char blob[] = R"(
 {
   "authenticationDatabase" : {
