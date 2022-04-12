@@ -4,6 +4,6 @@
 #include <AUI/IO/APath.h>
 
 namespace Util {
-    APath getSettingsDir();
+    APath launcherDir();
 };
 

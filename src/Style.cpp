@@ -108,6 +108,23 @@ struct Style {
                 TextAlign::CENTER,
                 Margin { 10_dp, 0, 0, 0 },
             },
+            {
+                c(".spinner_overlay"),
+                BackgroundSolid { 0x80ffffff_argb },
+                Expanding {},
+            },
+            {
+                c(".console_wrap"),
+                BackgroundSolid { 0x202020_rgb },
+                Expanding {},
+                Padding { 4_dp },
+            },
+            {
+                c(".console_wrap") >> t<AView>(),
+                TextColor { AColor::WHITE },
+                Margin { 0 },
+                LineHeight { 1.0 },
+            },
         });
     }
 } s;

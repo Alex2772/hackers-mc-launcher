@@ -18,6 +18,8 @@
 #include "ImportVersionWindow.h"
 #include "LauncherSettingsWindow.h"
 #include "GameProfileWindow.h"
+#include "GameConsoleWindow.h"
+#include "Model/GameProcess.h"
 #include <chrono>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -27,6 +29,7 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/ASpinner.h>
 #include <AUI/View/ADrawableView.h>
+#include <AUI/Traits/iterators.h>
 
 using namespace ass;
 
@@ -133,28 +136,52 @@ void MainWindow::onPlayButtonClicked() {
             auto launcher = _new<Launcher>();
             connect(launcher->updateStatus, slot(mStatusLabel)::setText);
             connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
-            connect(launcher->errorOccurred, [&](const AString& message) {
-                showPlayButton();
-                AMessageBox::show(this, "Could not run game", message, AMessageBox::Icon::CRITICAL);
-            });
+
             connect(launcher->updateTotalDownloadSize, [&](size_t s) {
                 mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
             });
             connect(launcher->updateDownloadedSize, [&](size_t s) {
                 mDownloadedLabel->setText(APrettyFormatter::sizeInBytes(s));
             });
-            AThread::sleep(1000);
 
-            launcher->play(
+            auto process = launcher->play(
                     UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId()),
                     GameProfilesRepository::inst().getModel()->at(mGameProfilesView->getSelectedProfileIndex()),
                     true
             );
+
+            auto game = _new<GameProcess>();
+            game->process = process;
+
+            connect(process->finished, [this, game] { // capture process in order to keep reference
+                show();
+                GameConsoleWindow::handleGameExit(this, std::move(game));
+            });
+
+            process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
+
+            connect(process->readyReadStdOut, [game] {
+                game->stdoutBuffer << AByteBuffer::fromStream(game->process->getStdOutStream());
+            });
+
+            connect(process->readyReadStdErr, [game] {
+                game->stdoutBuffer << AByteBuffer::fromStream(game->process->getStdErrStream());
+            });
+
+            ui_thread {
+                hide();
+            };
+
+        } catch (const AException& e) {
+            ALogger::err("GameLauncher") << "Could not run game: " << e;
+            ui_thread {
+                AMessageBox::show(this, "Could not run game", e.getMessage(), AMessageBox::Icon::CRITICAL);
+            };
+        }
+        ui_thread {
             mPlayButton->enable();
             showPlayButton();
-        } catch (const AException& e) {
-            ALogger::err("GameLauncher") << "Failed to launch game: " << e;
-        }
+        };
     };
 }
 

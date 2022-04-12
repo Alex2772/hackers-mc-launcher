@@ -1,11 +1,9 @@
 #include <AUI/UITest.h>
-#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include <AUI/View/AButton.h>
 #include "TestUtil.h"
 #include "Model/Settings.h"
 #include "Window/MainWindow.h"
-
-using namespace boost::unit_test;
 
 /**
  * Tests auto refresh feature.
@@ -15,14 +13,21 @@ using namespace boost::unit_test;
  *
  * The launcher responds on mouse move so we use mouseMove action in order to trigger reload.
  */
-BOOST_AUTO_TEST_SUITE(AutoRefresh)
 
-UI_TEST_CASE(DoesNotAutoreloadOnInvalidProfiles) {
-    TestUtil::prepareApp();
+
+class AutoRefreshTest: public testing::UITest {
+protected:
+    void SetUp() override {
+        UITest::SetUp();
+        TestUtil::prepareApp();
+    }
+};
+
+TEST_F(AutoRefreshTest, DoesNotAutoreloadOnInvalidProfiles) {
 
     // write a config with invalid profiles
     {
-        FileOutputStream fos(Settings::inst().gameDir["launcher_profiles.json"]);
+        AFileOutputStream fos(Settings::inst().gameDir["launcher_profiles.json"]);
         const char blob[] = R"(
 {
   "authenticationDatabase" : {
@@ -111,12 +116,10 @@ UI_TEST_CASE(DoesNotAutoreloadOnInvalidProfiles) {
 
     TestUtil::prepareMainWindow();
     AObject::connect(Autumn::get<MainWindow>()->reloadProfiles, Autumn::get<MainWindow>(), [] {
-        BOOST_FAIL("launcher reloaded profiles");
+        FAIL() << "launcher reloaded profiles";
     });
 
     AThread::sleep(6000); // wait 6 sec
     By::type<AButton>().perform(mouseMove()); // hover mouse to trigger reload
 }
 
-
-BOOST_AUTO_TEST_SUITE_END()

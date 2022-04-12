@@ -5,7 +5,7 @@
 #include <AUI/Util/kAUI.h>
 #include "Util.h"
 
-APath Util::getSettingsDir() {
+APath Util::launcherDir() {
     auto path = APath::getDefaultPath(APath::APPDATA).file(".hackers-mc");
     do_once {
         path.makeDirs();

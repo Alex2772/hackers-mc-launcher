@@ -9,7 +9,7 @@
 #include <AUI/Traits/platform.h>
 #include "Settings.h"
 
-const auto SETTINGS_PATH = Util::getSettingsDir().file("settings.json");
+const auto SETTINGS_PATH = Util::launcherDir().file("settings.json");
 
 Settings& Settings::inst() {
     static Settings s;
