@@ -12,9 +12,9 @@ public:
     class GameArg
     {
     public:
-        AString mName;
-        AString mValue;
-        Rules mConditions;
+        AString name;
+        AString value;
+        Rules conditions;
     };
 
     /**
@@ -23,21 +23,29 @@ public:
     class JavaArg
     {
     public:
-        AString mName;
-        Rules mConditions;
+        AString name;
+        Rules conditions;
     };
-    
+
+    class ClasspathEntry
+    {
+    public:
+        AString name;
+        Rules conditions;
+    };
+
 private:
 
     AUuid mUuid;
     AString mName;
     AString mMainClass;
     AString mAssetsIndex;
+    AString mJavaVersionName = "java-runtime-alpha";
 
     AVector<DownloadEntry> mDownloads;
     AVector<GameArg> mGameArgs;
     AVector<JavaArg> mJavaArgs;
-    AStringVector mClasspath;
+    AVector<ClasspathEntry> mClasspath;
 
 
     bool mIsFullscreen = false;
@@ -49,48 +57,53 @@ private:
 public:
     static void fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJson& json);
 
-    [[nodiscard]] const AUuid& getUuid() const {
+    [[nodiscard]] const AUuid& getUuid() const noexcept {
         return mUuid;
     }
 
-    [[nodiscard]] const AString& getName() const {
+    [[nodiscard]] const AString& getName() const noexcept {
         return mName;
     }
 
-    [[nodiscard]] const AString& getMainClass() const {
+    [[nodiscard]] const AString& getMainClass() const noexcept {
         return mMainClass;
     }
 
-    [[nodiscard]] const AString& getAssetsIndex() const {
+    [[nodiscard]] const AString& getAssetsIndex() const noexcept {
         return mAssetsIndex;
     }
 
-    [[nodiscard]] const AVector<DownloadEntry>& getDownloads() const {
+    [[nodiscard]] const AVector<DownloadEntry>& getDownloads() const noexcept {
         return mDownloads;
     }
 
-    [[nodiscard]] const AVector<GameArg>& getGameArgs() const {
+    [[nodiscard]] const AVector<GameArg>& getGameArgs() const noexcept {
         return mGameArgs;
     }
 
-    [[nodiscard]] const AVector<JavaArg>& getJavaArgs() const {
+    [[nodiscard]] const AVector<JavaArg>& getJavaArgs() const noexcept {
         return mJavaArgs;
     }
 
-    [[nodiscard]] const AStringVector& getClasspath() const {
+    [[nodiscard]] const AVector<ClasspathEntry>& getClasspath() const noexcept {
         return mClasspath;
     }
 
-    [[nodiscard]] bool isFullscreen() const {
+    [[nodiscard]] bool isFullscreen() const noexcept {
         return mIsFullscreen;
     }
 
-    [[nodiscard]] unsigned short getWindowWidth() const {
+    [[nodiscard]] unsigned short getWindowWidth() const noexcept {
         return mWindowWidth;
     }
 
-    [[nodiscard]] unsigned short getWindowHeight() const {
+    [[nodiscard]] unsigned short getWindowHeight() const noexcept {
         return mWindowHeight;
+    }
+
+    [[nodiscard]]
+    const AString& getJavaVersionName() const noexcept {
+        return mJavaVersionName;
     }
 
     void save();

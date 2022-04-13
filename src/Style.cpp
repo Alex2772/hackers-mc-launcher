@@ -122,8 +122,9 @@ struct Style {
             {
                 c(".console_wrap") >> t<AView>(),
                 TextColor { AColor::WHITE },
+                Font { ":font/JetBrainsMono-Regular.ttf" },
                 Margin { 0 },
-                LineHeight { 1.0 },
+                LineHeight { 1.5 },
             },
         });
     }

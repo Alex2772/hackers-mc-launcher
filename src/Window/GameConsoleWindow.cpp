@@ -15,11 +15,10 @@ void GameConsoleWindow::handleGameExit(AWindow* parent, _<GameProcess> game) {
 
 GameConsoleWindow::GameConsoleWindow(AWindow* parent, _<GameProcess> game): AWindow("Game console", 600_dp, 400_dp, parent) {
     setContents(Stacked {
-        mScroll = AScrollArea::Builder().withContents(Vertical {
+        mScroll = AScrollArea::Builder().withContents(
             mConsoleDisplayPort = Vertical {
                 _new<ALabel>("Hacker's MC Launcher")
-            } << ".console_wrap"
-        }).withExpanding().build(),
+            } << ".console_wrap").withExpanding().build(),
         mSpinnerOverlay = Stacked::Expanding {
             _new<AView>() << ".spinner_overlay",
             _new<ASpinner>(),

@@ -22,8 +22,10 @@
 #include <AUI/IO/AFileOutputStream.h>
 #include <numeric>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Traits/parallel.h>
 
 static constexpr auto LOG_TAG = "Launcher";
+static constexpr auto JAVA_VERSIONS_URL = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
 
 _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile, bool doUpdate) {
     emit updateStatus("Locating Java");
@@ -32,11 +34,11 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
     ALogger::info(LOG_TAG) << ("User: " + user.username);
     ALogger::info(LOG_TAG) << ("Profile: " + profile.getName());
 
-    ALogger::info(LOG_TAG) << "Checking for Java...";
+    ALogger::info(LOG_TAG) << "Checking for Java " << profile.getJavaVersionName() << "...";
 
-    if (!isJavaWorking()) {
+    if (!isJavaWorking(profile.getJavaVersionName())) {
         ALogger::info(LOG_TAG) << "Could not find a working java, trying to install";
-        downloadAndInstallJava();
+        downloadAndInstallJava(profile.getJavaVersionName());
     }
 
     ALogger::info(LOG_TAG) << "Java is working";
@@ -86,7 +88,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
                 continue;
             }
 
-            toDownload << ToDownload{download.mLocalPath, download.mUrl, download.mSize};
+            toDownload << ToDownload{download.mLocalPath, download.mUrl, download.mSize, download.mHash};
         }
 
         // asset downloads
@@ -141,6 +143,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
     };
 
     // extract necessary files
+    ALogger::info(LOG_TAG) << "Extract folder: " << extractFolder;
     for (auto& d : profile.getDownloads()) {
         if (d.mExtract) {
             if (!VariableHelper::checkRules(c, d.mConditions)) {
@@ -220,7 +223,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
                             }
 
 
-                            APath dstFile = extractFolder.file(fileName);
+                            APath dstFile = extractFolder / fileName;
                             dstFile.parent().makeDirs();
 
                             _<AFileOutputStream> fos;
@@ -255,31 +258,41 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
     // java args
     AStringVector args;
     for (auto& arg : profile.getJavaArgs()) {
-        if (VariableHelper::checkRules(c, arg.mConditions)) {
-            args << VariableHelper::parseVariables(c, arg.mName);
+        if (VariableHelper::checkRules(c, arg.conditions)) {
+            args << VariableHelper::parseVariables(c, arg.name);
         }
     }
+    /*
+-Xmx2G
+-Xss1M
+-XX:+UnlockExperimentalVMOptions
+-XX:+UseG1GC
+-XX:G1NewSizePercent=20
+-XX:G1ReservePercent=20
+-XX:MaxGCPauseMillis=50
+-XX:G1HeapRegionSize=32M
+     */
 
     args << profile.getMainClass();
 
     // game args
     for (auto& arg : profile.getGameArgs()) {
-        if (VariableHelper::checkRules(c, arg.mConditions)) {
+        if (VariableHelper::checkRules(c, arg.conditions)) {
             /*
             args << VariableHelper::parseVariables(c, arg.mName);
             if (!arg.mValue.empty()) {
                 args << VariableHelper::parseVariables(c, arg.mValue);
             }*/
 
-            if (arg.mValue.empty()) {
-                args << VariableHelper::parseVariables(c, arg.mName);
+            if (arg.value.empty()) {
+                args << VariableHelper::parseVariables(c, arg.name);
             } else {
-                args << VariableHelper::parseVariables(c, arg.mName) + "=" + VariableHelper::parseVariables(c, arg.mValue);
+                args << VariableHelper::parseVariables(c, arg.name) + "=" + VariableHelper::parseVariables(c, arg.value);
             }
         }
     }
 
-    auto java = javaExecutable();
+    auto java = javaExecutable(profile.getJavaVersionName());
     ALogger::info(LOG_TAG) << "Command line: " << (java + " " + args.join(' '));
     return AProcess::make(java, args.join(' '), Settings::inst().gameDir);
 }
@@ -294,48 +307,61 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
     if (!toDownload.empty()) {
         ALogger::info(LOG_TAG) << ("== BEGIN DOWNLOAD ==");
     }
-    std::size_t downloadedBytes;
-    for (const auto& d : toDownload) {
-        auto local = destinationDir[d.localPath];
-        ALogger::info(LOG_TAG) << ("Downloading: " + d.url + " > " + local);
-        emit updateTargetFile(d.localPath);
-        local.parent().makeDirs();
-        AFileOutputStream fos(local);
-        ACurl curl(ACurl::Builder(d.url).withWriteCallback([&](AByteBufferView b) {
-            fos << b;
-            downloadedBytes += b.size();
-            if (AWindow::isRedrawWillBeEfficient()) {
-                emit updateDownloadedSize(downloadedBytes);
+    std::atomic_size_t downloadedBytes = 0;
+    aui::parallel(toDownload.begin(), toDownload.end(), [&](const AVector<ToDownload>::const_iterator& begin, const AVector<ToDownload>::const_iterator& end) {
+        for (const auto& d : aui::range(begin, end)) {
+            auto local = destinationDir[d.localPath];
+            ALogger::info(LOG_TAG) << ("Downloading: " + d.url + " > " + local);
+            emit updateTargetFile(d.localPath);
+            local.parent().makeDirs();
+
+            AByteBuffer rawFileBlob;
+            rawFileBlob.reserve(d.bytes);
+
+            ACurl(ACurl::Builder(d.url).withWriteCallback([&](AByteBufferView b) {
+                rawFileBlob << b;
+                downloadedBytes += b.size();
+                if (AWindow::isRedrawWillBeEfficient()) {
+                    emit updateDownloadedSize(downloadedBytes);
+                }
+                return b.size();
+            })).run();
+            if (d.hash.empty()) {
+                ALogger::warn(LOG_TAG) << "Hash is missing for file " << d.url;
+            } else {
+                if (AHash::sha1(rawFileBlob).toHexString() != d.hash) {
+                    throw AException("file corrupted {}"_format(d.url));
+                }
             }
-            return b.size();
-        }));
-        curl.run();
-    }
+            AFileOutputStream(local) << rawFileBlob;
+        }
+    }).waitForAll();
 }
 
 
-bool Launcher::isJavaWorking() const noexcept {
+bool Launcher::isJavaWorking(const AString& version) const noexcept {
     try {
-        auto process = AProcess::make(javaExecutable(), "-version");
+        auto process = AProcess::make(javaExecutable(version), "-version");
         process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
         if (process->waitForExitCode() != 0) {
-            ALogger::info(LOG_TAG) << "Java does not work: nonzero exit code";
+            throw AException("nonzero exit code");
         }
 
         auto fullOutput = AString::fromLatin1(AByteBuffer::fromStream(process->getStdOutStream()));
         ALogger::info(LOG_TAG) << "Java version output: " << fullOutput.mid(0, fullOutput.find('\n'));
-    } catch (...) {
+    } catch (const AException& e) {
+        ALogger::warn(LOG_TAG) << "Java does not work: " << e;
         return false;
     }
 }
 
-void Launcher::downloadAndInstallJava() {
-    AString manifestUrl = retrieveJavaManifestUrl();
+void Launcher::downloadAndInstallJava(const AString& version) {
+    AString manifestUrl = retrieveJavaManifestUrl(version);
 
     emit updateStatus("Downloading Java...");
     auto manifest = AJson::fromBuffer(ACurl::Builder(manifestUrl).toByteBuffer());
-    auto jvmDir = Util::launcherDir()["jvm"];
+    auto jvmDir = Util::launcherDir() / "jvm" / version;
     jvmDir.removeFileRecursive().makeDirs();
 
     AVector<ToDownload> toDownload;
@@ -345,31 +371,44 @@ void Launcher::downloadAndInstallJava() {
             toDownload << ToDownload{
                 localPath,
                 raw["url"].asString(),
-                std::size_t(raw["size"].asInt())
+                std::size_t(raw["size"].asInt()),
+                raw["sha1"].asString()
             };
         }
     }
     performDownload(jvmDir, toDownload);
-    if (!isJavaWorking()) {
+    if (!isJavaWorking(version)) {
         throw AException("fresh installed java does not work - giving up");
     }
 }
 
-AString Launcher::retrieveJavaManifestUrl() const {
-    // TODO linux
-    auto json = AJson::fromBuffer(ACurl::Builder("http://launchermeta.mojang.com/v1/products/launcher/d03cf0cf95cce259fa9ea3ab54b65bd28bb0ae82/windows-x86.json").toByteBuffer());
-    auto manifest = json[aui::platform::is_64_bit ? "jre-x64" : "jre-x86"][0]["manifest"].asObject();
-    auto manifestUrl = manifest["url"].asString();
-    if (manifestUrl.empty()) {
-        throw AException("could not locate package manifest location");
+AString Launcher::retrieveJavaManifestUrl(const AString& version) const {
+    auto allJavaVersions = AJson::fromBuffer(ACurl::Builder(JAVA_VERSIONS_URL).toByteBuffer());
+
+    const char* platformName = nullptr;
+    if constexpr (aui::platform::current::is_windows()) {
+        if constexpr (aui::platform::is_64_bit) {
+            platformName = "windows-x64";
+        } else {
+            platformName = "windows-x64";
+        }
+    } else if constexpr (aui::platform::current::is_apple()) {
+        platformName = "mac-os";
+    } else if constexpr (aui::platform::current::is_unix()) {
+        if constexpr (aui::platform::is_64_bit) {
+            platformName = "linux";
+        } else {
+            platformName = "linux-i386";
+        }
     }
-    return manifestUrl;
+
+    return allJavaVersions[platformName][version][0]["manifest"]["url"].asString();
 }
 
-APath Launcher::javaExecutable() const noexcept {
-    auto path = Util::launcherDir()["jvm"]["bin"]["java"];
+APath Launcher::javaExecutable(const AString& version) const noexcept {
+    auto path = Util::launcherDir() / "jvm" / version / "bin" / "java";
     if constexpr (aui::platform::current::is_windows()) {
-        path += ".exe";
+        path += "w.exe"; // javaw.exe
     }
     return path;
 }

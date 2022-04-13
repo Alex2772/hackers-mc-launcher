@@ -11,12 +11,12 @@ private:
         AString localPath;
         AString url;
         std::size_t bytes;
+        AString hash;
     };
 
     [[nodiscard]]
-    bool isJavaWorking() const noexcept;
-    void downloadAndInstallJava();
-    APath javaExecutable() const noexcept;
+    bool isJavaWorking(const AString& version) const noexcept;
+    APath javaExecutable(const AString& version) const noexcept;
     void performDownload(const APath& destinationDir, const AVector<ToDownload>& toDownload);
 
 public:
@@ -28,7 +28,8 @@ signals:
     emits<size_t> updateTotalDownloadSize;
     emits<AString> updateTargetFile;
 
-    AString retrieveJavaManifestUrl() const;
+    void downloadAndInstallJava(const AString& version);
 
+    AString retrieveJavaManifestUrl(const AString& version) const;
 };
 

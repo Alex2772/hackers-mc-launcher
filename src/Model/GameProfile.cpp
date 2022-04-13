@@ -105,11 +105,11 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         for (auto& d : json["game_args"].asArray())
         {
             GameArg entry;
-            entry.mName = d["name"].asString();
-            entry.mValue = d["value"].asString();
+            entry.name = d["name"].asString();
+            entry.value = d["value"].asString();
 
             try {
-                entry.mConditions = aui::from_json<Rules>(d["conditions"]);
+                entry.conditions = aui::from_json<Rules>(d["conditions"]);
             } catch (...) {}
 
             dst.mGameArgs << entry;
@@ -118,10 +118,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         for (auto& d : json["java_args"].asArray())
         {
             JavaArg entry;
-            entry.mName = d["name"].asString();
+            entry.name = d["name"].asString();
 
             try {
-                entry.mConditions = aui::from_json<Rules>(d["conditions"]);
+                entry.conditions = aui::from_json<Rules>(d["conditions"]);
             } catch (...) {}
 
             dst.mJavaArgs << entry;
@@ -130,13 +130,24 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         // classpath
         for (auto& e : json["classpath"].asArray())
         {
-            dst.mClasspath << e.asString();
+            ClasspathEntry classpathEntry;
+            classpathEntry.name = e["name"].asString();
+
+            try {
+                classpathEntry.conditions = aui::from_json<Rules>(e["conditions"]);
+            } catch (...) {}
+
+            dst.mClasspath << std::move(classpathEntry);
         }
 
         auto settings = json["settings"].asObject();
         dst.mWindowWidth = settings["window_width"].asInt();
         dst.mWindowHeight = settings["window_height"].asInt();
         dst.mIsFullscreen = settings["fullscreen"].asBool();
+
+        if (json["javaVersion"].isString()) {
+            dst.mJavaVersionName = json["javaVersion"].asString();
+        }
     }
     else
     {
@@ -191,9 +202,9 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             } catch (...) {}
             try {
                 if (v["downloads"].isObject()) {
-                    dst.mClasspath << "libraries/" + v["downloads"]["artifact"]["path"].asString();
+                    dst.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].asString(), std::move(conditions)};
                 } else {
-                    dst.mClasspath << "libraries/" + javaLibNameToPath(name);
+                    dst.mClasspath << ClasspathEntry{"libraries/" + javaLibNameToPath(name), std::move(conditions)};
                 }
             } catch (...) {}
         }
@@ -209,14 +220,14 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             {
                 if (counter % 2 == 0)
                 {
-                    arg.mName = value;
+                    arg.name = value;
                 }
                 else
                 {
-                    arg.mValue = value;
+                    arg.value = value;
                     for (auto it = dst.mGameArgs.begin(); it != dst.mGameArgs.end();)
                     {
-                        if (it->mName == arg.mName)
+                        if (it->name == arg.name)
                         {
                             it = dst.mGameArgs.erase(it);
                         }
@@ -259,7 +270,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                             counter += 1;
                         }
 
-                        parseConditions(arg.mConditions, a["rules"]);
+                        parseConditions(arg.conditions, a["rules"]);
 
                         // Add arguments
                         if (a["value"].isArray())
@@ -268,14 +279,14 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                             {
                                 if (counter % 2 == 0)
                                 {
-                                    arg.mName = value.asString();
+                                    arg.name = value.asString();
                                 }
                                 else
                                 {
-                                    arg.mValue = value.asString();
+                                    arg.value = value.asString();
                                     dst.mGameArgs << arg;
-                                    arg.mName.clear();
-                                    arg.mValue.clear();
+                                    arg.name.clear();
+                                    arg.value.clear();
                                 }
                                 counter += 1;
                             }
@@ -288,7 +299,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                         }
                         else if (a["value"].isString())
                         {
-                            arg.mName = a["value"].asString();
+                            arg.name = a["value"].asString();
                             dst.mGameArgs << arg;
                             arg = {};
                         }
@@ -326,6 +337,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             dst.mJavaArgs << JavaArg{"${classpath}"};
         }
         cleanupNeeded = true;
+
+        if (json["javaVersion"].isObject()) {
+            dst.mJavaVersionName = json["javaVersion"]["component"].asString();
+        }
     }
 
     // optifine 1.15.2 classpath order fix
@@ -395,6 +410,7 @@ AJson GameProfile::toJson() {
 
     object["mainClass"] = mMainClass;
     object["assets"] = mAssetsIndex;
+    object["javaVersion"] = mJavaVersionName;
 
     // export to minecraft legacy launcher format is not supported
     object["hackers-mc"] = true;
@@ -421,10 +437,10 @@ AJson GameProfile::toJson() {
         AJson::Array gameArgs;
         for (auto& d: mGameArgs) {
             AJson::Object entry;
-            entry["name"] = d.mName;
-            entry["value"] = d.mValue;
+            entry["name"] = d.name;
+            entry["value"] = d.value;
 
-            entry["conditions"] = aui::to_json(d.mConditions);
+            entry["conditions"] = aui::to_json(d.conditions);
 
             gameArgs << std::move(entry);
         }
@@ -436,11 +452,11 @@ AJson GameProfile::toJson() {
     for (auto& d : mJavaArgs)
     {
         AJson::Object entry;
-        entry["name"] = d.mName;
+        entry["name"] = d.name;
 
         AJson::Array conditions;
 
-        entry["conditions"] = aui::to_json(d.mConditions);
+        entry["conditions"] = aui::to_json(d.conditions);
 
         javaArgs << entry;
     }
@@ -451,7 +467,10 @@ AJson GameProfile::toJson() {
     AJson::Array classpath;
     for (auto& lib : mClasspath)
     {
-        classpath << lib;
+        classpath << AJson::Object{
+            {"name", lib.name},
+            {"conditions", aui::to_json(lib.conditions) }
+        };
     }
     object["classpath"] = classpath;
 

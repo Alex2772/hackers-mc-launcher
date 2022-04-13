@@ -67,7 +67,14 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                         constexpr auto SEPARATOR = aui::platform::current::is_unix() ? ':' : ';';
                         if (c.profile) {
                             const auto& name = c.profile->getName();
-                            return c.profile->getClasspath().join(SEPARATOR) + SEPARATOR + "versions/{}/{}.jar"_format(name, name);
+                            AString classpath;
+                            for (auto& e : c.profile->getClasspath()) {
+                                if (VariableHelper::checkRules(c, e.conditions)) {
+                                    classpath += e.name;
+                                    classpath += SEPARATOR;
+                                }
+                            }
+                            return classpath + "versions/{}/{}.jar"_format(name, name);
                         }
                         return {};
                     }
