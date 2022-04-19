@@ -350,10 +350,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
         // if the current profile does not have it's own main jar file, we can copy it from the inherited profile.
         // in theory, it would work recursively too.
-        auto mainJarAbsolutePath = Settings::inst().gameDir["versions"][name][name + ".jar"];
+        auto mainJarAbsolutePath = Settings::inst().gameDir / "versions" / name / (name + ".jar");
         if (!mainJarAbsolutePath.isRegularFileExists())
         {
-            APath::copy(Settings::inst().gameDir["versions"][dst.mName][dst.mName + ".jar"], mainJarAbsolutePath);
+            APath::copy(Settings::inst().gameDir / "versions" / dst.mName / (dst.mName + ".jar"), mainJarAbsolutePath);
         }
     }
 
@@ -370,18 +370,13 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
     if (!isHackersMcFormat)
     {
-        /*
-        // again, due to Optifine 1.15.2 load order main game jar should be in the end of classpath load order.
-
         // client jar
         {
             auto path = "versions/" + json["id"].asString() + '/' + json["id"].asString() + ".jar";
             try {
                 dst.mDownloads << downloadEntryFromJson(path, json["downloads"].asObject()["client"].asObject());
             } catch (...) {}
-            dst.mClasspath << path;
         }
-        */
 
         // Asset index
         try {
@@ -487,12 +482,14 @@ AJson GameProfile::toJson() {
 }
 
 void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
+    auto pathToConfig = Settings::inst().gameDir.file("versions").file(name).file(name + ".hackers.json");
     try {
-        fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(Settings::inst().gameDir.file("versions").file(name).file(name + ".hackers.json"))).asObject());
+        fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(pathToConfig)).asObject());
         return;
     } catch (const AIOException& ignored) {
     } catch (const AException& e) {
-        ALogger::err("ProfileLoading") << "Failed to load hackers.json profile:" << e;
+        ALogger::err("ProfileLoading") << "Failed to load (" << pathToConfig << ") profile:" << e;
     }
     fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(Settings::inst().gameDir.file("versions").file(name).file(name + ".json"))).asObject());
+    dst.save();
 }

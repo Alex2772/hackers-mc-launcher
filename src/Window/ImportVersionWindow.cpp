@@ -27,12 +27,6 @@ using namespace ass;
 
 static constexpr auto LOG_TAG = "Import";
 
-struct Version {
-    AString id;
-    AString url;
-    VersionType type;
-};
-
 ImportVersionWindow::ImportVersionWindow():
     AWindow("Import version", 500_dp, 400_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL)
 {
@@ -99,18 +93,12 @@ ImportVersionWindow::ImportVersionWindow():
     mRadioGroup->uncheckAll();
     mRadioGroup->setSelectedId(0);
 
+
+
     minecraftRepoListWrap->setDisabled();
 
     mImportTask = async {
-        auto versionManifest = AJson::fromBuffer(ACurl::Builder("https://launchermeta.mojang.com/mc/game/version_manifest.json").toByteBuffer());
-        auto versionModel = _new<AListModel<Version>>();
-        for (auto& version : versionManifest["versions"].asArray()) {
-            versionModel->push_back({
-                version["id"].asString(),
-                version["url"].asString(),
-                AEnumerate<VersionType>::byName(version["type"].asString()),
-            });
-        }
+        _<AListModel<Version>> versionModel = _new<AListModel<Version>>(Version::fetchAll());
 
         ui_thread {
             minecraftRepoListWrap->setEnabled();
@@ -139,14 +127,7 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
 
         mImportTask = async {
             try {
-                GameProfile p;
-                auto file = Settings::inst().gameDir["versions"][version.id][version.id + ".json"];
-                file.parent().makeDirs();
-                ALogger::info(LOG_TAG) << "Importing " << version.url;
-                ACurl(ACurl::Builder(version.url).withOutputStream(_new<AFileOutputStream>(file))).run();
-                GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), version.id, AJson::fromStream(AFileInputStream(file)).asObject());
-                p.save();
-                ALogger::info(LOG_TAG) << "Imported " << p.getName();
+                GameProfile p = version.import();
                 ui_thread {
                     GameProfilesRepository::inst().addGameProfile(p);
                 };

@@ -41,7 +41,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     [](const Context& c) -> AString
                     {
                         if (c.profile) {
-                            return Settings::inst().gameDir["bin"][c.profile->getUuid().toRawString()];
+                            return Settings::inst().gameDir / "bin" / c.profile->getUuid().toRawString();
                         }
                         return {};
                     }
@@ -141,7 +141,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "assets_root",
                     [](const Context& c) -> AString
                     {
-                        return Settings::inst().gameDir["assets"];
+                        return Settings::inst().gameDir / "assets";
                     }
             },
             {

@@ -23,6 +23,7 @@
 #include <numeric>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/parallel.h>
+#include <AUI/Util/AStdOutputRecorder.h>
 
 static constexpr auto LOG_TAG = "Launcher";
 static constexpr auto JAVA_VERSIONS_URL = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
@@ -45,10 +46,10 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
 
     emit updateStatus("Scanning files to download");
     const APath gameFolder = Settings::inst().gameDir;
-    const APath extractFolder = gameFolder["bin"][profile.getUuid().toRawString()];
+    const APath extractFolder = gameFolder / "bin" / profile.getUuid().toRawString();
     ALogger::info(LOG_TAG) << ("Install path: " + gameFolder);
 
-    const APath assetsJson = gameFolder["assets"]["indexes"][profile.getAssetsIndex() + ".json"];
+    const APath assetsJson = gameFolder / "assets" / "indexes" / (profile.getAssetsIndex() + ".json");
     ALogger::info(LOG_TAG) << ("Assets: " + assetsJson);
 
     auto checkAndDownload = [&] {
@@ -96,12 +97,12 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
 
         auto objects = assets["objects"].asObject();
 
-        auto objectsDir = gameFolder["assets"]["objects"];
+        auto objectsDir = gameFolder / "assets" / "objects";
 
         for (auto& object : objects) {
             auto hash = object.second["hash"].asString();
             auto path = AString() + hash[0] + hash[1] + '/' + hash;
-            auto local = objectsDir[path];
+            auto local = objectsDir / path;
 
             if (local.isRegularFileExists()) {
                 if (!doUpdate
@@ -164,7 +165,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
                 }
             };
 
-            z unzip = unzOpen(gameFolder[d.mLocalPath].toStdString().c_str());
+            z unzip = unzOpen((gameFolder / d.mLocalPath).toStdString().c_str());
             unz_global_info info;
             if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
                 throw AException("launcher.error.invalid_zip"_as.format(d.mLocalPath));
@@ -310,7 +311,7 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
     std::atomic_size_t downloadedBytes = 0;
     aui::parallel(toDownload.begin(), toDownload.end(), [&](const AVector<ToDownload>::const_iterator& begin, const AVector<ToDownload>::const_iterator& end) {
         for (const auto& d : aui::range(begin, end)) {
-            auto local = destinationDir[d.localPath];
+            auto local = destinationDir / d.localPath;
             ALogger::info(LOG_TAG) << ("Downloading: " + d.url + " > " + local);
             emit updateTargetFile(d.localPath);
             local.parent().makeDirs();
@@ -327,7 +328,7 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
                 return b.size();
             })).run();
             if (d.hash.empty()) {
-                ALogger::warn(LOG_TAG) << "Hash is missing for file " << d.url;
+                //ALogger::warn(LOG_TAG) << "Hash is missing for file " << d.url;
             } else {
                 if (AHash::sha1(rawFileBlob).toHexString() != d.hash) {
                     throw AException("file corrupted {}"_format(d.url));
@@ -342,13 +343,14 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
 bool Launcher::isJavaWorking(const AString& version) const noexcept {
     try {
         auto process = AProcess::make(javaExecutable(version), "-version");
+        auto output = _new<AStdOutputRecorder>(process);
         process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
         if (process->waitForExitCode() != 0) {
             throw AException("nonzero exit code");
         }
 
-        auto fullOutput = AString::fromLatin1(AByteBuffer::fromStream(process->getStdOutStream()));
+        auto fullOutput = AString::fromLatin1(output->stdoutBuffer());
         ALogger::info(LOG_TAG) << "Java version output: " << fullOutput.mid(0, fullOutput.find('\n'));
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Java does not work: " << e;

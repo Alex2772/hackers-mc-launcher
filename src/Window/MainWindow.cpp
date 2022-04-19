@@ -156,16 +156,14 @@ void MainWindow::onPlayButtonClicked() {
             connect(process->finished, [this, game] { // capture process in order to keep reference
                 show();
                 GameConsoleWindow::handleGameExit(this, std::move(game));
+                game->process->finished.clearAllConnectionsWith(this);
+                game->process->stdOut.clearAllConnectionsWith(this);
             });
 
             process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
-            connect(process->readyReadStdOut, [game] {
-                game->stdoutBuffer << AByteBuffer::fromStream(game->process->getStdOutStream());
-            });
-
-            connect(process->readyReadStdErr, [game] {
-                game->stdoutBuffer << AByteBuffer::fromStream(game->process->getStdErrStream());
+            connect(process->stdOut, [game](const AByteBuffer& buffer) {
+                game->stdoutBuffer << buffer;
             });
 
             ui_thread {

@@ -24,11 +24,12 @@ struct AJsonConv<LauncherRule::Action> {
             case LauncherRule::Action::DISALLOW: return "disallow";
         }
     }
-    static LauncherRule::Action fromJson(const AJson& e) {
+    static void fromJson(const AJson& e, LauncherRule::Action& dst) {
         if (e.asString() == "disallow") {
-            return LauncherRule::Action::DISALLOW;
+            dst = LauncherRule::Action::DISALLOW;
+            return;
         }
-        return LauncherRule::Action::ALLOW;
+        dst = LauncherRule::Action::ALLOW;
     }
 };
 using Rules = AVector<LauncherRule>;
