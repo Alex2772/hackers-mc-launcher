@@ -50,7 +50,7 @@ MainWindow::MainWindow():
                 Horizontal {
                     Vertical {
                         _new<ALabel>("Account:"),
-                        mUsersListView = _new<AccountsComboBox>(AModels::adapt<AString>(UsersRepository::inst().getModel(), [](const Account& u) {
+                            mUsersListView = _new<AccountsComboBox>(AModels::adapt<AString>(UsersRepository::inst().getModel(), [](const Account& u) {
                             return u.username;
                         })) with_style { MinSize { 100_dp, {} } },
                     },

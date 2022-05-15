@@ -9,6 +9,7 @@
 #include <AUI/Autumn/Autumn.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/ATokenizer.h>
+#include <AUI/Logging/ALogger.h>
 #include "VariableHelper.h"
 
 AString VariableHelper::getVariableValue(const Context& c, const AString& name)
@@ -196,12 +197,20 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                         return "false";
                     }
             },
+            {
+                    "clientid",
+                    [](const Context& c) -> AString
+                    {
+                        return "0";
+                    }
+            },
     };
 
     
     if (auto co = m.contains(name)) {
         return co->second(c);
     }
+    ALogger::warn("VariableHelper") << "Unknown variable: " << name;
     return "null";
 }
 
