@@ -11,6 +11,7 @@
 UsersRepository::UsersRepository():
     mModel(_new<AListModel<Account>>())
 {
+    AObject::connect(mModel->dataInserted, mModel, []{LegacyLauncherJsonSource::save();});
     AObject::connect(mModel->dataChanged, mModel, []{LegacyLauncherJsonSource::save();});
     AObject::connect(mModel->dataRemoved, mModel, []{LegacyLauncherJsonSource::save();});
 }
