@@ -335,14 +335,18 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
                 }
             }
             AFileOutputStream(local) << rawFileBlob;
+#ifdef AUI_PLATFORM_UNIX
+            local.chmod(0777); // avoid unwanted "permission denied" on *nix
+#endif
         }
     }).waitForAll();
 }
 
 
 bool Launcher::isJavaWorking(const AString& version) const noexcept {
+    auto pathToJavaExecutable = javaExecutable(version);
     try {
-        auto process = AProcess::make(javaExecutable(version), "-version");
+        auto process = AProcess::make(pathToJavaExecutable, "-version");
         auto output = _new<AStdOutputRecorder>(process);
         process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
@@ -352,8 +356,10 @@ bool Launcher::isJavaWorking(const AString& version) const noexcept {
 
         auto fullOutput = AString::fromLatin1(output->stdoutBuffer());
         ALogger::info(LOG_TAG) << "Java version output: " << fullOutput.mid(0, fullOutput.find('\n'));
+        return true;
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Java does not work: " << e;
+        ALogger::warn(LOG_TAG) << pathToJavaExecutable << " -- broken";
         return false;
     }
 }
