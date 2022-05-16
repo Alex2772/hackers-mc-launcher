@@ -288,7 +288,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
             if (arg.value.empty()) {
                 args << VariableHelper::parseVariables(c, arg.name);
             } else {
-                args << VariableHelper::parseVariables(c, arg.name) + "=" + VariableHelper::parseVariables(c, arg.value);
+                args << VariableHelper::parseVariables(c, arg.name) + " " + VariableHelper::parseVariables(c, arg.value);
             }
         }
     }

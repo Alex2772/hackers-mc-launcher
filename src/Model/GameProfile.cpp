@@ -359,8 +359,9 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         }
     }
 
-    if (cleanupNeeded)
+    if (cleanupNeeded) {
         dst.makeClean();
+    }
 
     dst.mName = name;
 
@@ -395,11 +396,27 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
 void GameProfile::makeClean() {
     // remove duplicating game args
+    for (auto i = 0; i < mJavaArgs.size(); ++i) {
+        const auto& name = mJavaArgs[i].name;
+        mJavaArgs.erase(std::remove_if(mJavaArgs.begin() + i + 1, mJavaArgs.end(), [&name](const auto& p) {
+            return p.name == name;
+        }), mJavaArgs.end());
+    }
+
+    // remove duplicating game args
     for (auto i = 0; i < mGameArgs.size(); ++i) {
         const auto& name = mGameArgs[i].name;
         mGameArgs.erase(std::remove_if(mGameArgs.begin() + i + 1, mGameArgs.end(), [&name](const auto& p) {
             return p.name == name;
         }), mGameArgs.end());
+    }
+
+    // remove duplicating libraries
+    for (auto i = 0; i < mClasspath.size(); ++i) {
+        const auto& name = mClasspath[i].name;
+        mClasspath.erase(std::remove_if(mClasspath.begin() + i + 1, mClasspath.end(), [&name](const auto& p) {
+            return p.name == name;
+        }), mClasspath.end());
     }
 }
 
