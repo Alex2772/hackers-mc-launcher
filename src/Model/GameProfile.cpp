@@ -245,11 +245,13 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
             if (json.contains("minecraftArguments"))
             {
-                // old-style args
-                AStringVector args = json["minecraftArguments"].asString().split(' ');
-                for (auto& s : args)
-                    if (!s.empty())
-                        processStringObject(s);
+                if (dst.mGameArgs.empty()) { // should not override minecraftArguments by inheritance
+                    // old-style args
+                    AStringVector args = json["minecraftArguments"].asString().split(' ');
+                    for (auto& s: args)
+                        if (!s.empty())
+                            processStringObject(s);
+                }
             }
             else
             {
@@ -392,6 +394,13 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 }
 
 void GameProfile::makeClean() {
+    // remove duplicating game args
+    for (auto i = 0; i < mGameArgs.size(); ++i) {
+        const auto& name = mGameArgs[i].name;
+        mGameArgs.erase(std::remove_if(mGameArgs.begin() + i + 1, mGameArgs.end(), [&name](const auto& p) {
+            return p.name == name;
+        }), mGameArgs.end());
+    }
 }
 
 void GameProfile::save() {

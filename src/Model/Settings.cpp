@@ -33,8 +33,13 @@ Settings::Settings() {
 }
 
 void Settings::initEmptyFields() {
-    if (gameDir.empty())
-        gameDir = APath::getDefaultPath(APath::APPDATA).file(".minecraft");
+    if (gameDir.empty()) {
+        if constexpr (aui::platform::current::is_windows()) {
+            gameDir = APath::getDefaultPath(APath::APPDATA) / ".minecraft";
+        } else {
+            gameDir = APath::getDefaultPath(APath::HOME).absolute() / ".minecraft";
+        }
+    }
 }
 
 void Settings::reset() {

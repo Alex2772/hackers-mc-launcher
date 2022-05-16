@@ -139,7 +139,9 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
                 ALogger::err(LOG_TAG) << e;
                 AMessageBox::show(this, "Could not import version", e.getMessage(), AMessageBox::Icon::CRITICAL);
             }
-            close();
+            ui_thread {
+                close();
+            };
         };
     }
 }
