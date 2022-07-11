@@ -18,9 +18,6 @@ GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
             _new<AButton>("Import version...").connect(&AView::clicked, [] {
                 _new<ImportVersionWindow>()->show();
             }),
-            _new<ASpacer>(),
-            _new<ALabel>("Search:"),
-            _new<ATextField>() let { it->focus(); },
         },
         ui_for(profile, model, AWordWrappingLayout) {
             auto item = Vertical {
