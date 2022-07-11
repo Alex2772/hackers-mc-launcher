@@ -14,6 +14,7 @@
 
 AString VariableHelper::getVariableValue(const Context& c, const AString& name)
 {
+    static constexpr auto CLASSPATH_SEPARATOR = aui::platform::current::is_unix() ? ':' : ';';
     static AMap<AString, std::function<AString(const Context&)>> m = {
             {
                     "os.name",
@@ -65,19 +66,25 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "classpath",
                     [](const Context& c) -> AString
                     {
-                        constexpr auto SEPARATOR = aui::platform::current::is_unix() ? ':' : ';';
                         if (c.profile) {
                             const auto& name = c.profile->getName();
                             AString classpath;
                             for (auto& e : c.profile->getClasspath()) {
                                 if (VariableHelper::checkRules(c, e.conditions)) {
                                     classpath += e.name;
-                                    classpath += SEPARATOR;
+                                    classpath += CLASSPATH_SEPARATOR;
                                 }
                             }
                             return classpath + "versions/{}/{}.jar"_format(name, name);
                         }
                         return {};
+                    }
+            },
+            {
+                    "classpath_separator",
+                    [](const Context& c) -> AString
+                    {
+                        return AString(1, CLASSPATH_SEPARATOR);
                     }
             },
             {
@@ -136,6 +143,13 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     [](const Context& c) -> AString
                     {
                         return Settings::inst().gameDir;
+                    }
+            },
+            {
+                    "library_directory",
+                    [](const Context& c) -> AString
+                    {
+                        return Settings::inst().gameDir / "libraries";
                     }
             },
             {

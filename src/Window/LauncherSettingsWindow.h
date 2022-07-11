@@ -12,6 +12,12 @@ class LauncherSettingsWindow: public AWindow {
 private:
     _<AButton> mResetButton;
 
+    void clearGameDir();
+
+    AFuture<> mTask;
+    _<AView> mClearGameDirButton;
+    _<AView> mClearGameDirSpinner;
+
 public:
 
     LauncherSettingsWindow();

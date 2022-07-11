@@ -395,9 +395,12 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 }
 
 void GameProfile::makeClean() {
-    // remove duplicating game args
+    // remove duplicating java args
     for (auto i = 0; i < mJavaArgs.size(); ++i) {
         const auto& name = mJavaArgs[i].name;
+        if (name.startsWith("--")) { // --add-exports
+            continue;
+        }
         mJavaArgs.erase(std::remove_if(mJavaArgs.begin() + i + 1, mJavaArgs.end(), [&name](const auto& p) {
             return p.name == name;
         }), mJavaArgs.end());

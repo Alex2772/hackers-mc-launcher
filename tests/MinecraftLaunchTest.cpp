@@ -80,6 +80,9 @@ protected:
 };
 
 
+TEST_F(MinecraftLaunch, v1_19) {
+    launch("1.19");
+}
 TEST_F(MinecraftLaunch, v1_18_2) {
     launch("1.18.2");
 }

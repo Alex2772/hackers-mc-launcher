@@ -168,14 +168,16 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
             z unzip = unzOpen((gameFolder / d.mLocalPath).toStdString().c_str());
             unz_global_info info;
             if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
-                throw AException("launcher.error.invalid_zip"_as.format(d.mLocalPath));
+                ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.mLocalPath;
+                continue;
             }
             for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
                 char fileNameBuf[0x400];
                 unz_file_info fileInfo;
                 if (unzGetCurrentFileInfo(unzip, &fileInfo, fileNameBuf, sizeof(fileNameBuf), nullptr, 0, nullptr,
                                           0) != UNZ_OK) {
-                    throw AException("launcher.error.invalid_zip"_as.format(d.mLocalPath));
+                    ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.mLocalPath << "/" << fileNameBuf;
+                    break;
                 }
                 APath fileName = AString::fromLatin1(fileNameBuf);
 

@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-set(AUI_VERSION a3ac24ae)
+set(AUI_VERSION develop)
+
+set(BUILD_SHARED_LIBS OFF) # there's no reason to use static build
 
 file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake ${CMAKE_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_BINARY_DIR}/aui.boot.cmake)
@@ -11,7 +13,7 @@ auib_import(AUI https://github.com/aui-framework/aui
             VERSION ${AUI_VERSION})
 
 find_package(ZLIB REQUIRED)
-aui_executable(hackers-mc-launcher)
+aui_executable(hackers-mc-launcher WIN32_SUBSYSTEM_CONSOLE)
 
 aui_compile_assets(hackers-mc-launcher)
 
@@ -28,6 +30,8 @@ if (MSVC)
 endif()
 
 aui_enable_tests()
+
+
 
 aui_app(TARGET hackers-mc-launcher
         NAME "Hacker's MC Launcher"

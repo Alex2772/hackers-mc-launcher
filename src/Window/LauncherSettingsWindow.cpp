@@ -16,6 +16,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/ASS/ASS.h>
+#include <AUI/View/ASpinner.h>
 
 using namespace ass;
 
@@ -33,11 +34,23 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                 it->addTab(
                     Vertical{
                         _form({
-                            {"Game folder:"_as, _new<APathChooserView>() && binding(&Settings::gameDir)},
+                            {
+                                "Game dir:"_as,
+                                Horizontal {
+                                    _new<APathChooserView>() let {
+                                        it->setExpanding();
+                                        it && binding(&Settings::gameDir);
+                                    },
+                                    mClearGameDirButton = _new<AButton>("Clear game dir").connect(&AView::clicked, me::clearGameDir),
+                                    mClearGameDirSpinner = _new<ASpinner>() let {
+                                        it->setVisibility(Visibility::GONE);
+                                    },
+                                }
+                            },
                             {
                                 "Display:"_as,
                                 Horizontal {
-                                    resolutionView = Horizontal{
+                                    resolutionView = Horizontal {
                                         _new<ANumberPicker>() && binding(&Settings::width),
                                         _new<ALabel>("x"),
                                         _new<ANumberPicker>() && binding(&Settings::height),
@@ -123,8 +136,28 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
             }
         }
     );
+
     connect(binding->modelChanged, [&, binding] {
         mResetButton->enable();
     });
     connect(fullscreenCheckbox->checked, [this, resolutionView](bool g) { resolutionView->setVisibility(g ? Visibility::VISIBLE : Visibility::GONE); updateLayout(); });
+}
+
+void LauncherSettingsWindow::clearGameDir() {
+    if (AMessageBox::show(this,
+                          "Clear game dir?",
+                          "Your saves, settings, mods, configs will be permanently removed!",
+                          AMessageBox::Icon::WARNING, AMessageBox::Button::YES_NO) == AMessageBox::ResultButton::YES) {
+
+        mClearGameDirSpinner->setVisibility(Visibility::VISIBLE);
+        mClearGameDirButton->setVisibility(Visibility::GONE);
+
+        mTask = async {
+            Settings::inst().gameDir.removeFileRecursive().makeDirs();
+            ui_thread {
+                mClearGameDirSpinner->setVisibility(Visibility::GONE);
+                mClearGameDirButton->setVisibility(Visibility::VISIBLE);
+            };
+        };
+    }
 }

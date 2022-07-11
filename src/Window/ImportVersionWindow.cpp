@@ -105,7 +105,7 @@ ImportVersionWindow::ImportVersionWindow():
             auto filterModel = AModels::filter(versionModel, [&](const Version& v) {
                 if (v.type != mVersionTypeValue) return false;
 
-                auto filterString = mSearchTextField->getText();
+                auto filterString = mSearchTextField->text();
                 if (!filterString.empty()) {
                     if (!v.id.contains(filterString)) {
                         return false;
