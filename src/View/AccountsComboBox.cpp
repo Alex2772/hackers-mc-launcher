@@ -36,6 +36,7 @@ void AccountsComboBox::onComboBoxWindowCreated() {
 
 AccountsComboBox::AccountsComboBox(const _<IListModel<AString>>& model) : AComboBox(model) {
 
+    updateText();
 }
 
 void AccountsComboBox::updateText() {
