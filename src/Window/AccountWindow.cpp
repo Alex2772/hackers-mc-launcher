@@ -57,7 +57,7 @@ AccountWindow::AccountWindow(Account* user):
                         :
                     _new<AButton>("Create").connect(&AView::clicked, this, [&] {
                         auto user = mBinding->getModel();
-                        user.uuid = Autumn::get<ARandom>()->nextUuid();
+                        //user.uuid = Autumn::get<ARandom>()->nextUuid();
                         if (!UsernameValidator()(mBinding->getModel().username)) {
                             AMessageBox::show(this,
                                               "Username is invalid",

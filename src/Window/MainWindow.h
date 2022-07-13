@@ -27,6 +27,8 @@ private:
     void checkForDiskProfileUpdates();
     void showProfileLoading();
     void hideProfileLoading();
+    void openGameDir();
+    void showLauncherSettings();
 
 public:
 

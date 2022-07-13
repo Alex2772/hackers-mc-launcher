@@ -13,7 +13,9 @@ auib_import(AUI https://github.com/aui-framework/aui
             VERSION ${AUI_VERSION})
 
 find_package(ZLIB REQUIRED)
-aui_executable(hackers-mc-launcher WIN32_SUBSYSTEM_CONSOLE)
+aui_executable(hackers-mc-launcher
+        #WIN32_SUBSYSTEM_CONSOLE
+        )
 
 aui_compile_assets(hackers-mc-launcher)
 

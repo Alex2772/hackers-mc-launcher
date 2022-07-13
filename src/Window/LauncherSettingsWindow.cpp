@@ -66,14 +66,14 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                 it->addTab(
                     Vertical{
                         _new<ALabel>("Hacker's Minecraft Launcher") let {
-                            it->setCustomAss({
+                            it->setCustomStyle({
                                 FontSize { 19_pt },
                                 Margin { 8_dp, 0, 4_dp },
                                 TextAlign::CENTER,
                             });
                         },
                         _new<ALabel>("Version " HACKERS_MC_VERSION) let {
-                            it->setCustomAss({
+                            it->setCustomStyle({
                                 FontSize { 8_pt },
                                 //Margin { 0, 0, 4_dp },
                                 TextAlign::CENTER,
@@ -81,7 +81,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             });
                         },
                         _new<ALabel>("Distributed under GNU General Public License v3") let {
-                            it->setCustomAss({
+                            it->setCustomStyle({
                                 FontSize { 8_pt },
                                 Margin { 0, 0, 4_dp },
                                 TextAlign::CENTER,

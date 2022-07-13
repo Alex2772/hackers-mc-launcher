@@ -20,6 +20,7 @@
 #include "GameProfileWindow.h"
 #include "GameConsoleWindow.h"
 #include "Model/GameProcess.h"
+#include "Model/Settings.h"
 #include <chrono>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -30,8 +31,9 @@
 #include <AUI/View/ASpinner.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/iterators.h>
+#include <AUI/Platform/ADesktop.h>
 
-using namespace ass;
+using namespace declarative;
 
 MainWindow::MainWindow():
     AWindow("Hacker's Minecraft Launcher", 600_dp, 380_dp)
@@ -55,10 +57,17 @@ MainWindow::MainWindow():
                         })) with_style { MinSize { 100_dp, {} } },
                     },
                     _new<ASpacer>(),
-                    Centered{
-                        _new<AButton>().connect(&AView::clicked, this, [&] {
-                            _new<LauncherSettingsWindow>()->show();
-                        }) << "#settings"
+                    Centered {
+                        Vertical {
+                            Button {
+                                Icon { ":svg/dir.svg" },
+                                Label { "Game dir" },
+                            }.clicked(me::openGameDir),
+                            Button {
+                                Icon { ":svg/cog.svg" },
+                                Label { "Settings" }
+                            }.clicked(me::showLauncherSettings),
+                        }
                     },
                 } with_style { Expanding{} },
 
@@ -68,7 +77,7 @@ MainWindow::MainWindow():
                     mDownloadingPanel = Vertical {
                         Horizontal {
                             mStatusLabel = _new<ALabel>("Running...") let {
-                                it->setCustomAss({
+                                it->setCustomStyle({
                                     FontSize { 12_pt },
                                     TextColor { 0_rgb },
                                 });
@@ -242,12 +251,19 @@ void MainWindow::checkForDiskProfileUpdates() {
 }
 
 void MainWindow::showProfileLoading() {
-    mGameProfilesView->setCustomAss({ Opacity { 0.1f } });
+    mGameProfilesView->setCustomStyle({ Opacity { 0.1f } });
     mSpinnerView->setVisibility(Visibility::VISIBLE);
 }
 void MainWindow::hideProfileLoading() {
-    mGameProfilesView->setCustomAss({ Opacity { 1.f } });
+    mGameProfilesView->setCustomStyle({ Opacity { 1.f } });
     mSpinnerView->setVisibility(Visibility::GONE);
 }
 
 
+void MainWindow::openGameDir() {
+    ADesktop::openUrl(Settings::inst().gameDir);
+}
+
+void MainWindow::showLauncherSettings() {
+    _new<LauncherSettingsWindow>()->show();
+}

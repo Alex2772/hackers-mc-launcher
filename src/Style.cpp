@@ -12,7 +12,7 @@ using namespace ass;
 
 struct Style {
     Style() {
-        AStylesheet::inst().addRules({
+        AStylesheet::global().addRules({
             {
                 t<MainWindow>(),
                 Padding { 0 },

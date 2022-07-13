@@ -36,7 +36,7 @@ ImportVersionWindow::ImportVersionWindow():
     });
     _<AView> minecraftRepoListWrap = Horizontal {
         mMinecraftRepoList = _new<AListView>() let {
-            it->setCustomAss({ Expanding{} });
+            it->setCustomStyle({ Expanding{} });
             connect(it->itemDoubleClicked, me::doImportFromMinecraftRepo);
         },
         Vertical {

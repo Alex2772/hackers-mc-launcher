@@ -24,7 +24,7 @@ GameConsoleWindow::GameConsoleWindow(AWindow* parent, _<GameProcess> game): AWin
             _new<ASpinner>(),
         }
     });
-    setCustomAss({
+    setCustomStyle({
         ass::Padding { 0_dp },
     });
 

@@ -11,6 +11,8 @@
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/Logging/ALogger.h>
 #include "VariableHelper.h"
+#include "AuthTricks.h"
+#include <AUI/Util/ARandom.h>
 
 AString VariableHelper::getVariableValue(const Context& c, const AString& name)
 {
@@ -102,6 +104,14 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     [](const Context& c) -> AString
                     {
                         if (c.user) {
+                            if (c.user->uuid == AUuid()) {
+                                try {
+                                    const_cast<AUuid&>(c.user->uuid) = auth_tricks::usernameToUuid(c.user->username);
+                                    ALogger::info("VariableHelper") << "Mapped online user " << c.user->username << " uuid to " << c.user->uuid.toString();
+                                } catch (const AException& e) {
+                                    return "null";
+                                }
+                            }
                             return c.user->uuid.toRawString();
                         }
                         return {};
@@ -118,7 +128,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "user_type",
                     [](const Context& c) -> AString
                     {
-                        return "legacy";
+                        return "msa";
                     }
             },
             {
@@ -212,10 +222,19 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     }
             },
             {
+                    "auth_xuid",
+                    [](const Context& c) -> AString
+                    {
+                        //return auth_tricks::xuid(c);
+                        return "2535459390466924";
+                    }
+            },
+            {
                     "clientid",
                     [](const Context& c) -> AString
                     {
-                        return "0";
+                        return "N2U3M2FiOGYtNzQ5NS00N2RhLWIwNzgtMjk4NmY0NWZmODkx";
+                        //return auth_tricks::clientId(c);
                     }
             },
     };
@@ -225,7 +244,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
         return co->second(c);
     }
     ALogger::warn("VariableHelper") << "Unknown variable: " << name;
-    return "null";
+    return "${" + name + "}";
 }
 
 bool VariableHelper::checkRules(const Context& c, const Rules& rules) {
