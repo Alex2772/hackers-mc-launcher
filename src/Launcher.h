@@ -10,7 +10,7 @@ private:
     struct ToDownload {
         AString localPath;
         AString url;
-        std::size_t bytes;
+        std::uint64_t bytes;
         AString hash;
     };
 

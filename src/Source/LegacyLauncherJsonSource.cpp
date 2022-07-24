@@ -22,7 +22,6 @@ APath LegacyLauncherJsonSource::getVersionsJsonFilePath() {
 
 
 static void loadProfile(ASet<AString>& profilesLoadedFromConfig, const AUuid& uuid, const AString& name) {
-    GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles() << uuid;
     try {
         if (!name.startsWith("latest-")) {
             GameProfile p;
@@ -100,7 +99,10 @@ void LegacyLauncherJsonSource::load() {
                     name = obj["name"].asString();
                 }
 
-                loadProfile(profilesLoadedFromConfig, safeUuid(rawUuid), name);
+                auto uuid = safeUuid(rawUuid);
+                GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles() << uuid;
+
+                loadProfile(profilesLoadedFromConfig, uuid, name);
             }
         } catch (const AException& e) {
             ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
