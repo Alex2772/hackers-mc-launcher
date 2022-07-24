@@ -14,11 +14,6 @@ GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
     mModel(model)
 {
     setContents(Vertical {
-        Horizontal {
-            _new<AButton>("Import version...").connect(&AView::clicked, [] {
-                _new<ImportVersionWindow>()->show();
-            }),
-        },
         ui_for(profile, model, AWordWrappingLayout) {
             auto item = Vertical {
                     Stacked{

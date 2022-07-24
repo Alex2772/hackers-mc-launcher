@@ -15,6 +15,7 @@
 #include <unzip.h>
 #include "Launcher.h"
 #include "Util.h"
+#include "Util/Zip.h"
 
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Traits/strings.h>
@@ -152,26 +153,15 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
             }
             ALogger::info(LOG_TAG) << ("Extracting " + d.mLocalPath);
 
-            struct z {
-                unzFile unz;
-                z(unzFile unz): unz(unz) {
 
-                }
-                ~z() {
-                    unzClose(unz);
-                }
-                operator unzFile() const {
-                    return unz;
-                }
-            };
-
-            z unzip = unzOpen((gameFolder / d.mLocalPath).toStdString().c_str());
+            unzip::File unzip = _new<AFileInputStream>(gameFolder / d.mLocalPath);
             unz_global_info info;
             if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
                 ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.mLocalPath;
                 continue;
             }
             for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
+                AThread::interruptionPoint();
                 char fileNameBuf[0x400];
                 unz_file_info fileInfo;
                 if (unzGetCurrentFileInfo(unzip, &fileInfo, fileNameBuf, sizeof(fileNameBuf), nullptr, 0, nullptr,

@@ -84,7 +84,7 @@ void LegacyLauncherJsonSource::load() {
                 }
             }
         } catch (const AException& e) {
-            ALogger::warn(LOG_TAG) << ("Unable to load users from launcher_profiles.json: " + e.getMessage());
+            ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
         }
 
         // try to load game profiles
@@ -103,22 +103,27 @@ void LegacyLauncherJsonSource::load() {
                 loadProfile(profilesLoadedFromConfig, safeUuid(rawUuid), name);
             }
         } catch (const AException& e) {
-            ALogger::warn(LOG_TAG) << ("Unable to load users from launcher_profiles.json: " + e.getMessage());
+            ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
         }
 
     } catch (const AException& e) {
-        ALogger::warn(LOG_TAG) << ("Could not load launcher_profiles.json: " + e.getMessage());
+        ALogger::warn(LOG_TAG) << "Could not load launcher_profiles.json: " << e.getMessage();
     }
 
-    // the newest official minecraft launcher also loads profiles which are not listed in launcher_profiles.json
-    ARandom r;
-    for (const auto& profileDir : (Settings::inst().gameDir / "versions").listDir(AFileListFlags::DIRS)) {
-        auto filename = profileDir.filename();
-        if (!profilesLoadedFromConfig.contains(filename)) {
-            ALogger::info(LOG_TAG) << "Loading profile " << filename << " which is not listed in launcher_profiles.json";
-            auto uuid = r.nextUuid();
-            loadProfile(profilesLoadedFromConfig, uuid, filename);
+    try {
+        // the newest official minecraft launcher also loads profiles which are not listed in launcher_profiles.json
+        ARandom r;
+        for (const auto& profileDir: (Settings::inst().gameDir / "versions").listDir(AFileListFlags::DIRS)) {
+            auto filename = profileDir.filename();
+            if (!profilesLoadedFromConfig.contains(filename)) {
+                ALogger::info(LOG_TAG) << "Loading profile " << filename
+                                       << " which is not listed in launcher_profiles.json";
+                auto uuid = r.nextUuid();
+                loadProfile(profilesLoadedFromConfig, uuid, filename);
+            }
         }
+    } catch (const AException& e) {
+        ALogger::warn(LOG_TAG) << "Could not load version from versions/ dir" << e.getMessage();
     }
 }
 
@@ -155,7 +160,7 @@ void LegacyLauncherJsonSource::save() {
         }};
         AFileOutputStream(getVersionsJsonFilePath()) << config;
     } catch (const AException& e) {
-        ALogger::warn(LOG_TAG) << ("Could not save launcher_profiles.json: " + e.getMessage());
+        ALogger::warn(LOG_TAG) << "Could not save launcher_profiles.json: " << e.getMessage();
     }
 }
 
@@ -178,11 +183,11 @@ ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
                 s << safeUuid(entry.first);
             }
         } catch (const AException& e) {
-            ALogger::warn(LOG_TAG) << ("Unable to load users from launcher_profiles.json: " + e.getMessage());
+            ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
         }
 
     } catch (const AException& e) {
-        ALogger::warn(LOG_TAG) << ("Could not load launcher_profiles.json: " + e.getMessage());
+        ALogger::warn(LOG_TAG) << "Could not load launcher_profiles.json: " << e.getMessage();
     }
     return s;
 }

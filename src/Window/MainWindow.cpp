@@ -60,6 +60,12 @@ MainWindow::MainWindow():
                     Centered {
                         Vertical {
                             Button {
+                                Icon { ":svg/plus.svg" },
+                                Label { "Import version..." },
+                            }.clicked(this, [] {
+                                _new<ImportVersionWindow>()->show();
+                            }),
+                            Button {
                                 Icon { ":svg/dir.svg" },
                                 Label { "Game dir" },
                             }.clicked(me::openGameDir),

@@ -70,10 +70,6 @@ struct Style {
                 FontSize { 20_pt },
             },
             {
-                c(".import_version_offset"),
-                Margin { {}, {}, {}, 22_dp },
-            },
-            {
                 c(".import_version_offset") >> t<AButton>(),
                 Margin { 0 },
             },

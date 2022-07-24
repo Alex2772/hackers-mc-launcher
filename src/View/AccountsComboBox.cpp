@@ -32,6 +32,7 @@ void AccountsComboBox::onComboBoxWindowCreated() {
             _new<AccountWindow>(nullptr)->show();
         }) let { it->setExpanding(); },
     });
+    comboWindow()->updateLayout();
 }
 
 AccountsComboBox::AccountsComboBox(const _<IListModel<AString>>& model) : AComboBox(model) {

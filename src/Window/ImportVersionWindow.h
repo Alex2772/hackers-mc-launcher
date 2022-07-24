@@ -8,6 +8,7 @@
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ATextField.h>
 #include <AUI/Util/ABitField.h>
+#include <AUI/Thread/AAsyncHolder.h>
 #include "Model/Version.h"
 
 
@@ -16,17 +17,17 @@ public:
     ImportVersionWindow();
 
 private:
-    _<ARadioButton::Group> mRadioGroup = _new<ARadioButton::Group>();
     _<AListView> mMinecraftRepoList;
-    _<AButton> mImportButton;
     _<IListModel<Version>> mVersionModel;
     _<ATextField> mSearchTextField;
     VersionType mVersionTypeValue = VersionType::NONE;
     ARadioButton::Group mReleaseTypeGroup;
-    AFuture<> mImportTask;
+    AAsyncHolder mAsync;
 
     void doImportFromMinecraftRepo();
+    void showChooseFileDialog();
 
     emits<> invalidateSearch;
+
 };
 
