@@ -8,7 +8,6 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/IO/AFileInputStream.h>
-#include <AUI/Autumn/Autumn.h>
 #include "Version.h"
 #include "Settings.h"
 
@@ -41,7 +40,8 @@ GameProfile Version::import() const {
 
     ALogger::info(LOG_TAG) << "Importing " << url;
     ACurl(ACurl::Builder(url).withOutputStream(_new<AFileOutputStream>(file))).run();
-    GameProfile::fromJson(p, Autumn::get<ARandom>()->nextUuid(), id, AJson::fromStream(AFileInputStream(file)).asObject());
+    static ARandom r;
+    GameProfile::fromJson(p, r.nextUuid(), id, AJson::fromStream(AFileInputStream(file)).asObject());
     p.save();
     ALogger::info(LOG_TAG) << "Imported " << p.getName();
     return p;

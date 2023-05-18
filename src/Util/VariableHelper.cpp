@@ -1,4 +1,4 @@
-//
+﻿//
 // Created by alex2772 on 4/15/21.
 //
 
@@ -6,7 +6,6 @@
 #include <AUI/Traits/platform.h>
 #include <AUI/Traits/strings.h>
 #include <Model/Settings.h>
-#include <AUI/Autumn/Autumn.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/Logging/ALogger.h>

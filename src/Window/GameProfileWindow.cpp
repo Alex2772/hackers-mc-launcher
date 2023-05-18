@@ -12,9 +12,11 @@
 #include "MainWindow.h"
 
 GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
-    AWindow("Game profile", 500_dp, 300_dp, Autumn::get<MainWindow>().get(), WindowStyle::MODAL),
+    AWindow("Game profile", 500_dp, 300_dp, &MainWindow::inst(), WindowStyle::MODAL),
     mTargetGameProfile(targetGameProfile)
 {
+    using namespace declarative;
+
     auto binding = _new<ADataBinding<GameProfile>>(targetGameProfile);
     setContents(
         Vertical {
@@ -30,7 +32,7 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
                 );
 
             },
-            _new<ASpacer>(),
+            SpacerExpanding{},
             Horizontal {
                 mResetButton = _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this, binding] {
                     // TODO
@@ -48,7 +50,7 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
                         close();
                     }
                 }),
-                _new<ASpacer>(),
+                SpacerExpanding{},
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this, binding] {
                     mTargetGameProfile = binding->getModel();
                 }) let { it->setDefault(); },

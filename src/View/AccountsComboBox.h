@@ -1,9 +1,9 @@
 #pragma once
 
 
-#include <AUI/View/AComboBox.h>
+#include <AUI/View/ADropdownList.h>
 
-class AccountsComboBox: public AComboBox {
+class AccountsComboBox: public ADropdownList {
 public:
     AccountsComboBox(const _<IListModel<AString>>& model);
 

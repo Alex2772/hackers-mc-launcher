@@ -4,7 +4,7 @@
 
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
-#include <AUI/View/AComboBox.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/View/AText.h>
 #include <AUI/Curl/ACurl.h>
 #include <AUI/Json/AJson.h>
@@ -40,7 +40,7 @@ const RuleWithoutSelector importButtonWrap = {
 };
 
 ImportVersionWindow::ImportVersionWindow():
-    AWindow("Import version", 500_dp, 400_dp, Autumn::get<MainWindow>().get(), WindowStyle::MODAL)
+    AWindow("Import version", 500_dp, 400_dp, &MainWindow::inst(), WindowStyle::MODAL)
 {
     connect(mReleaseTypeGroup.selectionChanged, [&](int d) {
         mVersionTypeValue = (VersionType)d;
@@ -103,7 +103,7 @@ ImportVersionWindow::ImportVersionWindow():
             } with_style { Expanding{} },
         },
         Horizontal {
-            Spacer{},
+            SpacerExpanding{},
             _new<AButton>("Cancel").connect(&AView::clicked, me::close)
         }
     });
@@ -262,7 +262,7 @@ void ImportVersionWindow::showChooseFileDialog() {
                             break;
                     }
                     ui_threadX [v = float(entryIndex) / float(info.number_entry), progressBar] {
-                        nullsafe(progressBar)->setValue(v);
+                        AUI_NULLSAFE(progressBar)->setValue(v);
                     };
                 }
 

@@ -21,11 +21,13 @@
 using namespace ass;
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
-        AWindow("Settings", 400_dp, 400_dp, Autumn::get<MainWindow>().get(), WindowStyle::MODAL | WindowStyle::NO_RESIZE) {
+        AWindow("Settings", 400_dp, 400_dp, &MainWindow::inst(), WindowStyle::MODAL | WindowStyle::NO_RESIZE) {
+    using namespace declarative;
+
     auto binding = _new<ADataBinding<Settings>>(Settings::inst());
 
     _<AView> resolutionView;
-    _<ACheckBox> fullscreenCheckbox;
+    _<ACheckBoxWrapper> fullscreenCheckbox;
 
     setContents(
         Vertical {
@@ -55,7 +57,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                         _new<ALabel>("x"),
                                         _new<ANumberPicker>() && binding(&Settings::height),
                                     },
-                                    fullscreenCheckbox = _new<ACheckBox>("Fullscreen") && binding(&Settings::isFullscreen),
+                                    fullscreenCheckbox = CheckBoxWrapper { Label { "Fullscreen" } } && binding(&Settings::isFullscreen),
                                 }
                             },
                         }),
@@ -96,7 +98,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                           "powered by open source software: zlib, minizip, Freetype, Boost, AUI."),
                         AText::fromString("Contributors: Alex2772"),
                         Horizontal {
-                            _new<ASpacer>(),
+                            SpacerExpanding{},
                             _new<AButton>("View GNU General Public License v3").connect(&AButton::clicked, this, [] {
                                 ADesktop::openUrl("https://www.gnu.org/licenses/gpl-3.0.html");
                             }),
@@ -105,14 +107,14 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                     }, "About"
                 );
             },
-            _new<ASpacer>(),
+            SpacerExpanding{},
             Horizontal {
                 mResetButton = _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this, binding] {
                     Settings::reset();
                     binding->setModel(Settings::inst());
                     mResetButton->setDisabled();
                 }),
-                _new<ASpacer>(),
+                SpacerExpanding{},
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this, binding] {
                     Settings::inst() = binding->getModel();
                     auto s = Settings::inst();

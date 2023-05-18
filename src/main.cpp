@@ -11,9 +11,6 @@
 #include <AUI/Logging/ALogger.h>
 
 AUI_ENTRY {
-    Autumn::put(_new<ARandom>());
-    auto w = _new<MainWindow>();
-    Autumn::put(w);
-    w->show();
+    MainWindow::inst().show();
     return 0;
 };

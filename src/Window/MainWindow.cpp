@@ -3,7 +3,7 @@
 //
 
 #include <AUI/View/AButton.h>
-#include <AUI/View/AComboBox.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/View/AListView.h>
 #include <AUI/Model/AListModelAdapter.h>
 #include <Repository/UsersRepository.h>
@@ -32,6 +32,7 @@
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/iterators.h>
 #include <AUI/Platform/ADesktop.h>
+#include <AUI/Util/ACleanup.h>
 
 using namespace declarative;
 
@@ -56,7 +57,7 @@ MainWindow::MainWindow():
                             return u.username;
                         })) with_style { MinSize { 100_dp, {} } },
                     },
-                    _new<ASpacer>(),
+                    SpacerExpanding{},
                     Centered {
                         Vertical {
                             Button {
@@ -89,7 +90,7 @@ MainWindow::MainWindow():
                                 });
                             },
 
-                            _new<ASpacer>(),
+                            SpacerExpanding{},
 
                             mDownloadedLabel = _new<ALabel>() << ".secondary",
                             _new<ALabel>("of") << ".secondary",
@@ -208,8 +209,8 @@ void MainWindow::showPlayButton() {
     mPlayButton->setVisibility(Visibility::VISIBLE);
 }
 
-void MainWindow::onMouseMove(glm::ivec2 pos) {
-    AWindow::onMouseMove(pos);
+void MainWindow::onPointerMove(glm::ivec2 pos) {
+    AWindow::onPointerMove(pos);
     checkForDiskProfileUpdates();
 }
 
@@ -272,4 +273,12 @@ void MainWindow::openGameDir() {
 
 void MainWindow::showLauncherSettings() {
     _new<LauncherSettingsWindow>()->show();
+}
+
+MainWindow& MainWindow::inst() {
+    static auto a = aui::ptr::manage(new MainWindow);
+    ACleanup::afterEntry([&] {
+        a = nullptr;
+    });
+    return *a;
 }

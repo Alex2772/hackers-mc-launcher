@@ -115,7 +115,7 @@ TEST_F(AutoRefreshTest, DoesNotAutoreloadOnInvalidProfiles) {
     }
 
     TestUtil::prepareMainWindow();
-    AObject::connect(Autumn::get<MainWindow>()->reloadProfiles, Autumn::get<MainWindow>(), [] {
+    AObject::connect(MainWindow::inst().reloadProfiles, Autumn::get<MainWindow>(), [] {
         FAIL() << "launcher reloaded profiles";
     });
 

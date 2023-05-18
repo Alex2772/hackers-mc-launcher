@@ -347,7 +347,7 @@ bool Launcher::isJavaWorking(const AString& version) const noexcept {
         }
 
         auto fullOutput = AString::fromLatin1(output->stdoutBuffer());
-        ALogger::info(LOG_TAG) << "Java version output: " << fullOutput.mid(0, fullOutput.find('\n'));
+        ALogger::info(LOG_TAG) << "Java version output: " << fullOutput.substr(0, fullOutput.find('\n'));
         return true;
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Java does not work: " << e;

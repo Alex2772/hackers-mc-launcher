@@ -31,7 +31,7 @@ if (MSVC)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO")
 endif()
 
-aui_enable_tests()
+aui_enable_tests(hackers-mc-launcher)
 
 
 

@@ -12,7 +12,7 @@
 #include <Repository/UsersRepository.h>
 
 void AccountsComboBox::onComboBoxWindowCreated() {
-    AComboBox::onComboBoxWindowCreated();
+    ADropdownList::onComboBoxWindowCreated();
 
     comboWindow()->addView(Horizontal {
         _new<AButton>("Manage...")
@@ -23,9 +23,9 @@ void AccountsComboBox::onComboBoxWindowCreated() {
                             _new<AccountWindow>(nullptr)->show();
                         })
                         .withModifyButton([](const AModelIndex& index) {
-                            Autumn::get<MainWindow>()->showUserConfigureDialogFor(index.getRow());
+                            MainWindow::inst().showUserConfigureDialogFor(index.getRow());
                         })
-                        .buildWindow("Manage accounts", Autumn::get<MainWindow>().get())->show();
+                        .buildWindow("Manage accounts", &MainWindow::inst())->show();
                 }) let { it->setExpanding(); },
         _new<AButton>("New...").connect(&AView::clicked, this, [this] {
             destroyWindow();
@@ -35,13 +35,13 @@ void AccountsComboBox::onComboBoxWindowCreated() {
     comboWindow()->updateLayout();
 }
 
-AccountsComboBox::AccountsComboBox(const _<IListModel<AString>>& model) : AComboBox(model) {
+AccountsComboBox::AccountsComboBox(const _<IListModel<AString>>& model) : ADropdownList(model) {
 
     updateText();
 }
 
 void AccountsComboBox::updateText() {
-    AComboBox::updateText();
+    ADropdownList::updateText();
 
     if (getModel()->listSize() == 0) {
         setText("<no accounts>");

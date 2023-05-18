@@ -14,6 +14,7 @@
 AccountWindow::AccountWindow(Account* user):
     AWindow(user == nullptr ? "New account" : "Modify account", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL)
 {
+    using namespace declarative;
 
     if (user) {
         mBinding->setModel(*user);
@@ -25,7 +26,7 @@ AccountWindow::AccountWindow(Account* user):
         Vertical {
             _form({
                 {"Username:"_as, mUsername = _new<ATextField>() let { it->focus(); it && mBinding(&Account::username); }},
-                {{},            _new<ACheckBox>("Online account on minecraft.net") && mBinding(&Account::isOnlineAccount)},
+                {{},            CheckBoxWrapper { Label {"Online account on minecraft.net" } } && mBinding(&Account::isOnlineAccount)},
                 {"Password:"_as, _new<ATextField>() && mBinding(&Account::token) && mBinding(&Account::isOnlineAccount, &ATextField::setEnabled) },
                 }),
             Horizontal {
@@ -40,7 +41,7 @@ AccountWindow::AccountWindow(Account* user):
                         emit deleteUser();
                     }
                 })) : nullptr,
-                _new<ASpacer>(),
+                SpacerExpanding{},
                 (user ?
                     _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
                         if (!UsernameValidator()(mBinding->getModel().username)) {
