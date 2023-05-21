@@ -113,12 +113,13 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
                 }
             }
 
-            ALogger::info(LOG_TAG) << ("[A] To download: " + object.first);
+            ALogger::debug(LOG_TAG) << "[A] To download: " << object.first;
 
             toDownload << ToDownload{
-                    "assets/objects/" + path,
-                    "http://resources.download.minecraft.net/" + path,
-                    std::size_t(object.second["size"].asInt())
+                    .localPath = "assets/objects/" + path,
+                    .url = "https://resources.download.minecraft.net/" + path,
+                    .bytes = std::size_t(object.second["size"].asInt()),
+                    .hash = hash,
             };
         }
 
@@ -322,8 +323,8 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
             if (d.hash.empty()) {
                 //ALogger::warn(LOG_TAG) << "Hash is missing for file " << d.url;
             } else {
-                if (AHash::sha1(rawFileBlob).toHexString() != d.hash) {
-                    throw AException("file corrupted {}"_format(d.url));
+                if (auto actualHash = AHash::sha1(rawFileBlob).toHexString(); actualHash != d.hash) {
+                    throw AException("file corrupted {} (expected {}, actual {})"_format(d.url, d.hash, actualHash));
                 }
             }
             AFileOutputStream(local) << rawFileBlob;

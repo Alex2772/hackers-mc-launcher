@@ -83,6 +83,7 @@ MainWindow::MainWindow():
                     // downloading panel
                     mDownloadingPanel = Vertical {
                         Horizontal {
+                            _new<ASpinner>(),
                             mStatusLabel = _new<ALabel>("Running...") let {
                                 it->setCustomStyle({
                                     FontSize { 12_pt },

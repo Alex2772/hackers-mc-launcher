@@ -15,6 +15,8 @@
  */
 
 
+using namespace std::chrono_literals;
+
 class AutoRefreshTest: public testing::UITest {
 protected:
     void SetUp() override {
@@ -115,11 +117,11 @@ TEST_F(AutoRefreshTest, DoesNotAutoreloadOnInvalidProfiles) {
     }
 
     TestUtil::prepareMainWindow();
-    AObject::connect(MainWindow::inst().reloadProfiles, Autumn::get<MainWindow>(), [] {
+    AObject::connect(MainWindow::inst().reloadProfiles, &MainWindow::inst(), [] {
         FAIL() << "launcher reloaded profiles";
     });
 
-    AThread::sleep(6000); // wait 6 sec
+    AThread::sleep(6s); // wait 6 sec
     By::type<AButton>().perform(mouseMove()); // hover mouse to trigger reload
 }
 

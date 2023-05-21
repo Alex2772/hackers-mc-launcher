@@ -8,10 +8,10 @@
 class Launcher: public AObject {
 private:
     struct ToDownload {
-        AString localPath;
-        AString url;
+        AString       localPath;
+        AString       url;
         std::uint64_t bytes;
-        AString hash;
+        AString       hash;
     };
 
     [[nodiscard]]

@@ -61,7 +61,7 @@ protected:
         using namespace std::chrono_literals;
 
         // give a game 10 seconds to load
-        auto timer = _new<ATimer>(10'000);
+        auto timer = _new<ATimer>(10s);
         AObject::connect(timer->fired, timer, [&] {
             testFinished = true;
             process->kill();
