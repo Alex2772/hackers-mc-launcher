@@ -17,6 +17,7 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/ASpinner.h>
+#include <AUI/Platform/APlatform.h>
 
 using namespace ass;
 
@@ -100,7 +101,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                         Horizontal {
                             SpacerExpanding{},
                             _new<AButton>("View GNU General Public License v3").connect(&AButton::clicked, this, [] {
-                                ADesktop::openUrl("https://www.gnu.org/licenses/gpl-3.0.html");
+                                APlatform::openUrl("https://www.gnu.org/licenses/gpl-3.0.html");
                             }),
                             _new<AButton>("Check for updates..."),
                         }

@@ -33,6 +33,7 @@
 #include <AUI/Traits/iterators.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/ACleanup.h>
+#include <AUI/Platform/APlatform.h>
 
 using namespace declarative;
 
@@ -74,6 +75,11 @@ MainWindow::MainWindow():
                                 Icon { ":svg/cog.svg" },
                                 Label { "Settings" }
                             }.clicked(me::showLauncherSettings),
+                            Button {
+                                "Settings",
+                            }.clicked(this, [] {
+                                std::cout << "Button clicked!\n";
+                            }),
                         }
                     },
                 } with_style { Expanding{} },
@@ -269,7 +275,7 @@ void MainWindow::hideProfileLoading() {
 
 
 void MainWindow::openGameDir() {
-    ADesktop::openUrl(Settings::inst().gameDir);
+    APlatform::openUrl(Settings::inst().gameDir);
 }
 
 void MainWindow::showLauncherSettings() {
