@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-set(AUI_VERSION e6908eca)
+set(AUI_VERSION 45fe5792)
 
 set(BUILD_SHARED_LIBS OFF) # there's no reason to use dll build
 
