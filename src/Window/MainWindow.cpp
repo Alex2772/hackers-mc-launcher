@@ -43,10 +43,7 @@ MainWindow::MainWindow():
     setContents(
         Vertical {
             Centered::Expanding {
-                (_new<AScrollArea>() let {
-                    it->getContentContainer()->setLayout(_new<AVerticalLayout>());
-                    it->getContentContainer()->addView(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel()));
-                }) with_style { MinSize { 300_dp } },
+                (AScrollArea::Builder().withContents(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel())).build()) with_style { MinSize { 300_dp } },
                 mSpinnerView = _new<ASpinner>(),
             },
             _new<AView>() with_style { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
@@ -216,8 +213,8 @@ void MainWindow::showPlayButton() {
     mPlayButton->setVisibility(Visibility::VISIBLE);
 }
 
-void MainWindow::onPointerMove(glm::ivec2 pos) {
-    AWindow::onPointerMove(pos);
+void MainWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    AWindow::onPointerMove(pos, event);
     checkForDiskProfileUpdates();
 }
 

@@ -72,14 +72,14 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             it->setCustomStyle({
                                 FontSize { 19_pt },
                                 Margin { 8_dp, 0, 4_dp },
-                                TextAlign::CENTER,
+                                ATextAlign::CENTER,
                             });
                         },
                         _new<ALabel>("Version " HACKERS_MC_VERSION) let {
                             it->setCustomStyle({
                                 FontSize { 8_pt },
                                 //Margin { 0, 0, 4_dp },
-                                TextAlign::CENTER,
+                                ATextAlign::CENTER,
                                 TextColor { 0x444444_rgb },
                             });
                         },
@@ -87,7 +87,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             it->setCustomStyle({
                                 FontSize { 8_pt },
                                 Margin { 0, 0, 4_dp },
-                                TextAlign::CENTER,
+                                ATextAlign::CENTER,
                                 TextColor { 0x444444_rgb },
                             });
                         },

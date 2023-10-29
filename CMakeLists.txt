@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.14.4)
 
 project(hackers-mc-launcher)
 
-set(AUI_VERSION develop)
+set(AUI_VERSION e6908ecac938be8d207e676813dbc4d049afd4e1)
 
-set(BUILD_SHARED_LIBS OFF) # there's no reason to use static build
+set(BUILD_SHARED_LIBS OFF) # there's no reason to use dll build
 
 file(DOWNLOAD https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake ${CMAKE_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_BINARY_DIR}/aui.boot.cmake)

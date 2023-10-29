@@ -22,7 +22,7 @@ void AccountsComboBox::onComboBoxWindowCreated() {
                         .withNewButton([] {
                             _new<AccountWindow>(nullptr)->show();
                         })
-                        .withModifyButton([](const AModelIndex& index) {
+                        .withModifyButton([](const AListModelIndex& index) {
                             MainWindow::inst().showUserConfigureDialogFor(index.getRow());
                         })
                         .buildWindow("Manage accounts", &MainWindow::inst())->show();

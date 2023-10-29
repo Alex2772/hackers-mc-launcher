@@ -32,7 +32,7 @@ struct Style {
                 FontSize { 16_pt },
                 TextColor { 0xffffff_rgb },
                 Margin { 0, 8_dp },
-                TextAlign::CENTER,
+                ATextAlign::CENTER,
             },
             {
                 c("#downloading_panel"),
@@ -101,7 +101,7 @@ struct Style {
             },
             {
                 c(".version_item") > t<AText>(),
-                TextAlign::CENTER,
+                ATextAlign::CENTER,
                 Margin { 10_dp, 0, 0, 0 },
             },
             {

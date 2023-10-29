@@ -35,7 +35,7 @@ using namespace declarative;
 
 static constexpr auto LOG_TAG = "Import";
 
-const RuleWithoutSelector importButtonWrap = {
+const PropertyList importButtonWrap = {
     Padding { 8_dp },
 };
 

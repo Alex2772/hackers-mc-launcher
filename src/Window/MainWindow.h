@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AUI/Event/APointerMoveEvent.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
@@ -12,7 +13,7 @@ public:
 
     void showUserConfigureDialogFor(unsigned index);
     void showGameProfileConfigureDialogFor(unsigned index);
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPlayButtonClicked();
     void showPlayButton();
     void showDownloadingPanel();
