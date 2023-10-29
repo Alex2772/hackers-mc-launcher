@@ -72,11 +72,6 @@ MainWindow::MainWindow():
                                 Icon { ":svg/cog.svg" },
                                 Label { "Settings" }
                             }.clicked(me::showLauncherSettings),
-                            Button {
-                                "Settings",
-                            }.clicked(this, [] {
-                                std::cout << "Button clicked!\n";
-                            }),
                         }
                     },
                 } with_style { Expanding{} },
