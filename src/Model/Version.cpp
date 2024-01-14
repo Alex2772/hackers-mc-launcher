@@ -14,7 +14,7 @@
 static constexpr auto LOG_TAG = "Version";
 
 AVector<Version> Version::fetchAll() {
-    auto versionManifest = AJson::fromBuffer(ACurl::Builder("https://launchermeta.mojang.com/mc/game/version_manifest.json").toByteBuffer());
+    auto versionManifest = AJson::fromBuffer(ACurl::Builder("https://launchermeta.mojang.com/mc/game/version_manifest.json").runBlocking().body);
     const auto& jsonVersionArray = versionManifest["versions"].asArray();
     AVector<Version> versionModel;
     versionModel.reserve(jsonVersionArray.size());

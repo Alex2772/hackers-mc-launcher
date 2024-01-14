@@ -14,7 +14,7 @@ GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
     mModel(model)
 {
     setContents(Vertical {
-        ui_for(profile, model, AWordWrappingLayout) {
+        AUI_DECLARATIVE_FOR(profile, model, AWordWrappingLayout) {
             auto item = Vertical {
                     Stacked{
                         _new<ADrawableView>(":profile_icons/default.png"_url),

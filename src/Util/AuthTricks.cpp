@@ -27,6 +27,6 @@ AString auth_tricks::xuid(const VariableHelper::Context& c) {
 }
 
 AUuid auth_tricks::usernameToUuid(const AString& username) {
-    auto response = AJson::fromBuffer(ACurl::Builder("https://api.mojang.com/users/profiles/minecraft/" + username).toByteBuffer());
+    auto response = AJson::fromBuffer(ACurl::Builder("https://api.mojang.com/users/profiles/minecraft/" + username).runBlocking().body);
     return AUuid::fromString(response["id"].asString());
 }

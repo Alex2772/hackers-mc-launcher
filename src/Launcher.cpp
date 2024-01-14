@@ -361,7 +361,7 @@ void Launcher::downloadAndInstallJava(const AString& version) {
     AString manifestUrl = retrieveJavaManifestUrl(version);
 
     emit updateStatus("Downloading Java...");
-    auto manifest = AJson::fromBuffer(ACurl::Builder(manifestUrl).toByteBuffer());
+    auto manifest = AJson::fromBuffer(ACurl::Builder(manifestUrl).runBlocking().body);
     auto jvmDir = Util::launcherDir() / "jvm" / version;
     jvmDir.removeFileRecursive().makeDirs();
 
@@ -384,7 +384,7 @@ void Launcher::downloadAndInstallJava(const AString& version) {
 }
 
 AString Launcher::retrieveJavaManifestUrl(const AString& version) const {
-    auto allJavaVersions = AJson::fromBuffer(ACurl::Builder(JAVA_VERSIONS_URL).toByteBuffer());
+    auto allJavaVersions = AJson::fromBuffer(ACurl::Builder(JAVA_VERSIONS_URL).runBlocking().body);
 
     const char* platformName = nullptr;
     if constexpr (aui::platform::current::is_windows()) {
