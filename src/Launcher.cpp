@@ -2,6 +2,7 @@
 // Created by alex2772 on 4/20/21.
 //
 
+#include <range/v3/algorithm/find_if.hpp>
 #include <AUI/Logging/ALogger.h>
 #include <Model/Settings.h>
 #include <AUI/Crypt/AHash.h>
@@ -14,6 +15,7 @@
 #include <Util/VariableHelper.h>
 #include <unzip.h>
 #include "Launcher.h"
+#include "AUI/Common/AException.h"
 #include "Util.h"
 #include "Util/Zip.h"
 
@@ -404,8 +406,22 @@ AString Launcher::retrieveJavaManifestUrl(const AString& version) const {
             platformName = "linux-i386";
         }
     }
+    const auto& platformVersions = allJavaVersions[platformName].asObject();
+    const auto* targetVersion = &platformVersions[version];
+    if (targetVersion->asArray().empty()) {
+        // they don't support this particular version? (that's actually the case on windows-arm64)
+        // then try to use at least some non-empty version
+        auto it = ranges::find_if(platformVersions, [](const auto& version) -> bool {
+            return !version.second.asArray().empty();
+        });
+        if (it == platformVersions.end()) {
+            throw AException("unable to find java for platform {}"_format(platformName));
+        }
+        targetVersion = &it->second;
+        ALogger::warn(LOG_TAG) << "Unable to find java for platform " << platformName << " '" << version << "', using '" << it->first << "' instead";
+    }
 
-    return allJavaVersions[platformName][version][0]["manifest"]["url"].asString();
+    return (*targetVersion)[0]["manifest"]["url"].asString();
 }
 
 APath Launcher::javaExecutable(const AString& version) const noexcept {
