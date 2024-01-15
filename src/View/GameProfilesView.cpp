@@ -8,9 +8,10 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AButton.h>
 #include "GameProfilesView.h"
+#include "AUI/Action/AMenu.h"
 #include "Window/ImportVersionWindow.h"
 
-GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
+GameProfilesView::GameProfilesView(const _<IRemovableListModel<GameProfile>>& model):
     mModel(model)
 {
     setContents(Vertical {
@@ -30,6 +31,16 @@ GameProfilesView::GameProfilesView(const _<IListModel<GameProfile>>& model):
                 connect(selectionChanged, it, [this, it] {
                     it->removeAssName(".version_item_selected");
                     AObject::disconnect();
+                });
+            });
+            connect(item->clickedRightOrLongPressed, item, [this, index] {
+                AMenu::show(AMenuModel {
+                    AMenuItem {
+                        .name = "Remove",
+                        .onAction = [this, index] {
+                            mModel->removeItem(index);
+                        },
+                    },
                 });
             });
             return item;
