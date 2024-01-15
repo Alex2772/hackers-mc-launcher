@@ -388,10 +388,12 @@ AString Launcher::retrieveJavaManifestUrl(const AString& version) const {
 
     const char* platformName = nullptr;
     if constexpr (aui::platform::current::is_windows()) {
-        if constexpr (aui::platform::is_64_bit) {
+        if constexpr (aui::platform::is_x86_64) {
             platformName = "windows-x64";
-        } else {
-            platformName = "windows-x64";
+        } else if constexpr (aui::platform::is_x86) {
+            platformName = "windows-x86";
+        } else if constexpr (aui::platform::is_arm64) {
+            platformName = "windows-arm64";
         }
     } else if constexpr (aui::platform::current::is_apple()) {
         platformName = "mac-os";
