@@ -190,7 +190,6 @@ void ImportVersionWindow::showChooseFileDialog() {
                                 }
                         },
                 });
-                updateLayout();
             };
             ALogger::info(LOG_TAG) << "Importing " << p;
             auto extractFolder = Settings::inst().gameDir;

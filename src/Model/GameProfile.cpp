@@ -64,16 +64,16 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             {
                 if (r.first == "features")
                 {
-                    myRule.conditions << r.second.asObject().toVector([](const AString& key, const AJson& value) {
-                        return std::pair<AString, AString>{key, AJson::toString(value) };
+                    myRule.conditions << r.second.asObject().map([](const std::pair<AString, AJson>& value) {
+                        return std::pair<AString, AString>{value.first, AJson::toString(value.second) };
                     });
                 }
                 else if (r.first != "action")
                 {
                     if (r.second.isObject())
                     {
-                        myRule.conditions << r.second.asObject().toVector([&](const AString& key, const AJson& value) {
-                            return std::pair<AString, AString>(r.first + '.' + key, AJson::toString(value));
+                        myRule.conditions << r.second.asObject().map([&](const std::pair<AString, AJson>& value) {
+                            return std::pair<AString, AString>(r.first + '.' + value.first, AJson::toString(value.second));
                         });
                     }
                     else

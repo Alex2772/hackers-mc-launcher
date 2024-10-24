@@ -42,7 +42,6 @@ GameConsoleWindow::GameConsoleWindow(AWindow* parent, _<GameProcess> game): AWin
             for (auto& line : lines) {
                 mConsoleDisplayPort->addView(AText::fromString(line));
             }
-            mConsoleDisplayPort->updateLayout();
             mSpinnerOverlay->setVisibility(Visibility::GONE);
         };
 

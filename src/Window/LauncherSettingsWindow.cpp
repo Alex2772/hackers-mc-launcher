@@ -143,7 +143,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
     connect(binding->modelChanged, [&, binding] {
         mResetButton->enable();
     });
-    connect(fullscreenCheckbox->checked, [this, resolutionView](bool g) { resolutionView->setVisibility(g ? Visibility::VISIBLE : Visibility::GONE); updateLayout(); });
+    connect(fullscreenCheckbox->checked, [this, resolutionView](bool g) { resolutionView->setVisibility(g ? Visibility::VISIBLE : Visibility::GONE); });
 }
 
 void LauncherSettingsWindow::clearGameDir() {
