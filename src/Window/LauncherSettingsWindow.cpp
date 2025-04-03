@@ -16,7 +16,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/ASS/ASS.h>
-#include <AUI/View/ASpinner.h>
+#include <AUI/View/ASpinnerV2.h>
 #include <AUI/Platform/APlatform.h>
 
 using namespace ass;
@@ -43,7 +43,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                         it && mSettings.gameDir;
                                     },
                                     mClearGameDirButton = _new<AButton>("Clear game dir").connect(&AView::clicked, me::clearGameDir),
-                                    mClearGameDirSpinner = _new<ASpinner>() let {
+                                    mClearGameDirSpinner = _new<ASpinnerV2>() let {
                                         it->setVisibility(Visibility::GONE);
                                     },
                                 }

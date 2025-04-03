@@ -25,7 +25,7 @@
 #include <AUI/View/AScrollArea.h>
 #include <View/GameProfilesView.h>
 #include <AUI/View/AHDividerView.h>
-#include <AUI/View/ASpinner.h>
+#include <AUI/View/ASpinnerV2.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/iterators.h>
 #include <AUI/Platform/ADesktop.h>
@@ -41,7 +41,7 @@ MainWindow::MainWindow():
         Vertical {
             Centered::Expanding {
                 (AScrollArea::Builder().withContents(_new<GameProfilesView>(mState.profile)).build()) with_style { MinSize { 300_dp } },
-                mSpinnerView = _new<ASpinner>(),
+                mSpinnerView = _new<ASpinnerV2>(),
             },
             _new<AView>() with_style { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
             Stacked {
@@ -76,7 +76,7 @@ MainWindow::MainWindow():
                     // downloading panel
                     mDownloadingPanel = Vertical {
                         Horizontal {
-                            _new<ASpinner>(),
+                            _new<ASpinnerV2>(),
                             mStatusLabel = _new<ALabel>("Running...") let {
                                 it->setCustomStyle({
                                     FontSize { 12_pt },
@@ -87,10 +87,10 @@ MainWindow::MainWindow():
                             SpacerExpanding{},
 
                             mDownloadedLabel = _new<ALabel>() << ".secondary",
-                            _new<ALabel>("of") << ".secondary",
+                            _new<ALabel>("/") << ".secondary",
                             mTotalLabel = _new<ALabel>() << ".secondary",
                         },
-                        mTargetFileLabel = _new<ALabel>() << ".secondary",
+                        mTargetFileLabel = _new<ALabel>() << ".secondary" with_style { ATextOverflow::ELLIPSIS },
                     } let {
                         it->setVisibility(Visibility::GONE);
                         it << "#downloading_panel";
@@ -125,6 +125,8 @@ MainWindow::MainWindow():
         LegacyLauncherJsonSource::load(*state);
     };
 }
+
+
 
 void MainWindow::onPlayButtonClicked() {
     auto account = mState.accounts.current;

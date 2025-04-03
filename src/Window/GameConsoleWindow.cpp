@@ -3,7 +3,7 @@
 #include <AUI/Traits/iterators.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AText.h>
-#include <AUI/View/ASpinner.h>
+#include <AUI/View/ASpinnerV2.h>
 
 void GameConsoleWindow::handleGameExit(AWindow* parent, _<GameProcess> game) {
     if (game->process->waitForExitCode() != 0 && !game->consoleWindow) {
@@ -21,7 +21,7 @@ GameConsoleWindow::GameConsoleWindow(AWindow* parent, _<GameProcess> game): AWin
             } << ".console_wrap").withExpanding().build(),
         mSpinnerOverlay = Stacked::Expanding {
             _new<AView>() << ".spinner_overlay",
-            _new<ASpinner>(),
+            _new<ASpinnerV2>(),
         }
     });
     setCustomStyle({

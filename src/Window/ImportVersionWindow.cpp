@@ -27,7 +27,7 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/View/AGroupBox.h>
 #include <AUI/View/AVDividerView.h>
-#include <AUI/View/ASpinner.h>
+#include <AUI/View/ASpinnerV2.h>
 #include <AUI/View/AProgressBar.h>
 
 using namespace declarative;
@@ -137,7 +137,7 @@ ImportVersionWindow::ImportVersionWindow(State& state)
 
 void ImportVersionWindow::doImportFromMinecraftRepo() {
     setContents(Centered { Horizontal {
-      _new<ASpinner>(), Label { "Importing..." },
+      _new<ASpinnerV2>(), Label { "Importing..." },
 
       Centered {
         Button { Label { "Cancel" } }.clicked(me::close),
@@ -182,7 +182,7 @@ void ImportVersionWindow::showChooseFileDialog() {
                            setContents(Centered {
                              Vertical {
                                Horizontal {
-                                 _new<ASpinner>(),
+                                 _new<ASpinnerV2>(),
                                  Label { "Importing " + p.filename() },
                                },
                                progressBar = _new<AProgressBar>(),
@@ -256,9 +256,10 @@ void ImportVersionWindow::showChooseFileDialog() {
                                };
                            }
 
+                           LegacyLauncherJsonSource::reload(mState);
                            ui_thread {
                                close();
-                               LegacyLauncherJsonSource::reload(mState);
+                               mState.profile.list.notify();
                            };
                        } catch (const AException& e) {
                            ALogger::err(LOG_TAG) << "Unable to import zip archive: " << e;

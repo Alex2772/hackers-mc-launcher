@@ -10,12 +10,15 @@
 #include <Model/Settings.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
+#include "Util.h"
 
 using namespace std::chrono_literals;
 
 AUI_ENTRY {
     MainWindow::inst().show();
-    if (!LegacyLauncherJsonSource::getVersionsJsonFilePathHackers().isRegularFileExists()) {
+    auto welcome = Util::launcherDir() / "WELCOME";
+    if (!welcome.isRegularFileExists()) {
+        welcome.touch();
         ATimer::scheduler().enqueue(1s, [] {
           // an honor to Legacy Launcher, formerly TLauncher Legacy.
           AMessageBox::show(dynamic_cast<AWindow*>(AWindow::current()),
