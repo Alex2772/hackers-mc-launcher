@@ -6,14 +6,18 @@
 
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AUuid.h>
+#include <AUI/Common/AProperty.h>
 #include <AUI/Validation/AValidator.h>
+#include <AUI/Thread/AFuture.h>
 
 
 struct Account {
     AUuid uuid;
-    AString username;
-    bool isOnlineAccount = false;
-    AString token;
+    AProperty<AString> username;
+    AProperty<bool> isOnlineAccount = false;
+    AProperty<AString> token;
+
+    AFuture<> populateUuid();
 };
 
 

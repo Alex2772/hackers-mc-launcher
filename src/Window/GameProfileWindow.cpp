@@ -7,7 +7,6 @@
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/View/ATextField.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <Repository/GameProfilesRepository.h>
 #include "GameProfileWindow.h"
 #include "MainWindow.h"
 
@@ -25,8 +24,8 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
                 it->addTab(
                     Vertical {
                         _form({
-                            {"Profile name:"_as, _new<ATextField>() && binding(&GameProfile::mName)},
-                            {"Main class:"_as, _new<ATextField>() && binding(&GameProfile::mMainClass)},
+//                            {"Profile name:"_as, _new<ATextField>() && binding(&GameProfile::mName)},
+//                            {"Main class:"_as, _new<ATextField>() && binding(&GameProfile::mMainClass)},
                         }),
                     }, "Common"
                 );
@@ -46,7 +45,7 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
                                                     AMessageBox::Icon::WARNING,
                                                     AMessageBox::Button::YES_NO);
                     if (result == AMessageBox::ResultButton::YES) {
-                        GameProfilesRepository::inst().removeGameProfile(binding->getModel().getUuid());
+                        // TODO
                         close();
                     }
                 }),

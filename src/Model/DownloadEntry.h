@@ -23,6 +23,7 @@ struct AJsonConv<LauncherRule::Action> {
             case LauncherRule::Action::ALLOW: return "allow";
             case LauncherRule::Action::DISALLOW: return "disallow";
         }
+        return nullptr;
     }
     static void fromJson(const AJson& e, LauncherRule::Action& dst) {
         if (e.asString() == "disallow") {

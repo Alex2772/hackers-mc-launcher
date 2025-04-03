@@ -5,37 +5,45 @@
 #include <Model/Settings.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Logging/ALogger.h>
-#include <Repository/UsersRepository.h>
-#include <Repository/GameProfilesRepository.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Util/ARandom.h>
 #include "LegacyLauncherJsonSource.h"
-
+#include "Model/GameProfile.h"
+#include "Model/State.h"
 
 static constexpr auto LOG_TAG = "LegacyLauncherJsonSource";
 
 bool LegacyLauncherJsonSource::ourDoSave = true;
 
 APath LegacyLauncherJsonSource::getVersionsJsonFilePath() {
+    if (auto h = getVersionsJsonFilePathHackers(); h.isRegularFileExists()) {
+        return h;
+    }
     return Settings::inst().gameDir / "launcher_profiles.json";
 }
 
+APath LegacyLauncherJsonSource::getVersionsJsonFilePathHackers() {
+    return Settings::inst().gameDir / "launcher_profiles.hck.json";
+}
 
-static void loadProfile(ASet<AString>& profilesLoadedFromConfig, const AUuid& uuid, const AString& name) {
+static void loadProfile(State::Profiles& profiles, ASet<AString>& profilesLoadedFromConfig, const AUuid& uuid, const AString& name) {
     try {
-        if (!name.startsWith("latest-")) {
-            GameProfile p;
-            GameProfile::fromName(p, uuid, name);
-            GameProfilesRepository::inst().getModel() << p;
-            ALogger::info(LOG_TAG) << ("Imported profile: " + name);
+        if (name.startsWith("latest-")) {
+            return;
         }
+        auto p = _new<GameProfile>();
+        GameProfile::fromName(*p, uuid, name);
+        profiles.list.raw << std::move(p);
+        ALogger::info(LOG_TAG) << ("Imported profile: " + name);
         profilesLoadedFromConfig << std::move(name);
     } catch (const AException& e) {
-        ALogger::err(LOG_TAG) << ("ProfileLoading") << "Unable to load game profile " << name << " from launcher_profiles.json: " << e.getMessage();
+        ALogger::err(LOG_TAG)
+            << ("ProfileLoading") << "Unable to load game profile " << name
+            << " from launcher_profiles.json: " << e.getMessage();
     }
 }
 
-void LegacyLauncherJsonSource::load() {
+void LegacyLauncherJsonSource::load(State& state) {
     ASet<AString> profilesLoadedFromConfig;
     try {
         /*
@@ -67,19 +75,18 @@ void LegacyLauncherJsonSource::load() {
     "profile" : ""
   },
   "settings" : {
-	...
+        ...
   }
 }
-	 */
+         */
         auto config = AJson::fromStream(AFileInputStream(getVersionsJsonFilePath()));
-        GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles().clear();
 
         // try to load users
         try {
             for (auto& entry : config["authenticationDatabase"].asObject()) {
-                Account account{entry.first, entry.second["username"].asString()};
+                Account account { entry.first, entry.second["username"].asString() };
                 if (UsernameValidator()(account.username)) {
-                    UsersRepository::inst().getModel() << account;
+                    *state.accounts.current = std::move(account);
                 }
             }
         } catch (const AException& e) {
@@ -90,7 +97,7 @@ void LegacyLauncherJsonSource::load() {
         const auto& profiles = config["profiles"].asObject();
 
         try {
-            for (const auto&[rawUuid, obj] : profiles) {
+            for (const auto& [rawUuid, obj] : profiles) {
                 AString name = "unknown";
                 // optifine fix
                 try {
@@ -100,9 +107,8 @@ void LegacyLauncherJsonSource::load() {
                 }
 
                 auto uuid = safeUuid(rawUuid);
-                GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles() << uuid;
 
-                loadProfile(profilesLoadedFromConfig, uuid, name);
+                loadProfile(state.profile, profilesLoadedFromConfig, uuid, name);
             }
         } catch (const AException& e) {
             ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
@@ -115,13 +121,13 @@ void LegacyLauncherJsonSource::load() {
     try {
         // the newest official minecraft launcher also loads profiles which are not listed in launcher_profiles.json
         ARandom r;
-        for (const auto& profileDir: (Settings::inst().gameDir / "versions").listDir(AFileListFlags::DIRS)) {
+        for (const auto& profileDir : (Settings::inst().gameDir / "versions").listDir(AFileListFlags::DIRS)) {
             auto filename = profileDir.filename();
             if (!profilesLoadedFromConfig.contains(filename)) {
-                ALogger::info(LOG_TAG) << "Loading profile " << filename
-                                       << " which is not listed in launcher_profiles.json";
+                ALogger::info(LOG_TAG)
+                    << "Loading profile " << filename << " which is not listed in launcher_profiles.json";
                 auto uuid = r.nextUuid();
-                loadProfile(profilesLoadedFromConfig, uuid, filename);
+                loadProfile(state.profile, profilesLoadedFromConfig, uuid, filename);
             }
         }
     } catch (const AException& e) {
@@ -129,48 +135,49 @@ void LegacyLauncherJsonSource::load() {
     }
 }
 
-void LegacyLauncherJsonSource::save() {
+void LegacyLauncherJsonSource::save(const State& state) {
     if (!ourDoSave) {
         return;
     }
     try {
-        AJson config = {{
-            {"clientToken", ""}, // client token is not supported
-            {"launcherVersion", {
-                {"format", 21},
-                {"name", "hackers-mc"},
-                {"profilesFormat", 2},
-            }},
-            {"authenticationDatabase", [] { // users
+        AJson config = { {
+          { "clientToken", "" },   // client token is not supported
+          { "launcherVersion",
+            {
+              { "format", 21 },
+              { "name", "hackers-mc" },
+              { "profilesFormat", 2 },
+            } },
+          { "authenticationDatabase",
+            [&] {   // users
                 AJson::Object result;
-                for (const Account& u : UsersRepository::inst().getModel()) {
+                for (const _<Account>& u : std::array{ state.accounts.current }) {
                     AJson::Object user;
-                    user["username"] = u.username;
-                    result[u.uuid.toRawString()] = user;
+                    user["username"] = u->username;
+                    result[u->uuid.toRawString()] = user;
                 }
                 return result;
-            }()},
-            {"profiles", [] { // game profiles
+            }() },
+          { "profiles",
+            [&] {   // game profiles
                 AJson::Object profiles;
-                for (const GameProfile& p : GameProfilesRepository::inst().getModel()) {
-                    profiles[p.getUuid().toRawString()] = AJson{
-                        {"name", p.getName()}
-                    };
+                for (const auto& p : *state.profile.list) {
+                    profiles[p->getUuid().toRawString()] = AJson { { "name", p->getName() } };
                 }
                 return profiles;
-            }()},
-        }};
-        AFileOutputStream(getVersionsJsonFilePath()) << config;
+            }() },
+        } };
+        AFileOutputStream(getVersionsJsonFilePathHackers()) << config;
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Could not save launcher_profiles.json: " << e.getMessage();
     }
 }
 
-void LegacyLauncherJsonSource::reload() {
+void LegacyLauncherJsonSource::reload(State& state) {
     ourDoSave = false;
-    UsersRepository::inst().getModel()->clear();
-    GameProfilesRepository::inst().getModel()->clear();
-    load();
+//    state.accounts.list.raw.clear();
+    state.profile.list.raw.clear();
+    load(state);
     ourDoSave = true;
 }
 
@@ -194,6 +201,4 @@ ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
     return s;
 }
 
-AUuid LegacyLauncherJsonSource::safeUuid(const AString& uuid) {
-    return AUuid::fromString(uuid);
-}
+AUuid LegacyLauncherJsonSource::safeUuid(const AString& uuid) { return AUuid::fromString(uuid); }

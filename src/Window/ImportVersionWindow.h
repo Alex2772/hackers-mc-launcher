@@ -10,13 +10,14 @@
 #include <AUI/Util/ABitField.h>
 #include <AUI/Thread/AAsyncHolder.h>
 #include "Model/Version.h"
-
+#include "Model/State.h"
 
 class ImportVersionWindow: public AWindow {
 public:
-    ImportVersionWindow();
+    ImportVersionWindow(State& state);
 
 private:
+    State& mState;
     _<AListView> mMinecraftRepoList;
     _<IListModel<Version>> mVersionModel;
     _<ATextField> mSearchTextField;

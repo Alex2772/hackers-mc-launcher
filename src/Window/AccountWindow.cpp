@@ -5,29 +5,23 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/AButton.h>
-#include <Repository/UsersRepository.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Util/ARandom.h>
 #include "AccountWindow.h"
 
-AccountWindow::AccountWindow(Account* user):
-    AWindow(user == nullptr ? "New account" : "Modify account", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL)
+AccountWindow::AccountWindow(State& state, _<Account> user):
+    AWindow(user == nullptr ? "New account" : "Modify account", 200, 100, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL),
+    mState(state)
 {
     using namespace declarative;
-
-    if (user) {
-        mBinding->setModel(*user);
-    } else {
-        mBinding->setModel(Account{});
-    }
 
     setContents(
         Vertical {
             _form({
-                {"Username:"_as, mUsername = _new<ATextField>() let { it->focus(); it && mBinding(&Account::username); }},
-                {{},            CheckBoxWrapper { Label {"Online account on minecraft.net" } } && mBinding(&Account::isOnlineAccount)},
-                {"Password:"_as, _new<ATextField>() && mBinding(&Account::token) && mBinding(&Account::isOnlineAccount, &ATextField::setEnabled) },
+                {"Username:"_as, _new<ATextField>() let { it->focus(); it && mAccount.username; }},
+//                {{},            CheckBoxWrapper { Label {"Online account on minecraft.net" } } && mBinding(&Account::isOnlineAccount)},
+//                {"Password:"_as, _new<ATextField>() && mBinding(&Account::token) && mBinding(&Account::isOnlineAccount, &ATextField::setEnabled) },
                 }),
             Horizontal {
                 user ? (_new<AButton>("Delete account").connect(&AView::clicked, this, [&, user] {
@@ -42,35 +36,23 @@ AccountWindow::AccountWindow(Account* user):
                     }
                 })) : nullptr,
                 SpacerExpanding{},
-                (user ?
-                    _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
-                        if (!UsernameValidator()(mBinding->getModel().username)) {
-                            AMessageBox::show(this,
-                                              "Username is invalid",
-                                              "Please use latin or numeric characters",
-                                              AMessageBox::Icon::INFO,
-                                              AMessageBox::Button::OK);
-                        }
-                        *user = mBinding->getModel();
-                        emit positiveAction();
-                        close();
-                    })
-                        :
-                    _new<AButton>("Create").connect(&AView::clicked, this, [&] {
-                        auto user = mBinding->getModel();
-                        //user.uuid = Autumn::get<ARandom>()->nextUuid();
-                        if (!UsernameValidator()(mBinding->getModel().username)) {
-                            AMessageBox::show(this,
-                                              "Username is invalid",
-                                              "Please use latin or numeric characters",
-                                              AMessageBox::Icon::INFO,
-                                              AMessageBox::Button::OK);
-                            return;
-                        }
-                        UsersRepository::inst().addUser(user);
-                        close();
-                        emit positiveAction();
-                    })) let { it->setDefault(); },
+                  _new<AButton>("OK").connect(&AView::clicked, this, [&, user] {
+                      if (!UsernameValidator()(mAccount.username)) {
+                          AMessageBox::show(this,
+                                            "Username is invalid",
+                                            "Please use latin or numeric characters",
+                                            AMessageBox::Icon::INFO,
+                                            AMessageBox::Button::OK);
+                          return;
+                      }
+                      if (user) {
+                        *user = std::move(mAccount);
+                      } else {
+                          *mState.accounts.current = std::move(mAccount);
+                      }
+                      emit positiveAction();
+                      close();
+                  }),
                 _new<AButton>("Cancel").connect(&AView::clicked, me::close)
             }
         }

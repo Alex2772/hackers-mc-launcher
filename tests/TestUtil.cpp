@@ -12,11 +12,11 @@ void TestUtil::prepareApp() {
     // fake game dir
     Settings::inst().gameDir = APath("fake_game_dir").makeDirs().absolute();
 
-    (Settings::inst().gameDir / "libraries").removeFileRecursive();
-    (Settings::inst().gameDir / "versions").removeFileRecursive();
+//    (Settings::inst().gameDir / "libraries").removeFileRecursive();
+//    (Settings::inst().gameDir / "versions").removeFileRecursive();
 }
 
 void TestUtil::prepareMainWindow() {
-    LegacyLauncherJsonSource::load();
     MainWindow::inst().show();
+    LegacyLauncherJsonSource::load(MainWindow::inst().state());
 }

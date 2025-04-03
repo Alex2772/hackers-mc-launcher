@@ -6,8 +6,6 @@
 #include <AUI/View/ADropdownList.h>
 #include <AUI/View/AListView.h>
 #include <AUI/Model/AListModelAdapter.h>
-#include <Repository/UsersRepository.h>
-#include <Repository/GameProfilesRepository.h>
 #include <Source/LegacyLauncherJsonSource.h>
 #include <AUI/ASS/ASS.h>
 #include <Launcher.h>
@@ -25,7 +23,6 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AScrollArea.h>
-#include <View/AccountsComboBox.h>
 #include <View/GameProfilesView.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/ASpinner.h>
@@ -43,26 +40,24 @@ MainWindow::MainWindow():
     setContents(
         Vertical {
             Centered::Expanding {
-                (AScrollArea::Builder().withContents(mGameProfilesView = _new<GameProfilesView>(GameProfilesRepository::inst().getModel())).build()) with_style { MinSize { 300_dp } },
+                (AScrollArea::Builder().withContents(_new<GameProfilesView>(mState.profile)).build()) with_style { MinSize { 300_dp } },
                 mSpinnerView = _new<ASpinner>(),
             },
             _new<AView>() with_style { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
             Stacked {
                 Horizontal {
                     Vertical {
-                        _new<ALabel>("Account:"),
-                            mUsersListView = _new<AccountsComboBox>(AModels::adapt<AString>(UsersRepository::inst().getModel(), [](const Account& u) {
-                            return u.username;
-                        })) with_style { MinSize { 100_dp, {} } },
-                    },
+                        _new<ALabel>("Username:"),
+                        _new<ATextField>() && mState.accounts.current->username,
+                    } with_style { MinSize { 100_dp, {} } },
                     SpacerExpanding{},
                     Centered {
                         Vertical {
                             Button {
                                 Icon { ":svg/plus.svg" },
                                 Label { "Import version..." },
-                            }.clicked(this, [] {
-                                _new<ImportVersionWindow>()->show();
+                            }.clicked(this, [this] {
+                                _new<ImportVersionWindow>(mState)->show();
                             }),
                             Button {
                                 Icon { ":svg/dir.svg" },
@@ -114,31 +109,40 @@ MainWindow::MainWindow():
         }
     );
     showProfileLoading();
+    auto state = _new<State>(mState);
     mTask = async {
-        LegacyLauncherJsonSource::load();
-        ui_thread {
-            hideProfileLoading();
-            connect(reloadProfiles, [&] {
-                showProfileLoading();
-                LegacyLauncherJsonSource::reload();
+        AUI_DEFER {
+            ui_thread {
+                mState = std::move(*state);
                 hideProfileLoading();
-            });
+                connect(reloadProfiles, [&] {
+                    showProfileLoading();
+                    AUI_DEFER { hideProfileLoading(); };
+                    LegacyLauncherJsonSource::reload(mState);
+                });
+            };
         };
+        LegacyLauncherJsonSource::load(*state);
     };
 }
 
 void MainWindow::onPlayButtonClicked() {
-    Account account;
-    try {
-        account = UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId());
-    } catch (...) {
-        assert(("invalid user id", UsersRepository::inst().getModel()->empty()));
-
+    auto account = mState.accounts.current;
+    if (account == nullptr || account->username->empty()) {
         // ask username
-        auto accountWindow = _new<AccountWindow>(nullptr);
+        auto accountWindow = _new<AccountWindow>(mState, nullptr);
         connect(accountWindow->positiveAction, me::onPlayButtonClicked);
         accountWindow->show();
+        return;
+    }
 
+    _<GameProfile> profile = *mState.profile.selected;
+    if (!profile) {
+        if (mState.profile.list->empty()) {
+            _new<ImportVersionWindow>(mState)->show();
+            return;
+        }
+        AMessageBox::show(this, "Hacker's MC Launcher", "Please select a profile.");
         return;
     }
 
@@ -146,8 +150,10 @@ void MainWindow::onPlayButtonClicked() {
     mDownloadedLabel->setText("0");
     mTotalLabel->setText("0");
     mTargetFileLabel->setText("");
-    mTask = asyncX [this, account = std::move(account)] {
+    mTask = asyncX [this, account = std::move(account), profile = std::move(profile)] {
         try {
+            *account->populateUuid();
+
             auto launcher = _new<Launcher>();
             connect(launcher->updateStatus, slot(mStatusLabel)::setText);
             connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
@@ -160,8 +166,8 @@ void MainWindow::onPlayButtonClicked() {
             });
 
             auto process = launcher->play(
-                    UsersRepository::inst().getModel()->at(mUsersListView->getSelectedId()),
-                    GameProfilesRepository::inst().getModel()->at(mGameProfilesView->getSelectedProfileIndex()),
+                    *account,
+                    *profile,
                     true
             );
 
@@ -171,8 +177,8 @@ void MainWindow::onPlayButtonClicked() {
             connect(process->finished, [this, game] { // capture process in order to keep reference
                 show();
                 GameConsoleWindow::handleGameExit(this, std::move(game));
-                game->process->finished.clearAllConnectionsWith(this);
-                game->process->stdOut.clearAllConnectionsWith(this);
+                game->process->finished.clearAllOutgoingConnectionsWith(this);
+                game->process->stdOut.clearAllOutgoingConnectionsWith(this);
             });
 
             process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
@@ -213,22 +219,6 @@ void MainWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     checkForDiskProfileUpdates();
 }
 
-void MainWindow::showUserConfigureDialogFor(unsigned int index) {
-    _new<AccountWindow>(&UsersRepository::inst().getModel()->at(index)) let {
-        connect(it->positiveAction, this, [&, index] {
-            UsersRepository::inst().getModel()->invalidate(index);
-        });
-        connect(it->deleteUser, this, [&, index] {
-            UsersRepository::inst().getModel()->removeAt(index);
-        });
-        it->show();
-    };
-}
-
-void MainWindow::showGameProfileConfigureDialogFor(unsigned int index) {
-    _new<GameProfileWindow>(GameProfilesRepository::inst().getModel()->at(index))->show();
-}
-
 void MainWindow::checkForDiskProfileUpdates() {
     using namespace std::chrono;
     using namespace std::chrono_literals;
@@ -240,7 +230,7 @@ void MainWindow::checkForDiskProfileUpdates() {
             mTask = async {
                 // load actual set of profiles
                 decltype(auto) actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
-                decltype(auto) loadedProfiles = GameProfilesRepository::inst().getCurrentlyLoadedSetOfProfiles();
+                decltype(auto) loadedProfiles = mState.profile.uuids();
 
                 // and compare it with actual profiles
                 if (actualProfiles != loadedProfiles) {
@@ -257,11 +247,9 @@ void MainWindow::checkForDiskProfileUpdates() {
 }
 
 void MainWindow::showProfileLoading() {
-    mGameProfilesView->setCustomStyle({ Opacity { 0.1f } });
     mSpinnerView->setVisibility(Visibility::VISIBLE);
 }
 void MainWindow::hideProfileLoading() {
-    mGameProfilesView->setCustomStyle({ Opacity { 1.f } });
     mSpinnerView->setVisibility(Visibility::GONE);
 }
 

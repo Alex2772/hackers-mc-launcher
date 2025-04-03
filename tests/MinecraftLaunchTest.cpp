@@ -79,7 +79,15 @@ protected:
     }
 };
 
-
+TEST_F(MinecraftLaunch, v1_21) {
+  launch("1.21");
+}
+TEST_F(MinecraftLaunch, v1_20) {
+  launch("1.20");
+}
+TEST_F(MinecraftLaunch, v1_19_2) {
+  launch("1.19.2");
+}
 TEST_F(MinecraftLaunch, v1_19) {
     launch("1.19");
 }

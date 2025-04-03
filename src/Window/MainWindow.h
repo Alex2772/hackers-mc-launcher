@@ -11,24 +11,24 @@
 class MainWindow: public AWindow {
 public:
 
-    void showUserConfigureDialogFor(unsigned index);
-    void showGameProfileConfigureDialogFor(unsigned index);
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPlayButtonClicked();
     void showPlayButton();
     void showDownloadingPanel();
 
     static MainWindow& inst();
+    State& state() { return mState; }
 
 signals:
     emits<> reloadProfiles;
 
 private:
+    State mState;
+
     _<AButton> mUserConfigureButton;
     _<AButton> mGameProfileConfigureButton;
     _<AView> mPlayButton;
     _<ADropdownList> mUsersListView;
-    _<GameProfilesView> mGameProfilesView;
 
     _<AViewContainer> mDownloadingPanel;
     _<ALabel> mStatusLabel;

@@ -44,17 +44,17 @@ namespace unzip {
             return reinterpret_cast<File*>(opaque)->mStream->tell();
         }
         static long seekFileFunc (voidpf opaque, voidpf stream, uLong offset, int origin) {
-            AFileInputStream::Seek originImpl;
+            ASeekDir originImpl;
             switch (origin)
             {
                 case ZLIB_FILEFUNC_SEEK_CUR :
-                    originImpl = AFileInputStream::Seek::CURRENT;
+                    originImpl = ASeekDir::CURRENT;
                     break;
                 case ZLIB_FILEFUNC_SEEK_END :
-                    originImpl = AFileInputStream::Seek::END;
+                    originImpl = ASeekDir::END;
                     break;
                 case ZLIB_FILEFUNC_SEEK_SET :
-                    originImpl = AFileInputStream::Seek::BEGIN;
+                    originImpl = ASeekDir::BEGIN;
                     break;
                 default: return -1;
             }
