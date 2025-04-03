@@ -7,9 +7,11 @@
 
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AButton.h>
+#include "Model/Settings.h"
 
 class LauncherSettingsWindow: public AWindow {
 private:
+    Settings mSettings = Settings::inst();
     _<AButton> mResetButton;
 
     void clearGameDir();

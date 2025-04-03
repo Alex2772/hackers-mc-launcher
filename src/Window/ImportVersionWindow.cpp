@@ -192,7 +192,7 @@ void ImportVersionWindow::showChooseFileDialog() {
                            });
                        };
                        ALogger::info(LOG_TAG) << "Importing " << p;
-                       auto extractFolder = Settings::inst().gameDir;
+                       auto extractFolder = *Settings::inst().gameDir;
                        try {
                            unzip::File unzip = _new<AFileInputStream>(p);
                            unz_global_info info;

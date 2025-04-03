@@ -26,11 +26,10 @@ GameProfilesView::GameProfilesView(State::Profiles& state): mState(state)
             auto it = item.get();
 
             connect(item->clicked, item, [this, it, profile] {
-                *it << ".version_item_selected";
                 mState.selected = profile;
+                *it << ".version_item_selected";
                 connect(mState.selected.changed, it, [it] {
                     it->removeAssName(".version_item_selected");
-                    AObject::disconnect();
                 });
             });
             connect(item->clickedRightOrLongPressed, item, [this, profile] {

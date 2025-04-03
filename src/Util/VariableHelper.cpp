@@ -44,7 +44,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     [](const Context& c) -> AString
                     {
                         if (c.profile) {
-                            return Settings::inst().gameDir / "bin" / c.profile->getUuid().toRawString();
+                            return *Settings::inst().gameDir / "bin" / c.profile->getUuid().toRawString();
                         }
                         return {};
                     }
@@ -158,14 +158,14 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "library_directory",
                     [](const Context& c) -> AString
                     {
-                        return Settings::inst().gameDir / "libraries";
+                        return *Settings::inst().gameDir / "libraries";
                     }
             },
             {
                     "assets_root",
                     [](const Context& c) -> AString
                     {
-                        return Settings::inst().gameDir / "assets";
+                        return *Settings::inst().gameDir / "assets";
                     }
             },
             {
@@ -196,21 +196,21 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "resolution_width",
                     [](const Context& c) -> AString
                     {
-                        return AString::number(Settings::inst().width);
+                        return AString::number(*Settings::inst().width);
                     }
             },
             {
                     "resolution_height",
                     [](const Context& c) -> AString
                     {
-                        return AString::number(Settings::inst().height);
+                        return AString::number(*Settings::inst().height);
                     }
             },
             {
                     "is_fullscreen",
                     [](const Context& c) -> AString
                     {
-                        return AString::number(Settings::inst().isFullscreen);
+                        return AString::number(*Settings::inst().isFullscreen);
                     }
             },
             {

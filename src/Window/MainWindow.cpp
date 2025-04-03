@@ -255,7 +255,7 @@ void MainWindow::hideProfileLoading() {
 
 
 void MainWindow::openGameDir() {
-    APlatform::openUrl(Settings::inst().gameDir);
+    APlatform::openUrl(*Settings::inst().gameDir);
 }
 
 void MainWindow::showLauncherSettings() {

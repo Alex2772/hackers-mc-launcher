@@ -40,7 +40,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 Horizontal {
                                     _new<APathChooserView>() let {
                                         it->setExpanding();
-//                                        it && binding(&Settings::gameDir);
+                                        it && mSettings.gameDir;
                                     },
                                     mClearGameDirButton = _new<AButton>("Clear game dir").connect(&AView::clicked, me::clearGameDir),
                                     mClearGameDirSpinner = _new<ASpinner>() let {
@@ -52,11 +52,11 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 "Display:"_as,
                                 Horizontal {
                                     resolutionView = Horizontal {
-//                                        _new<ANumberPicker>() && binding(&Settings::width),
-//                                        _new<ALabel>("x"),
-//                                        _new<ANumberPicker>() && binding(&Settings::height),
+                                        _new<ANumberPicker>() && mSettings.width,
+                                        _new<ALabel>("x"),
+                                        _new<ANumberPicker>() && mSettings.height,
                                     },
-//                                    fullscreenCheckbox = CheckBoxWrapper { Label { "Fullscreen" } } && binding(&Settings::isFullscreen),
+                                    fullscreenCheckbox = CheckBoxWrapper { Label { "Fullscreen" } } && mSettings.isFullscreen,
                                 }
                             },
                         }),
@@ -108,39 +108,36 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
             },
             SpacerExpanding{},
             Horizontal {
-//                mResetButton = _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this, binding] {
-//                    Settings::reset();
-//                    binding->setModel(Settings::inst());
-//                    mResetButton->setDisabled();
-//                }),
-//                SpacerExpanding{},
-//                _new<AButton>("OK").connect(&AButton::clicked, this, [this, binding] {
-//                    Settings::inst() = binding->getModel();
-//                    auto s = Settings::inst();
-//                    Settings::save();
-//                    close();
-//                }) let { it->setDefault(); },
-//                _new<AButton>("Cancel").connect(&AView::clicked, this, [this, binding] {
-//                    if (binding->getEditableModel() != Settings::inst()) {
-//                        auto result = AMessageBox::show(this,
-//                                                        "Unsaved settings",
-//                                                        "You have an unsaved changes. Do you wish to continue?",
-//                                                        AMessageBox::Icon::WARNING,
-//                                                        AMessageBox::Button::YES_NO);
-//                        if (result == AMessageBox::ResultButton::YES) {
-//                            close();
-//                        }
-//                    } else {
-//                        close();
-//                    }
-//                }),
+                mResetButton = _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this] {
+                    Settings::reset();
+                    Settings::inst() = Settings{};
+                    mResetButton->setDisabled();
+                }),
+                SpacerExpanding{},
+                _new<AButton>("OK").connect(&AButton::clicked, this, [this] {
+                    Settings::inst() = mSettings;
+                    auto s = Settings::inst();
+                    Settings::save();
+                    close();
+                }) let { it->setDefault(); },
+                _new<AButton>("Cancel").connect(&AView::clicked, this, [this] {
+                    if (Settings::inst() != mSettings) {
+                        auto result = AMessageBox::show(this,
+                                                        "Unsaved settings",
+                                                        "You have an unsaved changes. Do you wish to continue?",
+                                                        AMessageBox::Icon::WARNING,
+                                                        AMessageBox::Button::YES_NO);
+                        if (result == AMessageBox::ResultButton::YES) {
+                            close();
+                        }
+                    } else {
+                        close();
+                    }
+                }),
             }
         }
     );
 
-//    connect(binding->modelChanged, [&, binding] {
-//        mResetButton->enable();
-//    });
     connect(fullscreenCheckbox->checked(), [this, resolutionView](bool g) { resolutionView->setVisibility(g ? Visibility::VISIBLE : Visibility::GONE); });
 }
 
@@ -154,7 +151,7 @@ void LauncherSettingsWindow::clearGameDir() {
         mClearGameDirButton->setVisibility(Visibility::GONE);
 
         mTask = async {
-            Settings::inst().gameDir.removeFileRecursive().makeDirs();
+            mSettings.gameDir->removeFileRecursive().makeDirs();
             ui_thread {
                 mClearGameDirSpinner->setVisibility(Visibility::GONE);
                 mClearGameDirButton->setVisibility(Visibility::VISIBLE);

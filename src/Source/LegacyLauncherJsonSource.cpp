@@ -19,11 +19,11 @@ APath LegacyLauncherJsonSource::getVersionsJsonFilePath() {
     if (auto h = getVersionsJsonFilePathHackers(); h.isRegularFileExists()) {
         return h;
     }
-    return Settings::inst().gameDir / "launcher_profiles.json";
+    return *Settings::inst().gameDir / "launcher_profiles.json";
 }
 
 APath LegacyLauncherJsonSource::getVersionsJsonFilePathHackers() {
-    return Settings::inst().gameDir / "launcher_profiles.hck.json";
+    return *Settings::inst().gameDir / "launcher_profiles.hck.json";
 }
 
 static void loadProfile(State::Profiles& profiles, ASet<AString>& profilesLoadedFromConfig, const AUuid& uuid, const AString& name) {
@@ -121,7 +121,7 @@ void LegacyLauncherJsonSource::load(State& state) {
     try {
         // the newest official minecraft launcher also loads profiles which are not listed in launcher_profiles.json
         ARandom r;
-        for (const auto& profileDir : (Settings::inst().gameDir / "versions").listDir(AFileListFlags::DIRS)) {
+        for (const auto& profileDir : (*Settings::inst().gameDir / "versions").listDir(AFileListFlags::DIRS)) {
             auto filename = profileDir.filename();
             if (!profilesLoadedFromConfig.contains(filename)) {
                 ALogger::info(LOG_TAG)

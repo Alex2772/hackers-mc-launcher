@@ -33,7 +33,7 @@ Settings::Settings() {
 }
 
 void Settings::initEmptyFields() {
-    if (gameDir.empty()) {
+    if (gameDir->empty()) {
         if constexpr (aui::platform::current::is_windows()) {
             gameDir = APath::getDefaultPath(APath::APPDATA) / ".minecraft";
         } else {

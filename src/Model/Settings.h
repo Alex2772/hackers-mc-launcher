@@ -2,13 +2,14 @@
 
 
 #include <AUI/Json/AJson.h>
+#include <AUI/Common/AProperty.h>
 
 struct Settings {
 public:
-    APath gameDir;
-    int width = 854;
-    int height = 500;
-    bool isFullscreen = false;
+    AProperty<APath> gameDir;
+    AProperty<int> width = 854;
+    AProperty<int> height = 500;
+    AProperty<bool> isFullscreen = false;
 
     bool operator==(const Settings& rhs) const {
         return std::tie(gameDir, width, height, isFullscreen) ==

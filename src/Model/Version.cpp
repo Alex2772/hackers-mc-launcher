@@ -30,7 +30,7 @@ AVector<Version> Version::fetchAll() {
 
 GameProfile Version::import() const {
     GameProfile p;
-    auto versionDir = Settings::inst().gameDir / "versions" / id;
+    auto versionDir = *Settings::inst().gameDir / "versions" / id;
     auto file = versionDir / (id + ".json");
 
     if (versionDir.isDirectoryExists()) {

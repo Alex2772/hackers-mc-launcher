@@ -352,10 +352,10 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
 
         // if the current profile does not have it's own main jar file, we can copy it from the inherited profile.
         // in theory, it would work recursively too.
-        auto mainJarAbsolutePath = Settings::inst().gameDir / "versions" / name / (name + ".jar");
+        auto mainJarAbsolutePath = *Settings::inst().gameDir / "versions" / name / (name + ".jar");
         if (!mainJarAbsolutePath.isRegularFileExists())
         {
-            APath::copy(Settings::inst().gameDir / "versions" / dst.mName / (dst.mName + ".jar"), mainJarAbsolutePath);
+            APath::copy(*Settings::inst().gameDir / "versions" / dst.mName / (dst.mName + ".jar"), mainJarAbsolutePath);
         }
     }
 
@@ -424,7 +424,7 @@ void GameProfile::makeClean() {
 }
 
 void GameProfile::save() {
-    auto f = Settings::inst().gameDir.file("versions").file(mName).file(mName + ".hackers.json");
+    auto f = Settings::inst().gameDir->file("versions").file(mName).file(mName + ".hackers.json");
     f.parent().makeDirs();
     AFileOutputStream(f) << toJson();
 }
@@ -511,7 +511,7 @@ AJson GameProfile::toJson() {
 }
 
 void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
-    auto pathToConfig = Settings::inst().gameDir.file("versions").file(name).file(name + ".hackers.json");
+    auto pathToConfig = Settings::inst().gameDir->file("versions").file(name).file(name + ".hackers.json");
     try {
         fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(pathToConfig)).asObject());
         return;
@@ -519,6 +519,6 @@ void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& n
     } catch (const AException& e) {
         ALogger::err("ProfileLoading") << "Failed to load (" << pathToConfig << ") profile:" << e;
     }
-    fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(Settings::inst().gameDir.file("versions").file(name).file(name + ".json"))).asObject());
+    fromJson(dst, uuid, name, AJson::fromStream(AFileInputStream(Settings::inst().gameDir->file("versions").file(name).file(name + ".json"))).asObject());
     dst.save();
 }
