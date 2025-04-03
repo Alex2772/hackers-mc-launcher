@@ -29,7 +29,7 @@ TEST_F(AutoRefreshTest, DoesNotAutoreloadOnInvalidProfiles) {
 
     // write a config with invalid profiles
     {
-        AFileOutputStream fos(Settings::inst().gameDir / "launcher_profiles.json");
+        AFileOutputStream fos(*Settings::inst().gameDir / "launcher_profiles.json");
         const char blob[] = R"(
 {
   "authenticationDatabase" : {

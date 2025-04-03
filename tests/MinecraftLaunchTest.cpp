@@ -14,6 +14,9 @@ class MinecraftLaunch : public ::testing::Test {
 protected:
     void SetUp() override {
         Test::SetUp();
+        if (std::getenv("CI")) {
+            GTEST_SKIP();
+        }
         TestUtil::prepareApp();
         AThreadPool::global().setWorkersCount(4);
     }

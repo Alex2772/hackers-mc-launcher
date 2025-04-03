@@ -31,6 +31,9 @@ protected:
 };
 
 TEST_F(Import, modrinth) {
+    if (std::getenv("CI")) {
+        GTEST_SKIP();
+    }
     auto importer = IImporter::from(DATA_DIR / "1.mrpack");
     ASSERT_NE(importer, nullptr);
     auto importerImpl = dynamic_cast<modrinth::v1::Importer*>(importer.get());

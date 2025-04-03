@@ -18,5 +18,4 @@ void TestUtil::prepareApp() {
 
 void TestUtil::prepareMainWindow() {
     MainWindow::inst().show();
-    LegacyLauncherJsonSource::load(MainWindow::inst().state());
 }
