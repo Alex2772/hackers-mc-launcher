@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.14.4)
+cmake_minimum_required(VERSION 3.16)
+project(example_app
+        VERSION 0.0.8 # CI_PROJECT_VERSION
+)
 
 project(hackers-mc-launcher)
 
