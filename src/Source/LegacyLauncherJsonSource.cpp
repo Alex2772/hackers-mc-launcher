@@ -1,7 +1,7 @@
 //
 // Created by alex2772 on 4/20/21.
 //
-
+#include <range/v3/all.hpp>
 #include <Model/Settings.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Logging/ALogger.h>
@@ -114,6 +114,13 @@ void LegacyLauncherJsonSource::load(State& state) {
             ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
         }
 
+        if (config.contains("selectedProfile")) {
+            auto selectedProfile = AUuid::fromString(config["selectedProfile"].asString());
+            if (auto it = ranges::find(*state.profile.list, selectedProfile, [](const _<GameProfile>& p) { return p->getUuid(); }); it != state.profile.list->end()) {
+                state.profile.selected = *it;
+            }
+        }
+
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Could not load launcher_profiles.json: " << e.getMessage();
     }
@@ -167,6 +174,9 @@ void LegacyLauncherJsonSource::save(const State& state) {
                 return profiles;
             }() },
         } };
+        if (state.profile.selected != nullptr) {
+            config["selectedProfile"] = (*state.profile.selected)->getUuid().toRawString();
+        }
         AFileOutputStream(getVersionsJsonFilePathHackers()) << config;
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Could not save launcher_profiles.json: " << e.getMessage();

@@ -19,6 +19,7 @@ public:
     static MainWindow& inst();
     State& state() { return mState; }
 
+    void onCloseButtonClicked() override;
 signals:
     emits<> reloadProfiles;
 

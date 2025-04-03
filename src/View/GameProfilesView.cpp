@@ -25,12 +25,11 @@ GameProfilesView::GameProfilesView(State::Profiles& state): mState(state)
             } << ".version_item";
             auto it = item.get();
 
-            connect(item->clicked, item, [this, it, profile] {
+            connect(item->clicked, [this, profile] {
                 mState.selected = profile;
-                *it << ".version_item_selected";
-                connect(mState.selected.changed, it, [it] {
-                    it->removeAssName(".version_item_selected");
-                });
+            });
+            connect(mState.selected, [item, profile](const _<GameProfile>& selected) {
+                item->setAssName(".version_item_selected", profile == selected);
             });
             connect(item->clickedRightOrLongPressed, item, [this, profile] {
                 AMenu::show(AMenuModel {

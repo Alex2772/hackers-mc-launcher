@@ -144,7 +144,7 @@ void MainWindow::onPlayButtonClicked() {
             _new<ImportVersionWindow>(mState)->show();
             return;
         }
-        AMessageBox::show(this, "Hacker's MC Launcher", "Please select a profile.");
+        ui_thread { AMessageBox::show(this, "Hacker's MC Launcher", "Please select a profile."); };
         return;
     }
 
@@ -270,4 +270,9 @@ MainWindow& MainWindow::inst() {
         a = nullptr;
     });
     return *a;
+}
+
+void MainWindow::onCloseButtonClicked() {
+    AWindow::onCloseButtonClicked();
+    LegacyLauncherJsonSource::save(mState);
 }

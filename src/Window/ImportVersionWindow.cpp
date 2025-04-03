@@ -259,7 +259,7 @@ void ImportVersionWindow::showChooseFileDialog() {
                            LegacyLauncherJsonSource::reload(mState);
                            ui_thread {
                                close();
-                               mState.profile.list.notify();
+                               mState.profile.notify();
                            };
                        } catch (const AException& e) {
                            ALogger::err(LOG_TAG) << "Unable to import zip archive: " << e;

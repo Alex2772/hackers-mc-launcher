@@ -10,6 +10,10 @@ struct State {
         AProperty<_<GameProfile>> selected;
 
         ASet<AUuid> uuids() const;
+        void notify() {
+            list.notify();
+            selected.notify();
+        }
     } profile;
 
     struct Accounts {
