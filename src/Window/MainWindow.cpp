@@ -144,7 +144,7 @@ void MainWindow::onPlayButtonClicked() {
             _new<ImportVersionWindow>(mState)->show();
             return;
         }
-        ui_thread { AMessageBox::show(this, "Hacker's MC Launcher", "Please select a profile."); };
+        AMessageBox::show(this, "Hacker's MC Launcher", "Please select a profile.");
         return;
     }
 

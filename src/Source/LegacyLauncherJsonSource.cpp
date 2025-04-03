@@ -79,45 +79,49 @@ void LegacyLauncherJsonSource::load(State& state) {
   }
 }
          */
-        auto config = AJson::fromStream(AFileInputStream(getVersionsJsonFilePath()));
+        if (getVersionsJsonFilePath().isRegularFileExists()) {
+            auto config = AJson::fromStream(AFileInputStream(getVersionsJsonFilePath()));
 
-        // try to load users
-        try {
-            for (auto& entry : config["authenticationDatabase"].asObject()) {
-                Account account { entry.first, entry.second["username"].asString() };
-                if (UsernameValidator()(account.username)) {
-                    *state.accounts.current = std::move(account);
+            // try to load users
+            try {
+                for (auto &entry: config["authenticationDatabase"].asObject()) {
+                    Account account{entry.first, entry.second["username"].asString()};
+                    if (UsernameValidator()(account.username)) {
+                        *state.accounts.current = std::move(account);
+                    }
                 }
+            } catch (const AException &e) {
+                ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
             }
-        } catch (const AException& e) {
-            ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
-        }
 
-        // try to load game profiles
-        const auto& profiles = config["profiles"].asObject();
+            // try to load game profiles
+            const auto &profiles = config["profiles"].asObject();
 
-        try {
-            for (const auto& [rawUuid, obj] : profiles) {
-                AString name = "unknown";
-                // optifine fix
-                try {
-                    name = obj["lastVersionId"].asString();
-                } catch (...) {
-                    name = obj["name"].asString();
+            try {
+                for (const auto &[rawUuid, obj]: profiles) {
+                    AString name = "unknown";
+                    // optifine fix
+                    try {
+                        name = obj["lastVersionId"].asString();
+                    } catch (...) {
+                        name = obj["name"].asString();
+                    }
+
+                    auto uuid = safeUuid(rawUuid);
+
+                    loadProfile(state.profile, profilesLoadedFromConfig, uuid, name);
                 }
-
-                auto uuid = safeUuid(rawUuid);
-
-                loadProfile(state.profile, profilesLoadedFromConfig, uuid, name);
+            } catch (const AException &e) {
+                ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
             }
-        } catch (const AException& e) {
-            ALogger::warn(LOG_TAG) << "Unable to load users from launcher_profiles.json: " << e.getMessage();
-        }
 
-        if (config.contains("selectedProfile")) {
-            auto selectedProfile = AUuid::fromString(config["selectedProfile"].asString());
-            if (auto it = ranges::find(*state.profile.list, selectedProfile, [](const _<GameProfile>& p) { return p->getUuid(); }); it != state.profile.list->end()) {
-                state.profile.selected = *it;
+            if (config.contains("selectedProfile")) {
+                auto selectedProfile = AUuid::fromString(config["selectedProfile"].asString());
+                if (auto it = ranges::find(*state.profile.list, selectedProfile,
+                                           [](const _<GameProfile> &p) { return p->getUuid(); }); it !=
+                                                                                                  state.profile.list->end()) {
+                    state.profile.selected = *it;
+                }
             }
         }
 
@@ -194,7 +198,11 @@ void LegacyLauncherJsonSource::reload(State& state) {
 ASet<AUuid> LegacyLauncherJsonSource::getSetOfProfilesOnDisk() {
     ASet<AUuid> s;
     try {
-        auto config = AJson::fromStream(AFileInputStream(getVersionsJsonFilePath()));
+        auto f = getVersionsJsonFilePath();
+        if (!f.isRegularFileExists()) {
+            return s;
+        }
+        auto config = AJson::fromStream(AFileInputStream(f));
 
         // try to load game profiles
         try {
