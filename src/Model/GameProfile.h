@@ -4,6 +4,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Common/AUuid.h>
+#include <AUI/Common/AProperty.h>
 #include "DownloadEntry.h"
 
 class GameProfile {
@@ -37,7 +38,6 @@ public:
 private:
 
     AUuid mUuid;
-    AString mName;
     AString mMainClass;
     AString mAssetsIndex;
     AString mJavaVersionName = "java-runtime-alpha";
@@ -57,12 +57,10 @@ private:
 public:
     static void fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJson& json);
 
+    AProperty<AString> name;
+
     [[nodiscard]] const AUuid& getUuid() const noexcept {
         return mUuid;
-    }
-
-    [[nodiscard]] const AString& getName() const noexcept {
-        return mName;
     }
 
     [[nodiscard]] const AString& getMainClass() const noexcept {

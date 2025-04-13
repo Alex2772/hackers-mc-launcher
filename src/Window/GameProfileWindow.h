@@ -6,11 +6,16 @@
 #include <AUI/View/AButton.h>
 
 class GameProfileWindow: public AWindow {
+public:
+    explicit GameProfileWindow(_<GameProfile> targetGameProfile);
 private:
     _<AButton> mResetButton;
-    GameProfile& mTargetGameProfile;
+    GameProfile mProfile;
+    _<GameProfile> mTargetGameProfile;
+    _<AViewContainer> mPageRoot;
 
-public:
-    explicit GameProfileWindow(GameProfile& targetGameProfile);
+    AProperty<_<AView>> mPage;
+
+    _<AView> tab(AString name, _<AView> contents);
 };
 

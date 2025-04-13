@@ -36,7 +36,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
 
     ALogger::info(LOG_TAG) << ("== PLAY BUTTON PRESSED ==");
     ALogger::info(LOG_TAG) << ("User: " + user.username);
-    ALogger::info(LOG_TAG) << ("Profile: " + profile.getName());
+    ALogger::info(LOG_TAG) << ("Profile: " + profile.name);
 
     ALogger::info(LOG_TAG) << "Checking for Java " << profile.getJavaVersionName() << "...";
 

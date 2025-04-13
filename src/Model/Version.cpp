@@ -43,6 +43,6 @@ GameProfile Version::import() const {
     static ARandom r;
     GameProfile::fromJson(p, r.nextUuid(), id, AJson::fromStream(AFileInputStream(file)).asObject());
     p.save();
-    ALogger::info(LOG_TAG) << "Imported " << p.getName();
+    ALogger::info(LOG_TAG) << "Imported " << p.name;
     return p;
 }

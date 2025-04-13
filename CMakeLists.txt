@@ -5,7 +5,7 @@ project(example_app
 
 project(hackers-mc-launcher)
 
-set(AUI_VERSION v7.0.2-rc.1)
+set(AUI_VERSION v7.0.2-rc.3)
 
 option(BUILD_SHARED_LIBS "Build shared libs" OFF) # there's no reason to use dll build
 

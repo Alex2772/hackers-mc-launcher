@@ -355,7 +355,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         auto mainJarAbsolutePath = *Settings::inst().gameDir / "versions" / name / (name + ".jar");
         if (!mainJarAbsolutePath.isRegularFileExists())
         {
-            APath::copy(*Settings::inst().gameDir / "versions" / dst.mName / (dst.mName + ".jar"), mainJarAbsolutePath);
+            APath::copy(*Settings::inst().gameDir / "versions" / dst.name / (dst.name + ".jar"), mainJarAbsolutePath);
         }
     }
 
@@ -363,7 +363,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         dst.makeClean();
     }
 
-    dst.mName = name;
+    dst.name = name;
 
     if (json["mainClass"].isString())
         dst.mMainClass = json["mainClass"].asString();
@@ -424,7 +424,7 @@ void GameProfile::makeClean() {
 }
 
 void GameProfile::save() {
-    auto f = Settings::inst().gameDir->file("versions").file(mName).file(mName + ".hackers.json");
+    auto f = Settings::inst().gameDir->file("versions").file(name).file(name + ".hackers.json");
     f.parent().makeDirs();
     AFileOutputStream(f) << toJson();
 }

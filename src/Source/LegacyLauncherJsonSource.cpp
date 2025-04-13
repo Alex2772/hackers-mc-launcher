@@ -144,6 +144,7 @@ void LegacyLauncherJsonSource::load(State& state) {
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Could not load version from versions/ dir" << e.getMessage();
     }
+    state.profilesUuidsSnapshot = getSetOfProfilesOnDisk();
 }
 
 void LegacyLauncherJsonSource::save(const State& state) {
@@ -173,7 +174,7 @@ void LegacyLauncherJsonSource::save(const State& state) {
             [&] {   // game profiles
                 AJson::Object profiles;
                 for (const auto& p : *state.profile.list) {
-                    profiles[p->getUuid().toRawString()] = AJson { { "name", p->getName() } };
+                    profiles[p->getUuid().toRawString()] = AJson { { "name", p->name } };
                 }
                 return profiles;
             }() },

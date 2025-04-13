@@ -2,6 +2,7 @@
 // Created by alex2772 on 2/15/21.
 //
 
+#include <range/v3/all.hpp>
 #include <AUI/View/AButton.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/View/AListView.h>
@@ -33,6 +34,7 @@
 #include <AUI/Platform/APlatform.h>
 
 using namespace declarative;
+static constexpr auto LOG_TAG = "MainWindow";
 
 MainWindow::MainWindow():
     AWindow("Hacker's Minecraft Launcher", 600_dp, 380_dp)
@@ -60,9 +62,12 @@ MainWindow::MainWindow():
                                 _new<ImportVersionWindow>(mState)->show();
                             }),
                             Button {
-                                Icon { ":svg/dir.svg" },
-                                Label { "Game dir" },
-                            }.clicked(me::openGameDir),
+                                Label { "Edit profile..." },
+                            }.clicked(me::editCurrentProfile) let {
+                                connect(mState.profile.selected.readProjected([](const _<GameProfile>& p){
+                                    return p != nullptr;
+                                }), slot(it)::setEnabled);
+                            },
                             Button {
                                 Icon { ":svg/cog.svg" },
                                 Label { "Settings" }
@@ -225,21 +230,25 @@ void MainWindow::checkForDiskProfileUpdates() {
     using namespace std::chrono;
     using namespace std::chrono_literals;
 
-    // check for new profiles every 5 secs when cursor moves
+    // check for new profiles every 5 secs when cursor moves.
+    // this is the case when a user install Forge or OptiFine via respective installer.
     static milliseconds lastCheckTime = 0ms;
     if (high_resolution_clock::now().time_since_epoch() - lastCheckTime > 5s) {
         if (!mTask.isWaitNeeded()) {
             mTask = async {
                 // load actual set of profiles
-                decltype(auto) actualProfiles = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
-                decltype(auto) loadedProfiles = mState.profile.uuids();
-
-                // and compare it with actual profiles
-                if (actualProfiles != loadedProfiles) {
-                    // found new game profile!
-                    ALogger::info("Detected changes in launcher_profiles.json, reloading");
-                    emit reloadProfiles();
-                }
+                decltype(auto) profilesOnDisk = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
+                ui_threadX [this, profilesOnDisk = std::move(profilesOnDisk)] {
+                    const auto& profilesInMemory = mState.profilesUuidsSnapshot;
+                    // and compare it with actual profiles
+                    if (ranges::any_of(profilesOnDisk, [&](const AUuid& u) { return !profilesInMemory.contains(u); })) {
+                        // found new game profile!
+                        ALogger::info("Detected changes in launcher_profiles.json, reloading");
+                        ALOG_DEBUG(LOG_TAG) << "Profiles on disk: " << profilesOnDisk;
+                        ALOG_DEBUG(LOG_TAG) << "Profiles in memory: " << profilesInMemory;
+                        emit reloadProfiles();
+                    }
+                };
             };
         }
 
@@ -275,4 +284,15 @@ MainWindow& MainWindow::inst() {
 void MainWindow::onCloseButtonClicked() {
     AWindow::onCloseButtonClicked();
     LegacyLauncherJsonSource::save(mState);
+}
+
+void MainWindow::editCurrentProfile() {
+    editProfile(mState.profile.selected);
+}
+
+void MainWindow::editProfile(_<GameProfile> profile) {
+    if (profile == nullptr) {
+        return;
+    }
+    _new<GameProfileWindow>(std::move(profile))->show();
 }

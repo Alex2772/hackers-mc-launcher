@@ -48,5 +48,7 @@ private:
     void hideProfileLoading();
     void openGameDir();
     void showLauncherSettings();
+    void editCurrentProfile();
+    void editProfile(_<GameProfile> profile);
 };
 

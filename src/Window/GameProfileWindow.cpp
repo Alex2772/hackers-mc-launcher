@@ -9,36 +9,41 @@
 #include <AUI/Platform/AMessageBox.h>
 #include "GameProfileWindow.h"
 #include "MainWindow.h"
+#include "Window/GameProfilePages/DetailsPage.h"
 
-GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
+using namespace declarative;
+
+GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
     AWindow("Game profile", 500_dp, 300_dp, &MainWindow::inst(), WindowStyle::MODAL),
-    mTargetGameProfile(targetGameProfile)
+    mProfile(*targetGameProfile),
+    mTargetGameProfile(targetGameProfile),
+    mPageRoot(_new<AViewContainer>())
 {
     using namespace declarative;
 
-    auto binding = _new<ADataBinding<GameProfile>>(targetGameProfile);
+
     setContents(
         Vertical {
-            _new<ATabView>() let {
-                // COMMON TAB ============================================================================================
-                it->addTab(
-                    Vertical {
-                        _form({
-//                            {"Profile name:"_as, _new<ATextField>() && binding(&GameProfile::mName)},
-//                            {"Main class:"_as, _new<ATextField>() && binding(&GameProfile::mMainClass)},
-                        }),
-                    }, "Common"
-                );
-
+            Horizontal::Expanding {
+                Vertical {
+                    tab("Version", _new<DetailsPage>(mProfile)) let { mPage = it; },
+                    tab("Mods", Centered { Label { "TODO. Sorry!" } }),
+                    tab("Notes", Centered { Label { "TODO. Sorry!" } }),
+                    tab("Servers", Centered { Label { "TODO. Sorry!" } }),
+                    tab("Resource packs", Centered { Label { "TODO. Sorry!" } }),
+                    tab("Shader packs", Centered { Label { "TODO. Sorry!" } }),
+                    tab("Worlds", Centered { Label { "TODO. Sorry!" } }),
+                } with_style { Padding{1_px}, LayoutSpacing { 1_px } },
+                Vertical::Expanding {
+                    mPageRoot,
+                },
             },
-            SpacerExpanding{},
             Horizontal {
-                mResetButton = _new<AButton>("Reset to defaults").connect(&AButton::clicked, this, [this, binding] {
-                    // TODO
-                    binding->setModel(mTargetGameProfile);
+                mResetButton = _new<AButton>("Reset").connect(&AButton::clicked, this, [this] {
+                    mProfile = *mTargetGameProfile;
                     mResetButton->setDisabled();
                 }),
-                _new<AButton>("Delete").connect(&AButton::clicked, this, [this, binding] {
+                _new<AButton>("Delete").connect(&AButton::clicked, this, [this] {
                     auto result = AMessageBox::show(this,
                                                     "Delete profile",
                                                     "This operation is unrecoverable. Do you wish to continue?",
@@ -50,10 +55,10 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
                     }
                 }),
                 SpacerExpanding{},
-                _new<AButton>("OK").connect(&AButton::clicked, this, [this, binding] {
-                    mTargetGameProfile = binding->getModel();
+                _new<AButton>("OK").connect(&AButton::clicked, this, [this] {
+                    *mTargetGameProfile = std::move(mProfile);
                 }) let { it->setDefault(); },
-                _new<AButton>("Cancel").connect(&AView::clicked, this, [this, binding] { /*
+                _new<AButton>("Cancel").connect(&AView::clicked, this, [this] { /*
                     if (binding->getEditableModel() != Settings::inst()) {
                         auto result = AMessageBox::show(this,
                                                         "Unsaved settings",
@@ -70,4 +75,18 @@ GameProfileWindow::GameProfileWindow(GameProfile& targetGameProfile):
             }
         }
     );
+}
+
+_<AView> GameProfileWindow::tab(AString name, _<AView> contents) {
+    return Label { std::move(name) } with_style { Padding { 8_dp, 16_dp }, Margin { 0 } } let {
+        connect(it->clicked, [this, it] {
+            mPage = it;
+        });
+        connect(mPage, [this, it, contents = std::move(contents)] {
+            it->setAssName(".background_accent", mPage == it);
+            if (mPage == it) {
+                ALayoutInflater::inflate(mPageRoot, contents);
+            }
+        });
+    };
 }

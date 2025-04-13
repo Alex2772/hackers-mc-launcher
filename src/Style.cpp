@@ -18,6 +18,11 @@ struct Style {
                 Padding { 0 },
             },
             {
+                c(".background_accent"),
+                BackgroundSolid { AStylesheet::getOsThemeColor() },
+                TextColor { AStylesheet::getOsThemeColor().readableBlackOrWhite() },
+            },
+            {
                 c("#play"),
                 Padding { 16_dp },
                 FixedSize { 300_dp, 50_dp },
