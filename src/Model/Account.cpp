@@ -14,7 +14,7 @@ static constexpr auto LOG_TAG = "Account";
 
 AFuture<> Account::populateUuid() {
     auto username = *this->username;
-    return async {
+    return AUI_THREADPOOL {
         if (ranges::any_of(uuid.data(), [](auto b) { return b != 0; })) {
             return;
         }

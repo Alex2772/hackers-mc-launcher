@@ -14,7 +14,7 @@ class Import : public ::testing::Test {
 protected:
     void SetUp() override {
         Test::SetUp();
-        do_once {
+        AUI_DO_ONCE {
             ALogger::info("ImportTest") << "Note: test data dir" << DATA_DIR;
             ALogger::info("ImportTest") << "Note: fake game dir" << mGameDir;
         }

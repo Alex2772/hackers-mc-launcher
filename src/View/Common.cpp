@@ -10,5 +10,5 @@ using namespace declarative;
 using namespace ass;
 
 _<AView> declarative::description(const AString &text) {
-    return AText::fromString(text) with_style { Opacity(0.5f) };
+    return AText::fromString(text) AUI_OVERRIDE_STYLE { Opacity(0.5f) };
 }

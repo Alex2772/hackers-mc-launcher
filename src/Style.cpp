@@ -24,7 +24,6 @@ struct Style {
             },
             {
                 c("#play"),
-                Padding { 16_dp },
                 FixedSize { 300_dp, 50_dp },
             },
             {

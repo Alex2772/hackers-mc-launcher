@@ -26,14 +26,14 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
         Vertical {
             Horizontal::Expanding {
                 Vertical {
-                    tab("Version", _new<DetailsPage>(mProfile)) let { mPage = it; },
+                    tab("Version", _new<DetailsPage>(mProfile)) AUI_LET { mPage = it; },
                     tab("Mods", Centered { Label { "TODO. Sorry!" } }),
                     tab("Notes", Centered { Label { "TODO. Sorry!" } }),
                     tab("Servers", Centered { Label { "TODO. Sorry!" } }),
                     tab("Resource packs", Centered { Label { "TODO. Sorry!" } }),
                     tab("Shader packs", Centered { Label { "TODO. Sorry!" } }),
                     tab("Worlds", Centered { Label { "TODO. Sorry!" } }),
-                } with_style { Padding{1_px}, LayoutSpacing { 1_px } },
+                } AUI_OVERRIDE_STYLE { Padding{1_px}, LayoutSpacing { 1_px } },
                 Vertical::Expanding {
                     mPageRoot,
                 },
@@ -57,7 +57,7 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
                 SpacerExpanding{},
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this] {
                     *mTargetGameProfile = std::move(mProfile);
-                }) let { it->setDefault(); },
+                }) AUI_LET { it->setDefault(); },
                 _new<AButton>("Cancel").connect(&AView::clicked, this, [this] { /*
                     if (binding->getEditableModel() != Settings::inst()) {
                         auto result = AMessageBox::show(this,
@@ -78,7 +78,7 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
 }
 
 _<AView> GameProfileWindow::tab(AString name, _<AView> contents) {
-    return Label { std::move(name) } with_style { Padding { 8_dp, 16_dp }, Margin { 0 } } let {
+    return Label { std::move(name) } AUI_OVERRIDE_STYLE { Padding { 8_dp, 16_dp }, Margin { 0 } } AUI_LET {
         connect(it->clicked, [this, it] {
             mPage = it;
         });

@@ -13,7 +13,7 @@ const auto SETTINGS_PATH = Util::launcherDir().file("settings.json");
 
 Settings& Settings::inst() {
     static Settings s;
-    do_once {
+    AUI_DO_ONCE {
         try {
             s = aui::from_json<Settings>(AJson::fromStream(AFileInputStream(SETTINGS_PATH)));
         } catch (...) {

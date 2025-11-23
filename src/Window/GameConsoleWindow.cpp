@@ -5,6 +5,8 @@
 #include <AUI/View/AText.h>
 #include <AUI/View/ASpinnerV2.h>
 
+using namespace declarative;
+
 void GameConsoleWindow::handleGameExit(AWindow* parent, _<GameProcess> game) {
     if (game->process->waitForExitCode() != 0 && !game->consoleWindow) {
         // game has crashed; should display game console
@@ -31,14 +33,14 @@ GameConsoleWindow::GameConsoleWindow(AWindow* parent, _<GameProcess> game): AWin
     game->consoleWindow = this;
 
     // parse existing stdout
-    mTask = async {
+    mTask = AUI_THREADPOOL {
         auto lines = AString::fromUtf8(game->stdoutBuffer).split('\n');
 
         for (auto& line : lines) {
             line = line.replacedAll("\t", "    ");
         }
 
-        ui_threadX [&, lines = std::move(lines)] {
+        AUI_UI_THREAD_X [&, lines = std::move(lines)] {
             for (auto& line : lines) {
                 mConsoleDisplayPort->addView(AText::fromString(line));
             }

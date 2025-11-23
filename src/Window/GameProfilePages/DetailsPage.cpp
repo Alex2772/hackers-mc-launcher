@@ -25,7 +25,7 @@ DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
     setContents(Vertical {
       _form(
           { { Button {
-                _new<ADrawableView>(":profile_icons/default.png"_url) let { stubButton(it); },
+                _new<ADrawableView>(":profile_icons/default.png"_url) AUI_LET { stubButton(it); },
               },
               Vertical {
                 _new<ATextField>() && profile.name,
@@ -33,7 +33,7 @@ DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
               } },
             { "UUID:",
               Vertical {
-                _new<ATextField>() let {
+                _new<ATextField>() AUI_LET {
                         it->setText(profile.getUuid().toString());
                         it->setEditable(false);
                     },

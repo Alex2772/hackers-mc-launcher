@@ -19,7 +19,7 @@ AccountWindow::AccountWindow(State& state, _<Account> user):
     setContents(
         Vertical {
             _form({
-                {"Username:"_as, _new<ATextField>() let { it->focus(); it && mAccount.username; }},
+                {"Username:"_as, _new<ATextField>() AUI_LET { it->focus(); it && mAccount.username; }},
 //                {{},            CheckBoxWrapper { Label {"Online account on minecraft.net" } } && mBinding(&Account::isOnlineAccount)},
 //                {"Password:"_as, _new<ATextField>() && mBinding(&Account::token) && mBinding(&Account::isOnlineAccount, &ATextField::setEnabled) },
                 }),

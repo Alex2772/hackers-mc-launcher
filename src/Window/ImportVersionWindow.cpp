@@ -15,6 +15,7 @@
 #include "Source/LegacyLauncherJsonSource.h"
 #include "Util/Zip.h"
 #include "MainWindow.h"
+#include "AUI/View/ASpacerFixed.h"
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Util/ARandom.h>
@@ -40,13 +41,9 @@ const PropertyList importButtonWrap = {
 
 ImportVersionWindow::ImportVersionWindow(State& state)
   : AWindow("Import version", 500_dp, 400_dp, &MainWindow::inst(), WindowStyle::MODAL), mState(state) {
-    connect(mReleaseTypeGroup.selectionChanged, [&](int d) {
-        mVersionTypeValue = (VersionType) d;
-        emit invalidateSearch;
-    });
     _<AView> minecraftRepoListWrap = Horizontal::Expanding {
         mMinecraftRepoList =
-            _new<AListView>() let {
+            _new<AListView>() AUI_LET {
                 it->setCustomStyle({
                   Expanding {},
                   MinSize { 70_dp },
@@ -54,18 +51,38 @@ ImportVersionWindow::ImportVersionWindow(State& state)
                 connect(it->itemDoubleClicked, me::doImportFromMinecraftRepo);
             },
         Vertical {
-          _new<ALabel>("Search:"),
-          mSearchTextField =
-              _new<ATextField>().connect(&ATextField::textChanging, [&] { emit invalidateSearch; }) let { it->focus(); },
+            Vertical {
+              _new<ALabel>("Search:"),
+              _new<ATextField>() AUI_LET { it && mSearchTextField; it->focus(); },
+            },
+            Vertical {
           _new<ALabel>("Filter:"),
-          mReleaseTypeGroup.addRadioButton(_new<ARadioButton>("Releases"), int(VersionType::RELEASE)),
-          mReleaseTypeGroup.addRadioButton(_new<ARadioButton>("Snapshots"), int(VersionType::SNAPSHOT)),
-          mReleaseTypeGroup.addRadioButton(_new<ARadioButton>("Betas"), int(VersionType::OLD_BETA)),
-          mReleaseTypeGroup.addRadioButton(_new<ARadioButton>("Alphas"), int(VersionType::OLD_ALPHA)),
-        },
-    };
+          RadioButton {
+              .checked = AUI_REACT(mVersionTypeValue == VersionType::RELEASE),
+              .onClick = [this] { mVersionTypeValue = VersionType::RELEASE; },
+              .content = Label { "Releases" },
+          },
 
-    mReleaseTypeGroup.setSelectedId(int(VersionType::RELEASE));
+         RadioButton {
+             .checked = AUI_REACT(mVersionTypeValue == VersionType::SNAPSHOT),
+             .onClick = [this] { mVersionTypeValue = VersionType::SNAPSHOT; },
+             .content = Label { "Snapshots" },
+         },
+
+         RadioButton {
+             .checked = AUI_REACT(mVersionTypeValue == VersionType::OLD_BETA),
+             .onClick = [this] { mVersionTypeValue = VersionType::OLD_BETA; },
+             .content = Label { "Betas" },
+         },
+
+         RadioButton {
+             .checked = AUI_REACT(mVersionTypeValue == VersionType::OLD_ALPHA),
+             .onClick = [this] { mVersionTypeValue = VersionType::OLD_ALPHA; },
+             .content = Label { "Alphas" },
+         },
+        },
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
 
     auto importFromFile = Centered {
         Vertical {
@@ -73,11 +90,15 @@ ImportVersionWindow::ImportVersionWindow(State& state)
               "You can import a modpack packed into the zip file sent you by your friend or "
               "downloaded from the internet."),
           Centered { Button {
-            Icon { ":svg/archive.svg" },
-            Label { "Choose file" },
-          }
-                         .clicked(me::showChooseFileDialog) } with_style { importButtonWrap },
-        } with_style { Expanding { true, false } }
+            .content =
+                Horizontal {
+                  Icon { ":svg/archive.svg" },
+                  SpacerFixed { 2_dp },
+                  Label { "Choose file" },
+                },
+            .onClick = [this] { showChooseFileDialog(); },
+          } } AUI_OVERRIDE_STYLE { importButtonWrap },
+        } AUI_OVERRIDE_STYLE { Expanding { true, false } }
     };
 
     setContents(Vertical {
@@ -91,34 +112,39 @@ ImportVersionWindow::ImportVersionWindow(State& state)
             minecraftRepoListWrap,
             Centered {
               Button {
-                Icon { ":svg/download.svg" },
-                Label { "Download" },
-              }
-                  .clicked(me::doImportFromMinecraftRepo),
-            } with_style { importButtonWrap } },
-        } with_style { Expanding {} },
+                .content =
+                    Horizontal {
+                      Icon { ":svg/download.svg" },
+                      SpacerFixed { 2_dp },
+                      Label { "Download" },
+                    },
+                .onClick = [this] { doImportFromMinecraftRepo(); },
+              },
+            } AUI_OVERRIDE_STYLE { importButtonWrap } },
+        } AUI_OVERRIDE_STYLE { Expanding {} },
         Centered {
-          _new<AVDividerView>() with_style { Expanding { 0 }, MinSize { 0, 20_dp } },
+          _new<AVDividerView>() AUI_OVERRIDE_STYLE { Expanding { 0 }, MinSize { 0, 20_dp } },
         },
         GroupBox {
           Label { "Zip archive" },
           importFromFile,
-        } with_style { Expanding {} },
-      },
-      Horizontal { SpacerExpanding {}, _new<AButton>("Cancel").connect(&AView::clicked, me::close) } });
+        } AUI_OVERRIDE_STYLE { Expanding {} },
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+      Horizontal { SpacerExpanding {}, _new<AButton>("Cancel").connect(&AView::clicked, me::close) },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     minecraftRepoListWrap->setDisabled();
 
-    mAsync << async {
+    mAsync << AUI_THREADPOOL {
         _<AListModel<Version>> versionModel = _new<AListModel<Version>>(Version::fetchAll());
 
-        ui_thread {
+        AUI_UI_THREAD {
             minecraftRepoListWrap->setEnabled();
             auto filterModel = AModels::filter(versionModel, [&](const Version& v) {
                 if (v.type != mVersionTypeValue)
                     return false;
 
-                auto filterString = *mSearchTextField->text();
+                auto filterString = *mSearchTextField;
                 if (!filterString.empty()) {
                     if (!v.id.contains(filterString)) {
                         return false;
@@ -127,7 +153,8 @@ ImportVersionWindow::ImportVersionWindow(State& state)
 
                 return true;
             });
-            connect(invalidateSearch, slot(filterModel)::invalidate);
+            connect(mSearchTextField.changed, AUI_SLOT(filterModel)::invalidate);
+            connect(mVersionTypeValue.changed, AUI_SLOT(filterModel)::invalidate);
             mMinecraftRepoList->setModel(AModels::adapt<AString>(mVersionModel = filterModel, [](const Version& v) {
                 return v.id;
             }));
@@ -136,20 +163,24 @@ ImportVersionWindow::ImportVersionWindow(State& state)
 }
 
 void ImportVersionWindow::doImportFromMinecraftRepo() {
-    setContents(Centered { Horizontal {
-      _new<ASpinnerV2>(), Label { "Importing..." },
+    setContents(Centered {
+      Horizontal {
+        _new<ASpinnerV2>(),
+        Label { "Importing..." },
 
-      Centered {
-        Button { Label { "Cancel" } }.clicked(me::close),
-      } } });
+        Centered {
+          Button { .content = Label { "Cancel" }, .onClick = [this] { close(); } },
+        },
+      },
+    });
 
     for (const auto& row : mMinecraftRepoList->getSelectionModel()) {
         Version version = mVersionModel->listItemAt(row.getIndex().getRow());
 
-        mAsync << async {
+        mAsync << AUI_THREADPOOL {
             try {
                 auto p = _new<GameProfile>(version.import());
-                ui_thread {
+                AUI_UI_THREAD {
                     mState.profile.list.writeScope() << p;
                     mState.profile.selected = p;
                     LegacyLauncherJsonSource::save(mState);
@@ -163,7 +194,7 @@ void ImportVersionWindow::doImportFromMinecraftRepo() {
                 ALogger::err(LOG_TAG) << e;
                 AMessageBox::show(this, "Could not import version", e.getMessage(), AMessageBox::Icon::CRITICAL);
             }
-            ui_thread { close(); };
+            AUI_UI_THREAD { close(); };
         };
     }
 }
@@ -175,10 +206,10 @@ void ImportVersionWindow::showChooseFileDialog() {
                    if (p.empty()) {
                        return;
                    }
-                   mAsync << async {
+                   mAsync << AUI_THREADPOOL {
                        _<AProgressBar> progressBar;
 
-                       ui_threadX[&] {
+                       AUI_UI_THREAD_X [&] {
                            setContents(Centered {
                              Vertical {
                                Horizontal {
@@ -187,8 +218,9 @@ void ImportVersionWindow::showChooseFileDialog() {
                                },
                                progressBar = _new<AProgressBar>(),
                                Centered {
-                                 Button { Label { "Cancel" } }.clicked(me::close),
-                               } },
+                                 Button { .content =  Label { "Cancel" }, .onClick = [this] { close(); } },
+                               },
+                             },
                            });
                        };
                        ALogger::info(LOG_TAG) << "Importing " << p;
@@ -251,13 +283,13 @@ void ImportVersionWindow::showChooseFileDialog() {
                                    if (unzGoToNextFile(unzip) != UNZ_OK)
                                        break;
                                }
-                               ui_threadX[v = float(entryIndex) / float(info.number_entry), progressBar] {
+                               AUI_UI_THREAD_X [v = float(entryIndex) / float(info.number_entry), progressBar] {
                                    AUI_NULLSAFE(progressBar)->setValue(v);
                                };
                            }
 
                            LegacyLauncherJsonSource::reload(mState);
-                           ui_thread {
+                           AUI_UI_THREAD {
                                close();
                                mState.profile.notify();
                            };
@@ -265,7 +297,7 @@ void ImportVersionWindow::showChooseFileDialog() {
                            ALogger::err(LOG_TAG) << "Unable to import zip archive: " << e;
                        }
 
-                       ui_thread {
+                       AUI_UI_THREAD {
                            close();
                            LegacyLauncherJsonSource::reload(mState);
                        };

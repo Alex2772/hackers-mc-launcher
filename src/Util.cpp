@@ -7,7 +7,7 @@
 
 APath Util::launcherDir() {
     auto path = APath::getDefaultPath(APath::APPDATA).file(".hackers-mc");
-    do_once {
+    AUI_DO_ONCE {
         path.makeDirs();
     };
     return path;

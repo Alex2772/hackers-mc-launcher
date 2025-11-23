@@ -18,6 +18,7 @@
 #include "LauncherSettingsWindow.h"
 #include "GameProfileWindow.h"
 #include "GameConsoleWindow.h"
+#include "AUI/View/ASpacerFixed.h"
 #include "Model/GameProcess.h"
 #include "Model/Settings.h"
 #include <chrono>
@@ -42,39 +43,50 @@ MainWindow::MainWindow():
     setContents(
         Vertical {
             Centered::Expanding {
-                (AScrollArea::Builder().withContents(_new<GameProfilesView>(mState.profile)).build()) with_style { MinSize { 300_dp } },
+                (AScrollArea::Builder().withContents(_new<GameProfilesView>(mState.profile)).build()) AUI_OVERRIDE_STYLE { MinSize { 300_dp } },
                 mSpinnerView = _new<ASpinnerV2>(),
             },
-            _new<AView>() with_style { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
+            _new<AView>() AUI_OVERRIDE_STYLE { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
             Stacked {
                 Horizontal {
                     Vertical {
                         _new<ALabel>("Username:"),
                         _new<ATextField>() && mState.accounts.current->username,
-                    } with_style { MinSize { 100_dp, {} } },
+                    } AUI_OVERRIDE_STYLE { MinSize { 100_dp, {} } },
                     SpacerExpanding{},
                     Centered {
                         Vertical {
                             Button {
-                                Icon { ":svg/plus.svg" },
-                                Label { "Import version..." },
-                            }.clicked(this, [this] {
-                                _new<ImportVersionWindow>(mState)->show();
-                            }),
-                            Button {
-                                Label { "Edit profile..." },
-                            }.clicked(me::editCurrentProfile) let {
-                                connect(mState.profile.selected.readProjected([](const _<GameProfile>& p){
-                                    return p != nullptr;
-                                }), slot(it)::setEnabled);
+                                .content = Horizontal {
+                                    Icon { ":svg/plus.svg" },
+                                    SpacerFixed { 2_dp },
+                                    Label { "Import version..." },
+                                },
+                                .onClick = [this] {
+                                    _new<ImportVersionWindow>(mState)->show();
+                                },
                             },
                             Button {
-                                Icon { ":svg/cog.svg" },
-                                Label { "Settings" }
-                            }.clicked(me::showLauncherSettings),
-                        }
+                                .content = Label { "Edit profile..." },
+                                .onClick = [this] {
+                                    editCurrentProfile();
+                                }
+                            } AUI_LET {
+                                connect(mState.profile.selected, [it](const _<GameProfile>& p){
+                                    it->setEnabled(p != nullptr);
+                                });
+                            },
+                            Button {
+                                .content = Horizontal {
+                                    Icon { ":svg/cog.svg" },
+                                    SpacerFixed { 2_dp },
+                                    Label { "Settings" },
+                                },
+                                .onClick = [this] { showLauncherSettings(); },
+                            },
+                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                     },
-                } with_style { Expanding{} },
+                } AUI_OVERRIDE_STYLE { Expanding{} },
 
                 // Play button / download panel
                 Stacked {
@@ -82,7 +94,7 @@ MainWindow::MainWindow():
                     mDownloadingPanel = Vertical {
                         Horizontal {
                             _new<ASpinnerV2>(),
-                            mStatusLabel = _new<ALabel>("Running...") let {
+                            mStatusLabel = _new<ALabel>("Running...") AUI_LET {
                                 it->setCustomStyle({
                                     FontSize { 12_pt },
                                     TextColor { 0_rgb },
@@ -95,29 +107,31 @@ MainWindow::MainWindow():
                             _new<ALabel>("/") << ".secondary",
                             mTotalLabel = _new<ALabel>() << ".secondary",
                         },
-                        mTargetFileLabel = _new<ALabel>() << ".secondary" with_style { ATextOverflow::ELLIPSIS },
-                    } let {
+                        mTargetFileLabel = _new<ALabel>() << ".secondary" AUI_OVERRIDE_STYLE { ATextOverflow::ELLIPSIS },
+                    } AUI_LET {
                         it->setVisibility(Visibility::GONE);
                         it << "#downloading_panel";
                     },
 
                     // download button
-                    mPlayButton = Centered { Horizontal {
-                        _new<ADrawableView>(":svg/play.svg"),
-                        _new<ALabel>("Play"),
-                    }} let {
-                        it << "#play" << ".btn" << ".btn_default";
-                        connect(it->clicked, me::onPlayButtonClicked);
-                    },
+                    mPlayButton = Button {
+                        .content = Horizontal {
+                          Icon { ":svg/play.svg" },
+                          SpacerFixed { 2_dp },
+                          Label { "Play" },
+                        },
+                        .onClick = [this] { onPlayButtonClicked(); },
+                        .isDefault = true,
+                    }() << "#play" << ".btn" << ".btn_default",
                 },
-            } with_style { Padding { 8_dp } },
+            } AUI_OVERRIDE_STYLE { Padding { 8_dp } },
         }
     );
     showProfileLoading();
     auto state = _new<State>(mState);
-    mTask = async {
+    mTask = AUI_THREADPOOL {
         AUI_DEFER {
-            ui_thread {
+            AUI_UI_THREAD {
                 mState = std::move(*state);
                 hideProfileLoading();
                 connect(reloadProfiles, [&] {
@@ -157,13 +171,13 @@ void MainWindow::onPlayButtonClicked() {
     mDownloadedLabel->setText("0");
     mTotalLabel->setText("0");
     mTargetFileLabel->setText("");
-    mTask = asyncX [this, account = std::move(account), profile = std::move(profile)] {
+    mTask = AUI_THREADPOOL_X [this, account = std::move(account), profile = std::move(profile)] {
         try {
             *account->populateUuid();
 
             auto launcher = _new<Launcher>();
-            connect(launcher->updateStatus, slot(mStatusLabel)::setText);
-            connect(launcher->updateTargetFile, slot(mTargetFileLabel)::setText);
+            connect(launcher->updateStatus, AUI_SLOT(mStatusLabel)::setText);
+            connect(launcher->updateTargetFile, AUI_SLOT(mTargetFileLabel)::setText);
 
             connect(launcher->updateTotalDownloadSize, [&](size_t s) {
                 mTotalLabel->setText(APrettyFormatter::sizeInBytes(s));
@@ -194,17 +208,17 @@ void MainWindow::onPlayButtonClicked() {
                 game->stdoutBuffer << buffer;
             });
 
-            ui_thread {
+            AUI_UI_THREAD {
                 hide();
             };
 
         } catch (const AException& e) {
             ALogger::err("GameLauncher") << "Could not run game: " << e;
-            ui_thread {
+            AUI_UI_THREAD {
                 AMessageBox::show(this, "Could not run game", e.getMessage(), AMessageBox::Icon::CRITICAL);
             };
         }
-        ui_thread {
+        AUI_UI_THREAD {
             mPlayButton->enable();
             showPlayButton();
         };
@@ -235,10 +249,10 @@ void MainWindow::checkForDiskProfileUpdates() {
     static milliseconds lastCheckTime = 0ms;
     if (high_resolution_clock::now().time_since_epoch() - lastCheckTime > 5s) {
         if (!mTask.isWaitNeeded()) {
-            mTask = async {
+            mTask = AUI_THREADPOOL {
                 // load actual set of profiles
                 decltype(auto) profilesOnDisk = LegacyLauncherJsonSource::getSetOfProfilesOnDisk();
-                ui_threadX [this, profilesOnDisk = std::move(profilesOnDisk)] {
+                AUI_UI_THREAD_X [this, profilesOnDisk = std::move(profilesOnDisk)] {
                     const auto& profilesInMemory = mState.profilesUuidsSnapshot;
                     // and compare it with actual profiles
                     if (ranges::any_of(profilesOnDisk, [&](const AUuid& u) { return !profilesInMemory.contains(u); })) {
@@ -274,7 +288,7 @@ void MainWindow::showLauncherSettings() {
 }
 
 MainWindow& MainWindow::inst() {
-    static auto a = aui::ptr::manage(new MainWindow);
+    static auto a = aui::ptr::manage_shared(new MainWindow);
     ACleanup::afterEntry([&] {
         a = nullptr;
     });

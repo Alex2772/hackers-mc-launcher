@@ -20,15 +20,12 @@ private:
     State& mState;
     _<AListView> mMinecraftRepoList;
     _<IListModel<Version>> mVersionModel;
-    _<ATextField> mSearchTextField;
-    VersionType mVersionTypeValue = VersionType::NONE;
-    ARadioButton::Group mReleaseTypeGroup;
+    AProperty<VersionType> mVersionTypeValue = VersionType::RELEASE;
+    AProperty<AString> mSearchTextField;
     AAsyncHolder mAsync;
 
     void doImportFromMinecraftRepo();
     void showChooseFileDialog();
-
-    emits<> invalidateSearch;
 
 };
 

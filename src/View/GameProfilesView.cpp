@@ -13,6 +13,8 @@
 #include "AUI/Action/AMenu.h"
 #include "Window/ImportVersionWindow.h"
 
+using namespace declarative;
+
 GameProfilesView::GameProfilesView(State::Profiles& state): mState(state)
 {
     setContents(Vertical {

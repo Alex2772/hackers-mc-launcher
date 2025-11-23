@@ -25,12 +25,9 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
         AWindow("Settings", 400_dp, 400_dp, &MainWindow::inst(), WindowStyle::MODAL | WindowStyle::NO_RESIZE) {
     using namespace declarative;
 
-    _<AView> resolutionView;
-    _<ACheckBoxWrapper> fullscreenCheckbox;
-
     setContents(
         Vertical {
-            _new<ATabView>() let {
+            _new<ATabView>() AUI_LET {
                 // GAME TAB ============================================================================================
                 it->addTab(
                     Vertical{
@@ -38,12 +35,12 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             {
                                 "Game dir:"_as,
                                 Horizontal {
-                                    _new<APathChooserView>() let {
+                                    _new<APathChooserView>() AUI_LET {
                                         it->setExpanding();
                                         it && mSettings.gameDir;
                                     },
                                     mClearGameDirButton = _new<AButton>("Clear game dir").connect(&AView::clicked, me::clearGameDir),
-                                    mClearGameDirSpinner = _new<ASpinnerV2>() let {
+                                    mClearGameDirSpinner = _new<ASpinnerV2>() AUI_LET {
                                         it->setVisibility(Visibility::GONE);
                                     },
                                 }
@@ -51,12 +48,22 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             {
                                 "Display:"_as,
                                 Horizontal {
-                                    resolutionView = Horizontal {
+                                    Horizontal {
                                         _new<ANumberPicker>() && mSettings.width,
                                         _new<ALabel>("x"),
                                         _new<ANumberPicker>() && mSettings.height,
+                                    } AUI_LET {
+                                        AObject::connect(mSettings.isFullscreen, [it](bool v) {
+                                            it->setVisibility(v ? Visibility::VISIBLE : Visibility::GONE);
+                                        });
                                     },
-                                    fullscreenCheckbox = CheckBoxWrapper { Label { "Fullscreen" } } && mSettings.isFullscreen,
+                                    CheckBox {
+                                        .checked = AUI_REACT(mSettings.isFullscreen),
+                                        .onCheckedChange = [this](bool g) {
+                                            mSettings.isFullscreen = g;
+                                        },
+                                        .content = Label { "Fullscreen" },
+                                    },
                                 }
                             },
                         }),
@@ -66,14 +73,14 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                 // ABOUT TAB ===========================================================================================
                 it->addTab(
                     Vertical{
-                        _new<ALabel>("Hacker's Minecraft Launcher") let {
+                        _new<ALabel>("Hacker's Minecraft Launcher") AUI_LET {
                             it->setCustomStyle({
                                 FontSize { 19_pt },
                                 Margin { 8_dp, 0, 4_dp },
                                 ATextAlign::CENTER,
                             });
                         },
-                        _new<ALabel>("Version " HACKERS_MC_VERSION) let {
+                        _new<ALabel>("Version " HACKERS_MC_VERSION) AUI_LET {
                             it->setCustomStyle({
                                 FontSize { 8_pt },
                                 //Margin { 0, 0, 4_dp },
@@ -81,7 +88,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 TextColor { 0x444444_rgb },
                             });
                         },
-                        _new<ALabel>("Distributed under GNU General Public License v3") let {
+                        _new<ALabel>("Distributed under GNU General Public License v3") AUI_LET {
                             it->setCustomStyle({
                                 FontSize { 8_pt },
                                 Margin { 0, 0, 4_dp },
@@ -119,7 +126,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                     auto s = Settings::inst();
                     Settings::save();
                     close();
-                }) let { it->setDefault(); },
+                }) AUI_LET { it->setDefault(); },
                 _new<AButton>("Cancel").connect(&AView::clicked, this, [this] {
                     if (Settings::inst() != mSettings) {
                         auto result = AMessageBox::show(this,
@@ -137,8 +144,6 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
             }
         }
     );
-
-    connect(fullscreenCheckbox->checked(), [this, resolutionView](bool g) { resolutionView->setVisibility(g ? Visibility::VISIBLE : Visibility::GONE); });
 }
 
 void LauncherSettingsWindow::clearGameDir() {
@@ -150,9 +155,9 @@ void LauncherSettingsWindow::clearGameDir() {
         mClearGameDirSpinner->setVisibility(Visibility::VISIBLE);
         mClearGameDirButton->setVisibility(Visibility::GONE);
 
-        mTask = async {
+        mTask = AUI_THREADPOOL {
             mSettings.gameDir->removeFileRecursive().makeDirs();
-            ui_thread {
+            AUI_UI_THREAD {
                 mClearGameDirSpinner->setVisibility(Visibility::GONE);
                 mClearGameDirButton->setVisibility(Visibility::VISIBLE);
             };

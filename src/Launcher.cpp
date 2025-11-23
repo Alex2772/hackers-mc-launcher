@@ -349,7 +349,7 @@ bool Launcher::isJavaWorking(const AString& version) const noexcept {
             throw AException("nonzero exit code");
         }
 
-        auto fullOutput = AString::fromLatin1(output->stdoutBuffer());
+        auto fullOutput = AString::fromLatin1({output->stdoutBuffer().data(), output->stdoutBuffer().size()});
         ALogger::info(LOG_TAG) << "Java version output: " << fullOutput.substr(0, fullOutput.find('\n'));
         return true;
     } catch (const AException& e) {
