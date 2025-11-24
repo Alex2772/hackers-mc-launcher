@@ -20,6 +20,9 @@ namespace unzip {
             fileFuncs.zerror_file = errorFileFunc;
 
             unz = unzOpen2("tmp", &fileFuncs);
+            if (!unz) {
+                throw AException("not a zip archive");
+            }
         }
         ~File() {
             unzClose(unz);

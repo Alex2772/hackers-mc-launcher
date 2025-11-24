@@ -31,13 +31,8 @@
 static constexpr auto LOG_TAG = "Launcher";
 static constexpr auto JAVA_VERSIONS_URL = "https://launchermeta.mojang.com/v1/products/java-runtime/2ec0cc96c44e5a76b9c8b7c39df7210883d12871/all.json";
 
-_<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile, bool doUpdate) {
+void Launcher::download(const Account& user, const GameProfile& profile, bool doUpdate) {
     emit updateStatus("Locating Java");
-
-    ALogger::info(LOG_TAG) << ("== PLAY BUTTON PRESSED ==");
-    ALogger::info(LOG_TAG) << ("User: " + user.username);
-    ALogger::info(LOG_TAG) << ("Profile: " + profile.name);
-
     ALogger::info(LOG_TAG) << "Checking for Java " << profile.getJavaVersionName() << "...";
 
     if (!isJavaWorking(profile.getJavaVersionName())) {
@@ -63,11 +58,11 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
 
             // the asset is located near the end so using reverse iterator wrap
             for (const auto& download : aui::reverse_iterator_wrap(profile.getDownloads())) {
-                if (download.mLocalPath == filepath) {
+                if (download.localPath == filepath) {
                     // here we go. download it
                     auto localFile = gameFolder.file(filepath);
                     localFile.parent().makeDirs();
-                    ACurl(ACurl::Builder(download.mUrl).withOutputStream(_new<AFileOutputStream>(localFile))).run();
+                    ACurl(ACurl::Builder(download.url).withOutputStream(_new<AFileOutputStream>(localFile))).run();
                     break;
                 }
             }
@@ -81,18 +76,25 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
 
         // regular downloads
         for (auto& download : profile.getDownloads()) {
-            auto localFilePath = gameFolder.file(download.mLocalPath);
+            auto localFilePath = gameFolder.file(download.localPath);
             if (!localFilePath.isRegularFileExists()) {
-                ALogger::info(LOG_TAG) << ("[x] To download: " + download.mLocalPath);
-            } else if (doUpdate && (download.mHash.empty() ||
-                                    AHash::sha1(_new<AFileInputStream>(localFilePath)).toHexString() !=
-                                    download.mHash)) {
-                ALogger::info(LOG_TAG) << ("[#] To download: " + download.mLocalPath);
-            } else {
+                ALogger::info(LOG_TAG) << ("[not exists   ] To download: " + download.localPath);
+                toDownload << ToDownload{download.localPath, download.url, download.size, download.sha1};
                 continue;
             }
-
-            toDownload << ToDownload{download.mLocalPath, download.mUrl, download.mSize, download.mHash};
+            if (AHash::sha1(AFileInputStream(localFilePath)).toHexString() != download.sha1) {
+                if (download.sha1.empty()) {
+                    if (!doUpdate) {
+                        // hash is empty. just skip if doUpdate is not requested.
+                        continue;
+                    }
+                    ALogger::info(LOG_TAG) << ("[forced update] To download: " + download.localPath);
+                    toDownload << ToDownload{download.localPath, download.url, download.size, download.sha1};
+                    continue;
+                }
+                ALogger::info(LOG_TAG) << ("[hash mismatch] To download: " + download.localPath);
+                toDownload << ToDownload{download.localPath, download.url, download.size, download.sha1};
+            }
         }
 
         // asset downloads
@@ -108,20 +110,19 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
             auto local = objectsDir / path;
 
             if (local.isRegularFileExists()) {
-                if (!doUpdate
-                    || AHash::sha1(_new<AFileInputStream>(local)).toHexString() == hash // check file's sha1
+                if (AHash::sha1(AFileInputStream(local)).toHexString() == hash // check file's sha1
                         ) {
                     continue;
                 }
             }
 
-            ALogger::debug(LOG_TAG) << "[A] To download: " << object.first;
+            ALogger::debug(LOG_TAG) << "[asset     ] To download: " << object.first;
 
             toDownload << ToDownload{
                     .localPath = "assets/objects/" + path,
                     .url = "https://resources.download.minecraft.net/" + path,
                     .bytes = std::size_t(object.second["size"].asInt()),
-                    .hash = hash,
+                    .sha1 = hash,
             };
         }
 
@@ -140,27 +141,40 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
     //Util::getSettingsDir()["jre-"]
 
     emit updateTargetFile("");
-    emit updateStatus("Preparing to launch...");
 
-    VariableHelper::Context c = {
+}
+
+_<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile, bool doUpdate) {
+    ALogger::info(LOG_TAG) << ("== PLAY BUTTON PRESSED ==");
+    ALogger::info(LOG_TAG) << ("User: " + user.username);
+    ALogger::info(LOG_TAG) << ("Profile: " + profile.name);
+
+    download(user, profile, doUpdate);
+
+   emit updateStatus("Preparing to launch...");
+
+    VariableHelper::Context variableHelperContext = {
             &user,
             &profile
     };
 
+    const APath gameFolder = Settings::inst().gameDir;
+    const APath extractFolder = gameFolder / "bin" / profile.getUuid().toRawString();
+
     // extract necessary files
     ALogger::info(LOG_TAG) << "Extract folder: " << extractFolder;
     for (auto& d : profile.getDownloads()) {
-        if (d.mExtract) {
-            if (!VariableHelper::checkRules(c, d.mConditions)) {
+        if (d.toExtract) {
+            if (!VariableHelper::checkRules(variableHelperContext, d.conditions)) {
                 continue;
             }
-            ALogger::info(LOG_TAG) << ("Extracting " + d.mLocalPath);
+            ALogger::info(LOG_TAG) << ("Extracting " + d.localPath);
 
 
-            unzip::File unzip = _new<AFileInputStream>(gameFolder / d.mLocalPath);
+            unzip::File unzip = _new<AFileInputStream>(gameFolder / d.localPath);
             unz_global_info info;
             if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
-                ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.mLocalPath;
+                ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.localPath;
                 continue;
             }
             for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
@@ -169,7 +183,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
                 unz_file_info fileInfo;
                 if (unzGetCurrentFileInfo(unzip, &fileInfo, fileNameBuf, sizeof(fileNameBuf), nullptr, 0, nullptr,
                                           0) != UNZ_OK) {
-                    ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.mLocalPath << "/" << fileNameBuf;
+                    ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.localPath << "/" << fileNameBuf;
                     break;
                 }
                 APath fileName = AString::fromLatin1(fileNameBuf);
@@ -254,8 +268,8 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
     // java args
     AStringVector args;
     for (auto& arg : profile.getJavaArgs()) {
-        if (VariableHelper::checkRules(c, arg.conditions)) {
-            args << VariableHelper::parseVariables(c, arg.name);
+        if (VariableHelper::checkRules(variableHelperContext, arg.conditions)) {
+            args << VariableHelper::parseVariables(variableHelperContext, arg.name);
         }
     }
     /*
@@ -273,7 +287,7 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
 
     // game args
     for (auto& arg : profile.getGameArgs()) {
-        if (VariableHelper::checkRules(c, arg.conditions)) {
+        if (VariableHelper::checkRules(variableHelperContext, arg.conditions)) {
             /*
             args << VariableHelper::parseVariables(c, arg.mName);
             if (!arg.mValue.empty()) {
@@ -281,12 +295,24 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
             }*/
 
             if (arg.value.empty()) {
-                args << VariableHelper::parseVariables(c, arg.name);
+                args << VariableHelper::parseVariables(variableHelperContext, arg.name);
             } else {
-                args << VariableHelper::parseVariables(c, arg.name) + " " + VariableHelper::parseVariables(c, arg.value);
+                args << VariableHelper::parseVariables(variableHelperContext, arg.name) << VariableHelper::parseVariables(variableHelperContext, arg.value);
             }
         }
     }
+
+    // fix: fabric json for some weird reason wraps its argument with spaces:
+    // "-DFabricMcEmu= net.minecraft.client.main.Main "
+    // while this is not an issue on linux, on windows this might confuse java's command line and cause an error
+    //
+    // could not find or load main class net.minecraft.client.main.Main
+    //
+    // workaround is to remove all whitespaces per argument.
+    for (auto& arg : args) {
+        arg.removeAll(' ');
+    }
+
 
     auto java = javaExecutable(profile.getJavaVersionName());
     ALogger::info(LOG_TAG) << "Command line: " << (java + " " + args.join(' '));
@@ -311,25 +337,25 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
             emit updateTargetFile(d.localPath);
             local.parent().makeDirs();
 
-            AByteBuffer rawFileBlob;
-            rawFileBlob.reserve(d.bytes);
 
-            ACurl(ACurl::Builder(d.url).withWriteCallback([&](AByteBufferView b) {
-                rawFileBlob << b;
-                downloadedBytes += b.size();
-                if (AWindow::isRedrawWillBeEfficient()) {
-                    emit updateDownloadedSize(downloadedBytes);
-                }
-                return b.size();
-            })).run();
-            if (d.hash.empty()) {
+            auto response = ACurl::Builder(d.url).runBlocking();
+            if (response.code != ACurl::ResponseCode::HTTP_200_OK) {
+                throw AException("unable to download file {}: http code {}"_format(d.url, response.code));
+            }
+
+            downloadedBytes += response.body.size();
+            if (AWindow::isRedrawWillBeEfficient()) {
+                emit updateDownloadedSize(downloadedBytes);
+            }
+
+            if (d.sha1.empty()) {
                 //ALogger::warn(LOG_TAG) << "Hash is missing for file " << d.url;
             } else {
-                if (auto actualHash = AHash::sha1(rawFileBlob).toHexString(); actualHash != d.hash) {
-                    throw AException("file corrupted {} (expected {}, actual {})"_format(d.url, d.hash, actualHash));
+                if (auto actualHash = AHash::sha1(response.body).toHexString(); actualHash != d.sha1) {
+                    throw AException("file corrupted {} (expected {}, actual {})"_format(d.url, d.sha1, actualHash));
                 }
             }
-            AFileOutputStream(local) << rawFileBlob;
+            AFileOutputStream(local) << response.body;
 #ifdef AUI_PLATFORM_UNIX
             local.chmod(0777); // avoid unwanted "permission denied" on *nix
 #endif
@@ -339,6 +365,7 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
 
 
 bool Launcher::isJavaWorking(const AString& version) const noexcept {
+    return true;
     auto pathToJavaExecutable = javaExecutable(version);
     try {
         auto process = AProcess::make(pathToJavaExecutable, "-version");

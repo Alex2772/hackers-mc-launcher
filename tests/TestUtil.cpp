@@ -13,9 +13,24 @@ void TestUtil::prepareApp() {
     Settings::inst().gameDir = APath("fake_game_dir").makeDirs().absolute();
 
 //    (Settings::inst().gameDir / "libraries").removeFileRecursive();
-//    (Settings::inst().gameDir / "versions").removeFileRecursive();
+    AUI_DO_ONCE {
+        (Settings::inst().gameDir / "versions").removeFileRecursive();
+    }
 }
 
 void TestUtil::prepareMainWindow() {
     MainWindow::inst().show();
 }
+
+const APath& TestUtil::testDataDir() {
+    static const auto path = [] {
+        auto p = APath(__FILE__).parent() / "data";
+        ALogger::info("TestUtil") << "Note: test data dir" << p;
+        if (!p.isDirectoryExists()) {
+            throw AException("launchCustom: missing test data dir: {}"_format(p));
+        }
+        return p;
+    }();
+    return path;
+}
+

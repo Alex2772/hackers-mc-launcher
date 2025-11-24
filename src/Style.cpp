@@ -45,6 +45,8 @@ struct Style {
                 BorderRadius { 4_dp },
                 Expanding {},
                 Margin {2_dp, 4_dp},
+                Padding { 4_dp },
+                AOverflow::HIDDEN,
             },
             {
                 c("#settings"),

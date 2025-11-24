@@ -106,8 +106,8 @@ MainWindow::MainWindow():
                             mDownloadedLabel = _new<ALabel>() << ".secondary",
                             _new<ALabel>("/") << ".secondary",
                             mTotalLabel = _new<ALabel>() << ".secondary",
-                        },
-                        mTargetFileLabel = _new<ALabel>() << ".secondary" AUI_OVERRIDE_STYLE { ATextOverflow::ELLIPSIS },
+                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                        mTargetFileLabel = _new<ALabel>() << ".secondary" AUI_OVERRIDE_STYLE { ATextOverflow::ELLIPSIS, Expanding {1, 0} },
                     } AUI_LET {
                         it->setVisibility(Visibility::GONE);
                         it << "#downloading_panel";
@@ -189,7 +189,7 @@ void MainWindow::onPlayButtonClicked() {
             auto process = launcher->play(
                     *account,
                     *profile,
-                    true
+                   false
             );
 
             auto game = _new<GameProcess>();

@@ -11,6 +11,8 @@
 #include <AUI/Logging/ALogger.h>
 #include "VariableHelper.h"
 #include "AuthTricks.h"
+#include "Zip.h"
+
 #include <AUI/Util/ARandom.h>
 
 AString VariableHelper::getVariableValue(const Context& c, const AString& name)
@@ -21,8 +23,13 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "os.name",
                     [](const Context& c) -> AString
                     {
-
-                        return aui::platform::current::name();
+#if AUI_PLATFORM_LINUX
+                        return "linux";
+#elif AUI_PLATFORM_WIN
+                        return "windows";
+#else
+#error "insert platform name"
+#endif
                     }
             },
             {
@@ -70,13 +77,24 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                         if (c.profile) {
                             const auto& name = *c.profile->name;
                             AString classpath;
-                            for (auto& e : c.profile->getClasspath()) {
-                                if (VariableHelper::checkRules(c, e.conditions)) {
-                                    classpath += e.name;
+                            for (const auto& cp : c.profile->getClasspath()) {
+                                if (VariableHelper::checkRules(c, cp.conditions)) {
+                                    // small verification rules for a class path entry.
+                                    auto fullPath = Settings::inst().gameDir / cp.name;
+                                    try {
+                                        if (!fullPath.isRegularFileExists()) {
+                                            ALogger::warn("VariableHelper") << "Classpath entry " << fullPath << " doesn't exist";
+                                        }
+                                        unzip::File zip = _new<AFileInputStream>(fullPath);
+                                    } catch (const AException& e) {
+                                        ALogger::warn("VariableHelper") << "While checking classpath entry " << fullPath << ": " << e;
+                                    }
+                                    classpath += cp.name;
                                     classpath += CLASSPATH_SEPARATOR;
                                 }
                             }
-                            return classpath + "versions/{}/{}.jar"_format(name, name);
+                            classpath += "versions/{}/{}.jar"_format(name, name);
+                            return classpath;
                         }
                         return {};
                     }

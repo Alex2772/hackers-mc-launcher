@@ -36,11 +36,11 @@ struct AJsonConv<LauncherRule::Action> {
 using Rules = AVector<LauncherRule>;
 
 struct DownloadEntry {
-    AString mLocalPath;
-    AString mUrl;
-    uint64_t mSize = 0;
-    bool mExtract = false;
-    AString mHash;
-    Rules mConditions;
+    AString localPath;
+    AString url;
+    uint64_t size = 0;
+    bool toExtract = false;
+    AString sha1;
+    Rules conditions;
 };
 

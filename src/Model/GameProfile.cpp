@@ -14,34 +14,41 @@ constexpr auto LOG_TAG = "GameProfile";
 
 DownloadEntry downloadEntryFromJson(const AString& path, const AJson& v)
 {
-    return DownloadEntry{
-            path, v["url"].asString(),
-            uint64_t(v["size"].asInt()), false, v["sha1"].asString()
+    return DownloadEntry {
+        .localPath = path,
+        .url = v["url"].asString(),
+        .size = uint64_t(v["size"].asInt()),
+        .toExtract = false,
+        .sha1 = v["sha1"].asString()
     };
 }
+
 /**
- * \brief Converts maven library name notation to path
+ * @brief Converts maven library name notation to path
+ * @param maven maven notation
+ * @return meaningful path
+ * @details
  *
- *        for example:
- *					optifine:OptiFine:1.14.4_HD_U_F4
- *							 ->
- *        optifine/OptiFine/1.14.4_HD_U_F4/OptiFine-1.14.4_HD_U_F4.jar
+ * **Example**: For the Maven ID com.google.guava:guava:33.2.1.0
  *
- *        Java coders so Java coders.
+ * - groupId: com.google.guava -> com/google/guava/
+ * - artifactId: guava
+ * - version: 33.2.1.0
  *
- * \param name maven notation
- * \return meaningful path
+ * Java coders so Java coders.
  */
-AString javaLibNameToPath(const AString& name)
+AString mavenIdToPath(const AString& maven)
 {
-    auto colonSplitted = name.split(':');
-    if (colonSplitted.size() == 3)
+    auto colonSplitted = maven.split(':');
+    if (colonSplitted.size() != 3)
     {
-        colonSplitted[0].replaceAll('.', '/');
-        return colonSplitted[0] + '/' + colonSplitted[1] + '/' + colonSplitted[2]
-               + '/' + colonSplitted[1] + '-' + colonSplitted[2] + ".jar";
+        return "INVALID:" + maven;
     }
-    return "INVALID:" + name;
+    auto& groupId = colonSplitted[0];
+    auto& artifactId = colonSplitted[1];
+    auto& version = colonSplitted[2];
+    groupId.replaceAll('.', '/');
+    return groupId + '/' + artifactId + '/' + version + '/' + artifactId + '-' + version + ".jar";
 }
 
 void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJson& json) {
@@ -62,10 +69,16 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
             myRule.action = rule["action"].asString() == "allow" ? LauncherRule::Action::ALLOW : LauncherRule::Action::DISALLOW;
             for (const auto& r : rule)
             {
+                static constexpr auto parseValue = [](const AJson& v) -> AString {
+                    if (v.isString()) {
+                        return v.asString();
+                    }
+                    return AJson::toString(v);
+                };
                 if (r.first == "features")
                 {
                     myRule.conditions << r.second.asObject().map([](const std::pair<AString, AJson>& value) {
-                        return std::pair<AString, AString>{value.first, AJson::toString(value.second) };
+                        return std::pair<AString, AString>{value.first, parseValue(value.second) };
                     });
                 }
                 else if (r.first != "action")
@@ -73,12 +86,12 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                     if (r.second.isObject())
                     {
                         myRule.conditions << r.second.asObject().map([&](const std::pair<AString, AJson>& value) {
-                            return std::pair<AString, AString>(r.first + '.' + value.first, AJson::toString(value.second));
+                            return std::pair<AString, AString>(r.first + '.' + value.first, parseValue(value.second));
                         });
                     }
                     else
                     {
-                        myRule.conditions << std::pair<AString, AString>{r.first, AJson::toString(r.second)};
+                        myRule.conditions << std::pair<AString, AString>{r.first, parseValue(r.second)};
                     }
                 }
             }
@@ -95,9 +108,9 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         {
             auto o = d.asObject();
             dst.mDownloads << downloadEntryFromJson(o["local"].asString(), o);
-            dst.mDownloads.last().mExtract = o["extract"].asBool();
+            dst.mDownloads.last().toExtract = o["extract"].asBool();
             if (o.contains("conditions")) {
-                dst.mDownloads.last().mConditions = aui::from_json<Rules>(o["conditions"]);
+                dst.mDownloads.last().conditions = aui::from_json<Rules>(o["conditions"]);
             }
         }
 
@@ -171,6 +184,8 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                         dst.mDownloads
                                 << downloadEntryFromJson("libraries/" + s,
                                                          v["downloads"]["artifact"].asObject());
+                        dst.mDownloads.last().toExtract = dst.mDownloads.last().localPath.contains("-natives-");
+                        dst.mDownloads.last().conditions = conditions;
                     } catch (...) {}
 
                     for (auto keyName : {"natives-osx", "natives-windows", "natives-linux"}) {
@@ -179,8 +194,8 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                             if (k["path"].isString()) {
                                 dst.mDownloads
                                         << downloadEntryFromJson("libraries/" + k["path"].asString(), k.asObject());
-                                dst.mDownloads.last().mExtract = true;
-                                dst.mDownloads.last().mConditions = conditions;
+                                dst.mDownloads.last().toExtract = true;
+                                dst.mDownloads.last().conditions = conditions;
                             }
                         }
                     }
@@ -192,10 +207,14 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                         if (!url.endsWith("/")) {
                             url += "/";
                         }
-                        dst.mDownloads << DownloadEntry{
-                                "libraries/" + javaLibNameToPath(name), url + javaLibNameToPath(name), 0, false, ""
+                        dst.mDownloads << DownloadEntry {
+                            .localPath = "libraries/" + mavenIdToPath(name),
+                            .url = url + mavenIdToPath(name),
+                            .size = static_cast<uint64_t>(v["size"].asLongIntOpt().valueOr(0)),
+                            .toExtract = false,
+                            .sha1 = v["sha1"].asStringOpt().valueOr(""),
+                            .conditions = conditions,
                         };
-                        dst.mDownloads.last().mConditions = conditions;
                     } catch (...) {}
                 }
 
@@ -204,7 +223,7 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
                 if (v["downloads"].isObject()) {
                     dst.mClasspath << ClasspathEntry{"libraries/" + v["downloads"]["artifact"]["path"].asString(), std::move(conditions)};
                 } else {
-                    dst.mClasspath << ClasspathEntry{"libraries/" + javaLibNameToPath(name), std::move(conditions)};
+                    dst.mClasspath << ClasspathEntry{"libraries/" + mavenIdToPath(name), std::move(conditions)};
                 }
             } catch (...) {}
         }
@@ -384,11 +403,11 @@ void GameProfile::fromJson(GameProfile& dst, const AUuid& uuid, const AString& n
         // Asset index
         try {
             dst.mDownloads << DownloadEntry{
-                    "assets/indexes/" + dst.mAssetsIndex + ".json",
-                    json["assetIndex"].asObject()["url"].asString(),
-                    uint64_t(json["assetIndex"].asObject()["size"].asInt()),
-                    false,
-                    json["assetIndex"].asObject()["sha1"].asString()
+                    .localPath = "assets/indexes/" + dst.mAssetsIndex + ".json",
+                    .url = json["assetIndex"].asObject()["url"].asString(),
+                    .size = uint64_t(json["assetIndex"].asObject()["size"].asInt()),
+                    .toExtract = false,
+                    .sha1 = json["assetIndex"].asObject()["sha1"].asString()
             };
         } catch (...) {}
     }
@@ -444,12 +463,12 @@ AJson GameProfile::toJson() {
         AJson::Array downloads;
         for (auto& d: mDownloads) {
             AJson::Object entry;
-            entry["local"] = d.mLocalPath;
-            entry["url"] = d.mUrl;
-            entry["size"] = int(d.mSize);
-            entry["sha1"] = d.mHash;
-            entry["extract"] = d.mExtract;
-            entry["conditions"] = aui::to_json(d.mConditions);
+            entry["local"] = d.localPath;
+            entry["url"] = d.url;
+            entry["size"] = int(d.size);
+            entry["sha1"] = d.sha1;
+            entry["extract"] = d.toExtract;
+            entry["conditions"] = aui::to_json(d.conditions);
 
             downloads << std::move(entry);
         }

@@ -11,7 +11,7 @@ private:
         AString       localPath;
         AString       url;
         std::uint64_t bytes;
-        AString       hash;
+        AString       sha1;
     };
 
     [[nodiscard]]
@@ -20,6 +20,7 @@ private:
     void performDownload(const APath& destinationDir, const AVector<ToDownload>& toDownload);
 
 public:
+    void download(const Account& user, const GameProfile& profile, bool doUpdate);
     _<AChildProcess> play(const Account& user, const GameProfile& profile, bool doUpdate = false);
 
 signals:
