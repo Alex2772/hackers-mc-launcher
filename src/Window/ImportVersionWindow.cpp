@@ -141,7 +141,7 @@ ImportVersionWindow::ImportVersionWindow(State& state)
         AUI_UI_THREAD {
             minecraftRepoListWrap->setEnabled();
             auto filterModel = AModels::filter(versionModel, [&](const Version& v) {
-                if (v.type != mVersionTypeValue)
+                if (mVersionTypeValue != v.type)
                     return false;
 
                 auto filterString = *mSearchTextField;
