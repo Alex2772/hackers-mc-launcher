@@ -365,7 +365,6 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
 
 
 bool Launcher::isJavaWorking(const AString& version) const noexcept {
-    return true;
     auto pathToJavaExecutable = javaExecutable(version);
     try {
         auto process = AProcess::make(pathToJavaExecutable, "-version");

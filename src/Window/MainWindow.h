@@ -43,6 +43,8 @@ private:
 
     MainWindow();
 
+    _<AView> playButton();
+
     void checkForDiskProfileUpdates();
     void showProfileLoading();
     void hideProfileLoading();

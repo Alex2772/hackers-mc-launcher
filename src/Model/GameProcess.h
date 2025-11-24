@@ -8,5 +8,5 @@ class GameConsoleWindow;
 struct GameProcess {
     _<AChildProcess> process;
     GameConsoleWindow* consoleWindow = nullptr;
-    AByteBuffer stdoutBuffer;
+    AProperty<AStringVector> stdoutBuffer;
 };

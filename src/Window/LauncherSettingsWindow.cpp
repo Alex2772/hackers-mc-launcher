@@ -43,20 +43,11 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                     mClearGameDirSpinner = _new<ASpinnerV2>() AUI_LET {
                                         it->setVisibility(Visibility::GONE);
                                     },
-                                }
+                                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                             },
                             {
                                 "Display:"_as,
                                 Horizontal {
-                                    Horizontal {
-                                        _new<ANumberPicker>() && mSettings.width,
-                                        _new<ALabel>("x"),
-                                        _new<ANumberPicker>() && mSettings.height,
-                                    } AUI_LET {
-                                        AObject::connect(mSettings.isFullscreen, [it](bool v) {
-                                            it->setVisibility(v ? Visibility::VISIBLE : Visibility::GONE);
-                                        });
-                                    },
                                     CheckBox {
                                         .checked = AUI_REACT(mSettings.isFullscreen),
                                         .onCheckedChange = [this](bool g) {
@@ -64,9 +55,35 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                         },
                                         .content = Label { "Fullscreen" },
                                     },
-                                }
+                                    Horizontal {
+                                        _new<ANumberPicker>() && mSettings.width,
+                                        _new<ALabel>("x"),
+                                        _new<ANumberPicker>() && mSettings.height,
+                                    } AUI_OVERRIDE_STYLE {
+                                        LayoutSpacing { 4_dp },
+                                    } AUI_LET {
+                                        AObject::connect(mSettings.isFullscreen, [it](bool v) {
+                                            it->setEnabled(!v);
+                                        });
+                                    },
+                                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                             },
-                        }),
+                            {
+                                "Show game console:"_as,
+                                Vertical {
+                                    RadioButton {
+                                        .checked = AUI_REACT(mSettings.showConsoleOnPlay == false),
+                                        .onClick = [this] { mSettings.showConsoleOnPlay = false; },
+                                        .content = Label { "When game crashes" },
+                                    },
+                                    RadioButton {
+                                        .checked = AUI_REACT(mSettings.showConsoleOnPlay == true),
+                                        .onClick = [this] { mSettings.showConsoleOnPlay = true; },
+                                        .content = Label { "Always" },
+                                    },
+                                },
+                            },
+                        }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                     }, "Game"
                 );
 
@@ -108,8 +125,8 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             _new<AButton>("View GNU General Public License v3").connect(&AButton::clicked, this, [] {
                                 APlatform::openUrl("https://www.gnu.org/licenses/gpl-3.0.html");
                             }),
-                            _new<AButton>("Check for updates..."),
-                        }
+                            // _new<AButton>("Check for updates..."),
+                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                     }, "About"
                 );
             },
@@ -141,7 +158,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                         close();
                     }
                 }),
-            }
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         }
     );
 }

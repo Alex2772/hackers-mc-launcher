@@ -47,84 +47,65 @@ MainWindow::MainWindow():
                 mSpinnerView = _new<ASpinnerV2>(),
             },
             _new<AView>() AUI_OVERRIDE_STYLE { FixedSize { {}, 1_px }, Margin { 0 }, BackgroundSolid { 0x80808080_argb } },
-            Stacked {
-                Horizontal {
-                    Vertical {
-                        _new<ALabel>("Username:"),
-                        _new<ATextField>() && mState.accounts.current->username,
-                    } AUI_OVERRIDE_STYLE { MinSize { 100_dp, {} } },
-                    SpacerExpanding{},
-                    Centered {
-                        Vertical {
-                            Button {
-                                .content = Horizontal {
-                                    Icon { ":svg/plus.svg" },
-                                    SpacerFixed { 2_dp },
-                                    Label { "Import version..." },
-                                },
-                                .onClick = [this] {
-                                    _new<ImportVersionWindow>(mState)->show();
-                                },
-                            },
-                            Button {
-                                .content = Label { "Edit profile..." },
-                                .onClick = [this] {
-                                    editCurrentProfile();
-                                }
-                            } AUI_LET {
-                                connect(mState.profile.selected, [it](const _<GameProfile>& p){
-                                    it->setEnabled(p != nullptr);
-                                });
-                            },
-                            Button {
-                                .content = Horizontal {
-                                    Icon { ":svg/cog.svg" },
-                                    SpacerFixed { 2_dp },
-                                    Label { "Settings" },
-                                },
-                                .onClick = [this] { showLauncherSettings(); },
-                            },
-                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-                    },
-                } AUI_OVERRIDE_STYLE { Expanding{} },
+           Horizontal {
+               Centered {
+                   Vertical {
+                       _new<ALabel>("Username:"),
+                       _new<ATextField>() && mState.accounts.current->username,
+                   } AUI_OVERRIDE_STYLE { MinSize { 100_dp, {} } },
+               },
+               SpacerExpanding{},
+               playButton(),
+               Centered {
+                   Horizontal {
+                       Vertical {
+                           Button {
+                               .content = Horizontal {
+                                   Icon { ":svg/plus.svg" },
+                                   SpacerFixed { 2_dp },
+                                   Label { "Import version..." },
+                               },
+                               .onClick = [this] {
+                                   _new<ImportVersionWindow>(mState)->show();
+                               },
+                           },
+                           Button {
+                               .content = Horizontal {
+                                   Icon { ":svg/wrench.svg" },
+                                   SpacerFixed { 2_dp },
+                                   Label { "Edit profile..." },
+                               },
+                               .onClick = [this] {
+                                   editCurrentProfile();
+                               }
+                           } AUI_LET {
+                               connect(mState.profile.selected, [it](const _<GameProfile>& p){
+                                   it->setEnabled(p != nullptr);
+                               });
+                           },
+                       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                       Vertical {
+                           Button {
+                               .content = Horizontal {
+                                   Icon { ":svg/cog.svg" },
+                                   SpacerFixed { 2_dp },
+                                   Label { "Settings" },
+                               },
+                               .onClick = [this] { showLauncherSettings(); },
+                           },
+                           Button {
+                               .content = Horizontal {
+                                   Icon { ":svg/dir.svg" },
+                                   SpacerFixed { 2_dp },
+                                   Label { "Game dir" },
+                               },
+                               .onClick = [this] { openGameDir(); },
+                           },
+                       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                   } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+               },
+           } AUI_OVERRIDE_STYLE { Expanding{}, Padding { 8_dp }, LayoutSpacing { 8_dp } },
 
-                // Play button / download panel
-                Stacked {
-                    // downloading panel
-                    mDownloadingPanel = Vertical {
-                        Horizontal {
-                            _new<ASpinnerV2>(),
-                            mStatusLabel = _new<ALabel>("Running...") AUI_LET {
-                                it->setCustomStyle({
-                                    FontSize { 12_pt },
-                                    TextColor { 0_rgb },
-                                });
-                            },
-
-                            SpacerExpanding{},
-
-                            mDownloadedLabel = _new<ALabel>() << ".secondary",
-                            _new<ALabel>("/") << ".secondary",
-                            mTotalLabel = _new<ALabel>() << ".secondary",
-                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-                        mTargetFileLabel = _new<ALabel>() << ".secondary" AUI_OVERRIDE_STYLE { ATextOverflow::ELLIPSIS, Expanding {1, 0} },
-                    } AUI_LET {
-                        it->setVisibility(Visibility::GONE);
-                        it << "#downloading_panel";
-                    },
-
-                    // download button
-                    mPlayButton = Button {
-                        .content = Horizontal {
-                          Icon { ":svg/play.svg" },
-                          SpacerFixed { 2_dp },
-                          Label { "Play" },
-                        },
-                        .onClick = [this] { onPlayButtonClicked(); },
-                        .isDefault = true,
-                    }() << "#play" << ".btn" << ".btn_default",
-                },
-            } AUI_OVERRIDE_STYLE { Padding { 8_dp } },
         }
     );
     showProfileLoading();
@@ -144,10 +125,46 @@ MainWindow::MainWindow():
         LegacyLauncherJsonSource::load(*state);
     };
 }
+_<AView> MainWindow::playButton() {
+    // Play button / download panel
+    return Stacked {
+        // downloading panel
+        mDownloadingPanel = Vertical {
+            Horizontal {
+                _new<ASpinnerV2>(),
+                mStatusLabel = _new<ALabel>("Running...") AUI_LET {
+                    it->setCustomStyle({
+                        FontSize { 12_pt },
+                        TextColor { 0_rgb },
+                    });
+                },
 
+                SpacerExpanding{},
 
+                mDownloadedLabel = _new<ALabel>() << ".secondary",
+                _new<ALabel>("/") << ".secondary",
+                mTotalLabel = _new<ALabel>() << ".secondary",
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+            mTargetFileLabel = _new<ALabel>() << ".secondary" AUI_OVERRIDE_STYLE { ATextOverflow::ELLIPSIS, Expanding {1, 0} },
+        } AUI_LET {
+            it->setVisibility(Visibility::GONE);
+            it << "#downloading_panel";
+        },
 
-void MainWindow::onPlayButtonClicked() {
+        // download button
+        mPlayButton = Button {
+            .content = Horizontal {
+                Icon { ":svg/play.svg" },
+                SpacerFixed { 2_dp },
+                Label { "Play" },
+              },
+              .onClick = [this] { onPlayButtonClicked(); },
+              .isDefault = true,
+          }() << "#play" << ".btn" << ".btn_default",
+      };
+}
+
+    void MainWindow::onPlayButtonClicked() {
     auto account = mState.accounts.current;
     if (account == nullptr || account->username->empty()) {
         // ask username
@@ -173,6 +190,18 @@ void MainWindow::onPlayButtonClicked() {
     mTargetFileLabel->setText("");
     mTask = AUI_THREADPOOL_X [this, account = std::move(account), profile = std::move(profile)] {
         try {
+            auto game = _new<GameProcess>();
+            ALogger::global().onLogged([game](const AString& prefix, const AString& message, ALogger::Level level) {
+                AUI_UI_THREAD {
+                    game->stdoutBuffer.writeScope() << message;
+                };
+            });
+            if (*Settings::inst().showConsoleOnPlay) {
+                AUI_UI_THREAD {
+                    _new<GameConsoleWindow>(this, game)->show();
+                };
+            }
+
             *account->populateUuid();
 
             auto launcher = _new<Launcher>();
@@ -192,12 +221,16 @@ void MainWindow::onPlayButtonClicked() {
                    false
             );
 
-            auto game = _new<GameProcess>();
             game->process = process;
 
             connect(process->finished, [this, game] { // capture process in order to keep reference
                 show();
-                GameConsoleWindow::handleGameExit(this, std::move(game));
+
+                ALogger::global().onLogged(nullptr);
+
+                if (!*Settings::inst().showConsoleOnPlay) {
+                    GameConsoleWindow::handleGameExit(this, std::move(game));
+                }
                 game->process->finished.clearAllOutgoingConnectionsWith(this);
                 game->process->stdOut.clearAllOutgoingConnectionsWith(this);
             });
@@ -205,7 +238,11 @@ void MainWindow::onPlayButtonClicked() {
             process->run(ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
             connect(process->stdOut, [game](const AByteBuffer& buffer) {
-                game->stdoutBuffer << buffer;
+                auto line = AString::fromUtf8(buffer);
+                while (!line.empty() && line.back() == '\n') {
+                    line.pop_back();
+                }
+                ALogger::info("Minecraft") << line;
             });
 
             AUI_UI_THREAD {
@@ -214,8 +251,9 @@ void MainWindow::onPlayButtonClicked() {
 
         } catch (const AException& e) {
             ALogger::err("GameLauncher") << "Could not run game: " << e;
+            auto msg = e.getMessage();
             AUI_UI_THREAD {
-                AMessageBox::show(this, "Could not run game", e.getMessage(), AMessageBox::Icon::CRITICAL);
+                AMessageBox::show(this, "Could not run game", msg, AMessageBox::Icon::CRITICAL);
             };
         }
         AUI_UI_THREAD {

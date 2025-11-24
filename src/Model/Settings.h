@@ -10,10 +10,11 @@ public:
     AProperty<int> width = 854;
     AProperty<int> height = 500;
     AProperty<bool> isFullscreen = false;
+    AProperty<bool> showConsoleOnPlay = false;
 
     bool operator==(const Settings& rhs) const {
-        return std::tie(gameDir, width, height, isFullscreen) ==
-               std::tie(rhs.gameDir, rhs.width, rhs.height, rhs.isFullscreen);
+        return std::tie(gameDir, width, height, isFullscreen, showConsoleOnPlay) ==
+               std::tie(rhs.gameDir, rhs.width, rhs.height, rhs.isFullscreen, rhs.showConsoleOnPlay);
     }
 
     bool operator!=(const Settings& rhs) const {
@@ -34,4 +35,6 @@ AJSON_FIELDS(Settings,
              (gameDir, "game_dir")
              (width, "width")
              (height, "height")
-             (isFullscreen, "is_fullscreen"))
+             (isFullscreen, "is_fullscreen")
+             (showConsoleOnPlay, "show_console_on_play")
+             )
