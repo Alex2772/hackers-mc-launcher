@@ -23,7 +23,7 @@ GameProfilesView::GameProfilesView(State::Profiles& state): mState(state)
                     Stacked{
                         _new<ADrawableView>(":profile_icons/default.png"_url),
                     } << ".version_item_wrap",
-                    AText::fromString(profile->name, { WordBreak::BREAK_ALL }),
+                    AText::fromString(profile->displayName, { WordBreak::BREAK_ALL }),
             } << ".version_item";
             auto it = item.get();
 

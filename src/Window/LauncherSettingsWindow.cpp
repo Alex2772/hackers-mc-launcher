@@ -43,7 +43,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                     mClearGameDirSpinner = _new<ASpinnerV2>() AUI_LET {
                                         it->setVisibility(Visibility::GONE);
                                     },
-                                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                                } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
                             },
                             {
                                 "Display:"_as,
@@ -60,13 +60,13 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                         _new<ALabel>("x"),
                                         _new<ANumberPicker>() && mSettings.height,
                                     } AUI_OVERRIDE_STYLE {
-                                        LayoutSpacing { 4_dp },
+                                        LayoutSpacing { 8_dp },
                                     } AUI_LET {
                                         AObject::connect(mSettings.isFullscreen, [it](bool v) {
                                             it->setEnabled(!v);
                                         });
                                     },
-                                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                                } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
                             },
                             {
                                 "Show game console:"_as,
@@ -83,7 +83,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                     },
                                 },
                             },
-                        }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                        }) AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
                     }, "Game"
                 );
 
@@ -126,7 +126,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 APlatform::openUrl("https://www.gnu.org/licenses/gpl-3.0.html");
                             }),
                             // _new<AButton>("Check for updates..."),
-                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
                     }, "About"
                 );
             },
@@ -158,7 +158,7 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                         close();
                     }
                 }),
-            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
         }
     );
 }

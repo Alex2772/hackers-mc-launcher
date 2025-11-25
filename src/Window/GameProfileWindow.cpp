@@ -8,6 +8,8 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/Platform/AMessageBox.h>
 #include "GameProfileWindow.h"
+
+#include "GameProfileExportWindow.h"
 #include "MainWindow.h"
 #include "Window/GameProfilePages/DetailsPage.h"
 
@@ -54,9 +56,17 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
                         close();
                     }
                 }),
+                Button {
+                    .content = Label { "Export..." },
+                    .onClick = [=] {
+                        _new<GameProfileExportWindow>(this, targetGameProfile)->show();
+                    },
+                },
                 SpacerExpanding{},
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this] {
                     *mTargetGameProfile = std::move(mProfile);
+                    mTargetGameProfile->save();
+                    close();
                 }) AUI_LET { it->setDefault(); },
                 _new<AButton>("Cancel").connect(&AView::clicked, this, [this] { /*
                     if (binding->getEditableModel() != Settings::inst()) {
@@ -72,7 +82,7 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
                         close();
                     }
                 }),
-            }
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
         }
     );
 }

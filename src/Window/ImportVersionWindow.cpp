@@ -81,8 +81,8 @@ ImportVersionWindow::ImportVersionWindow(State& state)
              .content = Label { "Alphas" },
          },
         },
-      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } };
 
     auto importFromFile = Centered {
         Vertical {
@@ -129,9 +129,9 @@ ImportVersionWindow::ImportVersionWindow(State& state)
           Label { "Zip archive" },
           importFromFile,
         } AUI_OVERRIDE_STYLE { Expanding {} },
-      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       Horizontal { SpacerExpanding {}, _new<AButton>("Cancel").connect(&AView::clicked, me::close) },
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } });
 
     minecraftRepoListWrap->setDisabled();
 

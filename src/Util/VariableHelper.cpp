@@ -75,7 +75,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     [](const Context& c) -> AString
                     {
                         if (c.profile) {
-                            const auto& name = *c.profile->name;
+                            const auto& name = c.profile->name;
                             AString classpath;
                             for (const auto& cp : c.profile->getClasspath()) {
                                 if (VariableHelper::checkRules(c, cp.conditions)) {

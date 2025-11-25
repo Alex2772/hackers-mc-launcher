@@ -57,7 +57,8 @@ private:
 public:
     static void fromJson(GameProfile& dst, const AUuid& uuid, const AString& name, const AJson& json);
 
-    AProperty<AString> name;
+    AString name;
+    AProperty<AString> displayName;
 
     [[nodiscard]] const AUuid& getUuid() const noexcept {
         return mUuid;

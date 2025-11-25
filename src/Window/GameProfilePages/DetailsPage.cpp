@@ -28,7 +28,7 @@ DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
                 _new<ADrawableView>(":profile_icons/default.png"_url) AUI_LET { stubButton(it); },
               },
               Vertical {
-                _new<ATextField>() && profile.name,
+                _new<ATextField>() && profile.displayName,
                 description("Display name. You can use whatever symbols you want."),
               } },
             { "UUID:",
@@ -37,7 +37,7 @@ DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
                         it->setText(profile.getUuid().toString());
                         it->setEditable(false);
                     },
-                description("Identifies profile within this launcher and potentially in others.") } } }),
+                description("Identifies profile within this launcher and potentially in others.") } } }) AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
 
     });
 }
