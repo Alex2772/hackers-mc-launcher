@@ -19,12 +19,7 @@ GameProfilesView::GameProfilesView(State::Profiles& state): mState(state)
 {
     setContents(Vertical {
         AUI_DECLARATIVE_FOR(profile, *mState.list, AWordWrappingLayout) {
-            auto item = Vertical {
-                    Stacked{
-                        _new<ADrawableView>(":profile_icons/default.png"_url),
-                    } << ".version_item_wrap",
-                    AText::fromString(profile->displayName, { WordBreak::BREAK_ALL }),
-            } << ".version_item";
+            auto item = this->item(profile);
             auto it = item.get();
 
             connect(item->clicked, [this, profile] {
@@ -46,4 +41,13 @@ GameProfilesView::GameProfilesView(State::Profiles& state): mState(state)
             return item;
         }
     });
+}
+
+_<AView> GameProfilesView::item(_<GameProfile> profile) {
+    return Vertical {
+        Stacked{
+            _new<ADrawableView>(":profile_icons/default.png"_url),
+        } << ".version_item_wrap",
+        AText::fromString(profile->displayName, { WordBreak::BREAK_ALL }),
+    } << ".version_item";
 }

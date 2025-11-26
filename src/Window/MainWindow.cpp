@@ -66,7 +66,7 @@ MainWindow::MainWindow():
                                    Label { "Import version..." },
                                },
                                .onClick = [this] {
-                                   _new<ImportVersionWindow>(mState)->show();
+                                   ui::presentImportVersion(mState);
                                },
                            },
                            Button {
@@ -177,7 +177,7 @@ _<AView> MainWindow::playButton() {
     _<GameProfile> profile = *mState.profile.selected;
     if (!profile) {
         if (mState.profile.list->empty()) {
-            _new<ImportVersionWindow>(mState)->show();
+            ui::presentImportVersion(mState);
             return;
         }
         AMessageBox::show(this, "Hacker's MC Launcher", "Please select a profile.");

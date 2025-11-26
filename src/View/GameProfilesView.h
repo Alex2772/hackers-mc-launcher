@@ -10,6 +10,8 @@ class GameProfilesView: public AViewContainer {
 public:
     GameProfilesView(State::Profiles& state);
 
+    static _<AView> item(_<GameProfile> profile);
+
 private:
     State::Profiles& mState;
 
