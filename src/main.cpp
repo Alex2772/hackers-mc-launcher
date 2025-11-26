@@ -2,6 +2,8 @@
 // Created by alex2772 on 2/15/21.
 //
 
+#include "MyUpdater.h"
+
 #include <AUI/Platform/Entry.h>
 #include <Window/MainWindow.h>
 #include <AUI/Common/Plugin.h>
@@ -15,6 +17,7 @@
 using namespace std::chrono_literals;
 
 AUI_ENTRY {
+    MyUpdater::inst().handleStartup(args);
     MainWindow::inst().show();
     auto welcome = Util::launcherDir() / "WELCOME";
     if (!welcome.isRegularFileExists()) {

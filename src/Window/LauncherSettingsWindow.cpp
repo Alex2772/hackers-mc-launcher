@@ -4,6 +4,12 @@
 
 #include "LauncherSettingsWindow.h"
 #include "MainWindow.h"
+#include "MyUpdater.h"
+#include "AUI/Reflect/for_each_field.h"
+#include "AUI/View/AGroupBox.h"
+#include "AUI/View/AProgressBar.h"
+#include "AUI/View/Dynamic.h"
+
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATabView.h>
 #include <AUI/View/AText.h>
@@ -20,10 +26,43 @@
 #include <AUI/Platform/APlatform.h>
 
 using namespace ass;
+using namespace declarative;
+
+static _<AView> updaterView() {
+    if (std::any_cast<AUpdater::StatusIdle>(&*MyUpdater::inst().status)) {
+        return Button {
+            .content = Label { "Check for updates..." },
+            .onClick = [] { MyUpdater::inst().checkForUpdates(); }
+        };
+    }
+
+    if (std::any_cast<AUpdater::StatusCheckingForUpdates>(&*MyUpdater::inst().status)) {
+        return Label { "Checking for updates..." };
+    }
+
+    if (auto downloading = std::any_cast<AUpdater::StatusDownloading>(&*MyUpdater::inst().status)) {
+        return Vertical {
+            Label { "Downloading..." },
+            _new<AProgressBar>() & downloading->progress,
+        };
+    }
+
+    if (auto downloading = std::any_cast<AUpdater::StatusWaitingForApplyAndRestart>(&*MyUpdater::inst().status)) {
+        return Button {
+            .content = Label { "Restart to apply updates" },
+            .onClick = [] { MyUpdater::inst().applyUpdateAndRestart(); }
+        };
+    }
+
+    return nullptr;
+}
 
 LauncherSettingsWindow::LauncherSettingsWindow() :
         AWindow("Settings", 400_dp, 400_dp, &MainWindow::inst(), WindowStyle::MODAL | WindowStyle::NO_RESIZE) {
-    using namespace declarative;
+
+    aui::reflect::for_each_field_value(mSettings, [this](auto&& field) {
+        AObject::connect(field.changed, [this] { mDirty = true; });
+    });
 
     setContents(
         Vertical {
@@ -97,7 +136,15 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                                 ATextAlign::CENTER,
                             });
                         },
-                        _new<ALabel>("Version " HACKERS_MC_VERSION) AUI_LET {
+                        _new<ALabel>("Version " AUI_PP_STRINGIZE(AUI_CMAKE_PROJECT_VERSION)) AUI_LET {
+                            it->setCustomStyle({
+                                FontSize { 8_pt },
+                                //Margin { 0, 0, 4_dp },
+                                ATextAlign::CENTER,
+                                TextColor { 0x444444_rgb },
+                            });
+                        },
+                        _new<ALabel>("Built " __DATE__ " " __TIME__) AUI_LET {
                             it->setCustomStyle({
                                 FontSize { 8_pt },
                                 //Margin { 0, 0, 4_dp },
@@ -127,6 +174,19 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                             }),
                             // _new<AButton>("Check for updates..."),
                         } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
+
+                        GroupBox {
+                            CheckBox {
+                                .checked = AUI_REACT(mSettings.autoUpdate),
+                                .onCheckedChange = [this](bool v) { mSettings.autoUpdate = v; },
+                                .content = Label { "Auto update" },
+                            },
+                            Vertical {
+                                experimental::Dynamic {
+                                    .content = AUI_REACT(updaterView()),
+                                },
+                            },
+                        } AUI_LET { it->setVisible(MyUpdater::isAvailable()); },
                     }, "About"
                 );
             },
@@ -145,18 +205,17 @@ LauncherSettingsWindow::LauncherSettingsWindow() :
                     close();
                 }) AUI_LET { it->setDefault(); },
                 _new<AButton>("Cancel").connect(&AView::clicked, this, [this] {
-                    if (Settings::inst() != mSettings) {
+                    if (mDirty) {
                         auto result = AMessageBox::show(this,
                                                         "Unsaved settings",
                                                         "You have an unsaved changes. Do you wish to continue?",
                                                         AMessageBox::Icon::WARNING,
                                                         AMessageBox::Button::YES_NO);
-                        if (result == AMessageBox::ResultButton::YES) {
-                            close();
+                        if (result != AMessageBox::ResultButton::YES) {
+                            return;
                         }
-                    } else {
-                        close();
                     }
+                    close();
                 }),
             } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
         }

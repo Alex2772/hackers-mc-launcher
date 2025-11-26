@@ -50,8 +50,9 @@ MainWindow::MainWindow():
            Horizontal {
                Centered {
                    Vertical {
-                       _new<ALabel>("Username:"),
+                       Label { "Username:" },
                        _new<ATextField>() && mState.accounts.current->username,
+                       Label { "v" AUI_PP_STRINGIZE(AUI_CMAKE_PROJECT_VERSION) } AUI_OVERRIDE_STYLE { Opacity { 0.5f }, FontSize { 9_pt } },
                    } AUI_OVERRIDE_STYLE { MinSize { 100_dp, {} } },
                },
                SpacerExpanding{},
@@ -104,7 +105,7 @@ MainWindow::MainWindow():
                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                },
-           } AUI_OVERRIDE_STYLE { Expanding{}, Padding { 8_dp }, LayoutSpacing { 8_dp } },
+           } AUI_OVERRIDE_STYLE { Padding { 8_dp }, LayoutSpacing { 8_dp } },
 
         }
     );

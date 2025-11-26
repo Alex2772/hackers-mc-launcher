@@ -12,6 +12,7 @@
 class LauncherSettingsWindow: public AWindow {
 private:
     Settings mSettings = Settings::inst();
+    bool mDirty = false;
     _<AButton> mResetButton;
 
     void clearGameDir();
