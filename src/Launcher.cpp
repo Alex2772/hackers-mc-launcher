@@ -301,14 +301,22 @@ void Launcher::performDownload(const APath& destinationDir, const AVector<ToDown
             local.parent().makeDirs();
 
 
+            lolWatTryAgain:
             auto response = ACurl::Builder(d.url).runBlocking();
+            if (int(response.code) == 0) {
+                goto lolWatTryAgain;
+            }
             if (response.code != ACurl::ResponseCode::HTTP_200_OK) {
                 throw AException("unable to download file {}: http code {}"_format(d.url, response.code));
             }
 
             downloadedBytes += response.body.size();
-            if (AWindow::isRedrawWillBeEfficient()) {
+            using namespace std::chrono;
+            using namespace std::chrono_literals;
+            const auto now = high_resolution_clock::now();
+            if (static std::atomic lastUpdate = now; now - lastUpdate.load() >= 500ms) {
                 emit updateDownloadedSize(downloadedBytes);
+                lastUpdate = now;
             }
 
             if (d.sha1.empty()) {
