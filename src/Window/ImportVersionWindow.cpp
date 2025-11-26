@@ -13,7 +13,6 @@
 #include <Model/GameProfile.h>
 #include "ImportVersionWindow.h"
 #include "Source/LegacyLauncherJsonSource.h"
-#include "Util/Zip.h"
 #include "MainWindow.h"
 #include "AUI/Model/AListModel.h"
 #include "AUI/Thread/AAsyncHolder.h"
@@ -185,73 +184,41 @@ void doImport(_<ImportZipState> state) {
     ALogger::info(LOG_TAG) << "Importing " << state->zipFile;
     auto extractFolder = *Settings::inst().gameDir;
     try {
-        unzip::File unzip = _new<AFileInputStream>(state->zipFile);
-        unz_global_info info;
-        if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
-            throw AException("unzGetGlobalInfo failed");
-        }
-
-        for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
+        size_t i = 0;
+        aui::archive::zip::read(AFileInputStream(state->zipFile), [&](const aui::archive::FileEntry& fileEntry) {
             AThread::interruptionPoint();
-            char fileNameBuf[0x400];
-            unz_file_info fileInfo;
-            if (unzGetCurrentFileInfo(
-                    unzip, &fileInfo, fileNameBuf, sizeof(fileNameBuf), nullptr, 0, nullptr, 0) !=
-                UNZ_OK) {
-                throw AException("failed getting info for {}"_format(fileNameBuf));
-                }
-            APath fileName = fileNameBuf;
-            ALogger::info(LOG_TAG) << "Unpacking " << fileName;
+            ALogger::info(LOG_TAG) << "Unpacking " << fileEntry.name;
 
-            AUI_UI_THREAD {
-                state->status = "Extracting {}..."_format(fileName);
+            AUI_UI_THREAD_X [state, name = AString(fileEntry.name)] {
+                state->status = "Extracting {}..."_format(name);
             };
 
-            if (!fileName.empty() && fileName != "/") {
-                if (fileName.endsWith('/')) {
+            if (!fileEntry.name.empty() && fileEntry.name != "/") {
+                if (fileEntry.name.endsWith("/")) {
                     // folder
                     try {
-                        extractFolder.file(fileName).makeDirs();
+                        extractFolder.file(fileEntry.name).makeDirs();
                     } catch (const AException& e) {
                         ALogger::warn(LOG_TAG) << (e.getMessage());
                     }
                 } else {
                     // file
-                    if (unzOpenCurrentFile(unzip) != UNZ_OK) {
-                        throw AException("launcher.error.unpack"_i18n.format(fileName));
-                    }
-
-                    APath dstFile = extractFolder / fileName;
+                    APath dstFile = extractFolder / fileEntry.name;
                     dstFile.parent().makeDirs();
 
-                    _<AFileOutputStream> fos;
                     try {
-                        fos = _new<AFileOutputStream>(dstFile);
+                        AFileOutputStream fos(dstFile);
+                        fos << *fileEntry.open();
                     } catch (...) {
-                        unzCloseCurrentFile(unzip);
-                        throw AException("launcher.error.unable_to_write"_i18n.format(fileName));
+                        throw AException("launcher.error.unable_to_write"_i18n.format(fileEntry.name));
                     }
-
-                    uint64_t total = 0;
-                    char buf[0x800];
-                    for (int read; (read = unzReadCurrentFile(unzip, buf, sizeof(buf))) > 0;) {
-                        fos->write(buf, read);
-                        total += read;
-                    }
-
-                    unzCloseCurrentFile(unzip);
                 }
             }
 
-            if ((entryIndex + 1) < info.number_entry) {
-                if (unzGoToNextFile(unzip) != UNZ_OK)
-                    break;
-            }
-
-            AUI_UI_THREAD_X [state, v = float(entryIndex) / float(info.number_entry)] {
+            AUI_UI_THREAD_X [state, v = float(++i) / float(fileEntry.archiveInfo.numberOfFiles)] {
                 state->progress = v;
             };
-        }
+        });
 
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to import zip archive: " << e;

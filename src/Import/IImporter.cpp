@@ -9,6 +9,7 @@
 #include <AUI/Json/AJson.h>
 #include "IImporter.h"
 #include "ModrinthV1.h"
+#include "AUI/Util/Archive.h"
 
 static constexpr auto LOG_TAG = "ImportHelper";
 
@@ -26,28 +27,12 @@ namespace {
 
 _unique<IImporter> IImporter::from(const APath& archivePath) {
     ALogger::info(LOG_TAG) << "Importing " << archivePath;
-    unzip::File unzip = _new<AFileInputStream>(archivePath);
-    unz_global_info info;
-    if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
-        throw AException("unzGetGlobalInfo failed");
-    }
 
     APath extractDir = APath::getDefaultPath(APath::TEMP) / "hackers-mc-" + ARandom().nextUuid();
-    for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
+
+    aui::archive::zip::read(AFileInputStream(archivePath), [&](const aui::archive::FileEntry& entry) {
         AThread::interruptionPoint();
-        char fileNameBuf[0x400];
-        unz_file_info fileInfo;
-        if (unzGetCurrentFileInfo(unzip,
-                                  &fileInfo,
-                                  fileNameBuf,
-                                  sizeof(fileNameBuf),
-                                  nullptr,
-                                  0,
-                                  nullptr,
-                                  0) != UNZ_OK) {
-            throw AException("failed getting info for {}"_format(fileNameBuf));
-        }
-        APath fileName = fileNameBuf;
+        APath fileName = entry.name;
         ALogger::info(LOG_TAG) << "Unpacking " << fileName;
         if (!fileName.empty() && fileName != "/") {
             if (fileName.endsWith('/')) {
@@ -59,44 +44,19 @@ _unique<IImporter> IImporter::from(const APath& archivePath) {
                 }
             } else {
                 // file
-                if (unzOpenCurrentFile(unzip) != UNZ_OK) {
-                    throw AException(
-                            "launcher.error.unpack"_i18n.format(fileName));
-                }
-
-
                 APath dstFile = extractDir / fileName;
                 dstFile.parent().makeDirs();
 
-                _<AFileOutputStream> fos;
                 try {
-                    fos = _new<AFileOutputStream>(dstFile);
+                    AFileOutputStream(dstFile) << *entry.open();
                 } catch (...) {
-                    unzCloseCurrentFile(unzip);
                     throw AException(
                             "launcher.error.unable_to_write"_i18n.format(
                                     fileName));
                 }
-
-                uint64_t total = 0;
-                char buf[0x800];
-                for (int read; (read = unzReadCurrentFile(unzip, buf, sizeof(buf))) > 0;) {
-                    fos->write(buf, read);
-                    total += read;
-                }
-
-                unzCloseCurrentFile(unzip);
             }
         }
-
-        if ((entryIndex + 1) < info.number_entry) {
-            if (unzGoToNextFile(unzip) != UNZ_OK)
-                break;
-        }
-//        ui_threadX [v = float(entryIndex) / float(info.number_entry), progressBar] {
-//            AUI_NULLSAFE(progressBar)->setValue(v);
-//        };
-    }
+    });
 
     for (const auto& factory : factories) {
         auto impl = factory();

@@ -16,7 +16,7 @@
 #include "Launcher.h"
 #include "AUI/Common/AException.h"
 #include "Util.h"
-#include "Util/Zip.h"
+#include "AUI/Util/Archive.h"
 
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Traits/strings.h>
@@ -170,43 +170,28 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
             ALogger::info(LOG_TAG) << ("Extracting " + d.localPath);
 
 
-            unzip::File unzip = _new<AFileInputStream>(gameFolder / d.localPath);
-            unz_global_info info;
-            if (unzGetGlobalInfo(unzip, &info) != UNZ_OK) {
-                ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.localPath;
-                continue;
-            }
-            for (size_t entryIndex = 0; entryIndex < info.number_entry; ++entryIndex) {
+            aui::archive::zip::read(AFileInputStream(gameFolder / d.localPath), [&](const aui::archive::FileEntry& entry) {
                 AThread::interruptionPoint();
-                char fileNameBuf[0x400];
-                unz_file_info fileInfo;
-                if (unzGetCurrentFileInfo(unzip, &fileInfo, fileNameBuf, sizeof(fileNameBuf), nullptr, 0, nullptr,
-                                          0) != UNZ_OK) {
-                    ALogger::warn(LOG_TAG) << "unzGetGlobalInfo failed for " << d.localPath << "/" << fileNameBuf;
-                    break;
-                }
-                APath fileName = AString::fromLatin1(fileNameBuf);
-
-                auto checks = [&] {
+                  auto checks = [&] {
                     // filter
-                    if (fileName.endsWith(".sha1")) {
+                    if (entry.name.endsWith(".sha1")) {
                         return false;
                     }
-                    if (fileName.endsWith(".git")) {
+                    if (entry.name.endsWith(".git")) {
                         return false;
                     }
-                    if (fileName.startsWith("META-INF/")) {
+                    if (entry.name.startsWith("META-INF/")) {
                         return false;
                     }
 
-                    bool isDylib = fileName.endsWith(".dylib");
-                    bool isSo = fileName.endsWith(".so");
-                    bool isDll = fileName.endsWith(".dll");
+                    bool isDylib = entry.name.endsWith(".dylib");
+                    bool isSo = entry.name.endsWith(".so");
+                    bool isDll = entry.name.endsWith(".dll");
 
                     if (isDylib || isSo || isDll) {
-                        if (fileName.endsWith("." + AProgramModule::getDllExtension())) {
+                        if (entry.name.endsWith("." + AProgramModule::getDllExtension())) {
                             /*
-                            if (!fileName.endsWith("64." + Dll::getDllExtension())) {
+                            if (!entry.name.endsWith("64." + Dll::getDllExtension())) {
                                 return false;
                             }*/
                         } else {
@@ -216,51 +201,30 @@ _<AChildProcess> Launcher::play(const Account& user, const GameProfile& profile,
                     return true;
                 };
                 if (checks()) {
-                    if (!fileName.empty() && fileName != "/") {
-                        if (fileName.endsWith('/')) {
+                    if (!entry.name.empty() && entry.name != "/") {
+                        if (entry.name.endsWith("/")) {
                             // folder
                             try {
-                                extractFolder.file(fileName).makeDirs();
+                                extractFolder.file(entry.name).makeDirs();
                             } catch (const AException& e) {
                                 ALogger::warn(LOG_TAG) << (e.getMessage());
                             }
                         } else {
-                            // file
-                            if (unzOpenCurrentFile(unzip) != UNZ_OK) {
-                                throw AException(
-                                        "launcher.error.unpack"_i18n.format(fileName));
-                            }
-
-
-                            APath dstFile = extractFolder / fileName;
+                            APath dstFile = extractFolder / entry.name;
                             dstFile.parent().makeDirs();
 
-                            _<AFileOutputStream> fos;
                             try {
-                                fos = _new<AFileOutputStream>(dstFile);
+                                AFileOutputStream fos(dstFile);
+                                fos << *entry.open();
                             } catch (...) {
-                                unzCloseCurrentFile(unzip);
                                 throw AException(
                                         "launcher.error.unable_to_write"_i18n.format(
-                                                fileName));
+                                                entry.name));
                             }
-
-                            uint64_t total = 0;
-                            char buf[0x800];
-                            for (int read; (read = unzReadCurrentFile(unzip, buf, sizeof(buf))) > 0;) {
-                                fos->write(buf, read);
-                                total += read;
-                            }
-
-                            unzCloseCurrentFile(unzip);
                         }
                     }
                 }
-                if ((entryIndex + 1) < info.number_entry) {
-                    if (unzGoToNextFile(unzip) != UNZ_OK)
-                        break;
-                }
-            }
+            });
         }
     }
 

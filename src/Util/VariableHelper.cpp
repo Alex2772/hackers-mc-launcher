@@ -11,7 +11,8 @@
 #include <AUI/Logging/ALogger.h>
 #include "VariableHelper.h"
 #include "AuthTricks.h"
-#include "Zip.h"
+#include "AUI/IO/AFileInputStream.h"
+#include "AUI/Util/Archive.h"
 
 #include <AUI/Util/ARandom.h>
 
@@ -85,7 +86,8 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                                         if (!fullPath.isRegularFileExists()) {
                                             ALogger::warn("VariableHelper") << "Classpath entry " << fullPath << " doesn't exist";
                                         }
-                                        unzip::File zip = _new<AFileInputStream>(fullPath);
+                                        // just give it a shot
+                                        aui::archive::zip::read(AFileInputStream(fullPath), [&](const aui::archive::FileEntry&) {});
                                     } catch (const AException& e) {
                                         ALogger::warn("VariableHelper") << "While checking classpath entry " << fullPath << ": " << e;
                                     }
