@@ -585,6 +585,16 @@ void ImportVersionWindow::presentImportZipProgress(_<ImportZipState> state) {
       });
 
     mAsync << AUI_THREADPOOL {
+        if (*state->moveAwayMods) {
+            auto myModsDir = Settings::inst().gameDir / "mods";
+            if (myModsDir.isDirectoryExists()) {
+                auto targetModsDir = Settings::inst().gameDir / "mods.old";
+                while (targetModsDir.isDirectoryExists()) {
+                    targetModsDir += ".old";
+                }
+                APath::move(myModsDir, targetModsDir);
+            }
+        }
         doImport(state);
 
         AUI_UI_THREAD {
