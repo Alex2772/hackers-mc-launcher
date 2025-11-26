@@ -13,7 +13,6 @@
 #include <AUI/Platform/AProcess.h>
 #include <AUI/Platform/AProgramModule.h>
 #include <Util/VariableHelper.h>
-#include <unzip.h>
 #include "Launcher.h"
 #include "AUI/Common/AException.h"
 #include "Util.h"

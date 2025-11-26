@@ -449,12 +449,21 @@ void ImportVersionWindow::showChooseFileDialog() {
                        setContents(Centered { _new<ASpinnerV2>() });
                    });
                    mAsync << AUI_THREADPOOL {
-                       ALogger::info(LOG_TAG) << "Parsing: " << p;
-                       auto state = _new<ImportZipState>(p);
-                       ALogger::info(LOG_TAG) << "Parsing complete";
-                       AUI_UI_THREAD_X [this, state = std::move(state)] () mutable {
-                           presentImportZip(std::move(state));
-                       };
+                       try {
+                           ALogger::info(LOG_TAG) << "Parsing: " << p;
+                           auto state = _new<ImportZipState>(p);
+                           ALogger::info(LOG_TAG) << "Parsing complete";
+                           AUI_UI_THREAD_X [this, state = std::move(state)]() mutable {
+                               presentImportZip(std::move(state));
+                           };
+                       } catch (const AException& e) {
+                           auto msg = e.getMessage();
+                           AUI_UI_THREAD {
+                               AMessageBox::show(this, "Importing failed", msg);
+                               close();
+                           };
+                           ALogger::err(LOG_TAG) << "Parsing " << p << " failed: " << e;
+                       }
 
                   };
                });

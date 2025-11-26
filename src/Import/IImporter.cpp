@@ -8,7 +8,6 @@
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Json/AJson.h>
 #include "IImporter.h"
-#include "Util/Zip.h"
 #include "ModrinthV1.h"
 
 static constexpr auto LOG_TAG = "ImportHelper";
