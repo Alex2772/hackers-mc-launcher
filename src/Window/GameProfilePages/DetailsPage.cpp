@@ -24,20 +24,31 @@ static void stubButton(const _<AView>& button) {
 DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
     setContents(Vertical {
       _form(
-          { { Button {
-                _new<ADrawableView>(":profile_icons/default.png"_url) AUI_LET { stubButton(it); },
+          { {
+              Centered {
+                  Button {
+                    _new<ADrawableView>(":profile_icons/default.png"_url) AUI_LET { stubButton(it); },
+                  },
               },
               Vertical {
                 _new<ATextField>() && profile.displayName,
                 description("Display name. You can use whatever symbols you want."),
               } },
-            { "UUID:",
+        { "Original name:",
+          Vertical {
+            _new<ATextField>() AUI_LET {
+                    it->setText(profile.name);
+                    it->setEditable(false);
+                },
+            description("Contains version and mod loader name.") } },
+        { "UUID:",
               Vertical {
                 _new<ATextField>() AUI_LET {
                         it->setText(profile.getUuid().toString());
                         it->setEditable(false);
                     },
-                description("Identifies profile within this launcher and potentially in others.") } } }) AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
+                description("Identifies profile within this launcher and potentially in others.") } },
+          }) AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
 
     });
 }
