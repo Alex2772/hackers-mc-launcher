@@ -13,6 +13,7 @@ const auto SETTINGS_PATH = Util::launcherDir().file("settings.json");
 
 Settings& Settings::inst() {
     static Settings s;
+    s.initEmptyFields();
     AUI_DO_ONCE {
         try {
             s = aui::from_json<Settings>(AJson::fromStream(AFileInputStream(SETTINGS_PATH)));
@@ -26,10 +27,6 @@ Settings& Settings::inst() {
 void Settings::save() {
     inst().initEmptyFields();
     AFileOutputStream(SETTINGS_PATH) << aui::to_json(inst());
-}
-
-Settings::Settings() {
-    initEmptyFields();
 }
 
 void Settings::initEmptyFields() {

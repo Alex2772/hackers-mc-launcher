@@ -68,7 +68,7 @@ AString VariableHelper::getVariableValue(const Context& c, const AString& name)
                     "launcher_version",
                     [](const Context& c) -> AString
                     {
-                        return HACKERS_MC_VERSION;
+                        return AUI_PP_STRINGIZE(AUI_CMAKE_PROJECT_VERSION);
                     }
             },
             {
