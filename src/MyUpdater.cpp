@@ -58,7 +58,9 @@ AFuture<void> MyUpdater::downloadUpdateImpl(const APath& unpackedUpdateDir) {
     return AUI_THREADPOOL {
         try {
             AUI_ASSERTX(!mDownloadUrl.empty(), "make a successful call to checkForUpdates first");
+            ALogger::info(LOG_TAG) << "Downloading update from " << mDownloadUrl << " to " << unpackedUpdateDir;
             downloadAndUnpack(mDownloadUrl, unpackedUpdateDir);
+            ALogger::info(LOG_TAG) << "Update downloaded successfuly";
             reportReadyToApplyAndRestart(makeDefaultInstallationCmdline());
         } catch (const AException& e) {
             ALogger::err(LOG_TAG) << "Can't download update" << e;

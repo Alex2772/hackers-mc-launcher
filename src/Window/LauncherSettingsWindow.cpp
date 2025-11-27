@@ -24,15 +24,20 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/ASpinnerV2.h>
 #include <AUI/Platform/APlatform.h>
+#include <AUI/View/ASpacerFixed.h>
 
 using namespace ass;
 using namespace declarative;
 
 static _<AView> updaterView() {
     if (std::any_cast<AUpdater::StatusIdle>(&*MyUpdater::inst().status)) {
-        return Button {
-            .content = Label { "Check for updates..." },
-            .onClick = [] { MyUpdater::inst().checkForUpdates(); }
+        return Horizontal {
+            Label { "No updates found. " },
+            SpacerFixed { 4_dp },
+            Button {
+                .content = Label { "Check for updates..." },
+                .onClick = [] { MyUpdater::inst().checkForUpdates(); }
+            },
         };
     }
 
