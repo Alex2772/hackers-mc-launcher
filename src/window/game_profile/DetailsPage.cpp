@@ -3,7 +3,7 @@
 //
 
 #include "DetailsPage.h"
-#include "View/Common.h"
+#include "view/Common.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>

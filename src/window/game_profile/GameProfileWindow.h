@@ -2,7 +2,7 @@
 
 
 #include <AUI/Platform/AWindow.h>
-#include <Model/GameProfile.h>
+#include <model/GameProfile.h>
 #include <AUI/View/AButton.h>
 
 class GameProfileWindow: public AWindow {

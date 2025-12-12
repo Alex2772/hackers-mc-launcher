@@ -5,7 +5,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/ADropdownList.h>
-#include <View/GameProfilesView.h>
+#include <view/GameProfilesView.h>
 #include <AUI/View/ADropdownList.h>
 
 class MainWindow: public AWindow {

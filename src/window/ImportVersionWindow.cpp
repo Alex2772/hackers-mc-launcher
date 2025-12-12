@@ -10,9 +10,9 @@
 #include <AUI/Json/AJson.h>
 #include <AUI/Model/AModels.h>
 #include <AUI/View/ACheckBox.h>
-#include <Model/GameProfile.h>
+#include <model/GameProfile.h>
 #include "ImportVersionWindow.h"
-#include "Source/LegacyLauncherJsonSource.h"
+#include "source/LegacyLauncherJsonSource.h"
 #include "MainWindow.h"
 #include "AUI/Model/AListModel.h"
 #include "AUI/Thread/AAsyncHolder.h"
@@ -20,11 +20,11 @@
 #include "AUI/View/AForEachUI.h"
 #include "AUI/View/ARadioButton.h"
 #include "AUI/View/ASpacerFixed.h"
-#include "Model/Version.h"
+#include "model/Version.h"
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Util/ARandom.h>
-#include <Model/Settings.h>
+#include <model/Settings.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ATextField.h>

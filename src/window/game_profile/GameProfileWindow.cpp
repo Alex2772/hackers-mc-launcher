@@ -9,9 +9,9 @@
 #include <AUI/Platform/AMessageBox.h>
 #include "GameProfileWindow.h"
 
-#include "GameProfileExportWindow.h"
-#include "MainWindow.h"
-#include "Window/GameProfilePages/DetailsPage.h"
+#include "../GameProfileExportWindow.h"
+#include "../MainWindow.h"
+#include "window/game_profile/DetailsPage.h"
 
 using namespace declarative;
 

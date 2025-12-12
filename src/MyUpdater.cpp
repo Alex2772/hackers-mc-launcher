@@ -8,7 +8,7 @@
 #include "AUI/Updater/GitHub.h"
 #include "AUI/Updater/Semver.h"
 #include "AUI/Util/kAUI.h"
-#include "Model/Settings.h"
+#include "model/Settings.h"
 
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/view/transform.hpp>

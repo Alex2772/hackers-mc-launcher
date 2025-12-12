@@ -3,7 +3,7 @@
 #include <AUI/Common/ASet.h>
 #include <AUI/Common/AUuid.h>
 #include <AUI/IO/APath.h>
-#include "Model/State.h"
+#include "model/State.h"
 
 /**
  * Load data from launcher_profiles.json

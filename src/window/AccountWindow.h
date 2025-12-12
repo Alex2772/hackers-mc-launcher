@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Model/Account.h>
+#include <model/Account.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/ATextField.h>
 #include <AUI/Util/ADataBinding.h>
-#include "Model/State.h"
+#include "model/State.h"
 
 class AccountWindow: public AWindow {
 public:

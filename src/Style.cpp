@@ -6,7 +6,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AText.h>
-#include "Window/MainWindow.h"
+#include "window/MainWindow.h"
 
 using namespace ass;
 

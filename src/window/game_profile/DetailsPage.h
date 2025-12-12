@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Model/GameProfile.h"
+#include "model/GameProfile.h"
 #include <AUI/View/AViewContainer.h>
 
 /**

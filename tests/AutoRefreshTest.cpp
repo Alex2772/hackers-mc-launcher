@@ -2,8 +2,8 @@
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/View/AButton.h>
 #include "TestUtil.h"
-#include "Model/Settings.h"
-#include "Window/MainWindow.h"
+#include "model/Settings.h"
+#include "window/MainWindow.h"
 
 /**
  * Tests auto refresh feature.

@@ -2,9 +2,9 @@
 
 
 #include "AUI/Model/IMutableListModel.h"
-#include "Model/State.h"
+#include "model/State.h"
 #include <AUI/View/AViewContainer.h>
-#include <Model/GameProfile.h>
+#include <model/GameProfile.h>
 
 class GameProfilesView: public AViewContainer {
 public:

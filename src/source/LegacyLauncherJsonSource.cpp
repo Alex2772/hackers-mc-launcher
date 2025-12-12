@@ -2,14 +2,14 @@
 // Created by alex2772 on 4/20/21.
 //
 #include <range/v3/all.hpp>
-#include <Model/Settings.h>
+#include <model/Settings.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Util/ARandom.h>
 #include "LegacyLauncherJsonSource.h"
-#include "Model/GameProfile.h"
-#include "Model/State.h"
+#include "model/GameProfile.h"
+#include "model/State.h"
 
 static constexpr auto LOG_TAG = "LegacyLauncherJsonSource";
 

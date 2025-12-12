@@ -7,7 +7,7 @@
 
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AButton.h>
-#include "Model/Settings.h"
+#include "model/Settings.h"
 
 class LauncherSettingsWindow: public AWindow {
 private:

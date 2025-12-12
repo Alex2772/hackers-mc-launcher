@@ -4,9 +4,9 @@
 
 #include <AUI/Util/ARandom.h>
 #include "TestUtil.h"
-#include "Source/LegacyLauncherJsonSource.h"
-#include "Window/MainWindow.h"
-#include "Model/Settings.h"
+#include "source/LegacyLauncherJsonSource.h"
+#include "window/MainWindow.h"
+#include "model/Settings.h"
 
 void TestUtil::prepareApp() {
     // fake game dir

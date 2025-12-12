@@ -11,7 +11,7 @@
 #include <AUI/View/AButton.h>
 #include "GameProfilesView.h"
 #include "AUI/Action/AMenu.h"
-#include "Window/ImportVersionWindow.h"
+#include "window/ImportVersionWindow.h"
 
 using namespace declarative;
 

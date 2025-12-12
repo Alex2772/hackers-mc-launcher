@@ -1,13 +1,13 @@
 #include <gmock/gmock.h>
 #include <AUI/Common/AString.h>
 #include "Launcher.h"
-#include "Model/Version.h"
-#include "Model/GameProcess.h"
+#include "model/Version.h"
+#include "model/GameProcess.h"
 #include "TestUtil.h"
 #include "Util.h"
-#include "Model/Settings.h"
-#include "Model/State.h"
-#include "Source/LegacyLauncherJsonSource.h"
+#include "model/Settings.h"
+#include "model/State.h"
+#include "source/LegacyLauncherJsonSource.h"
 
 #include <chrono>
 #include <AUI/Thread/AThreadPool.h>

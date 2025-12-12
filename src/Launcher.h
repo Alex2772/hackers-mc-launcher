@@ -1,8 +1,8 @@
 #pragma once
 
 
-#include <Model/GameProfile.h>
-#include <Model/Account.h>
+#include <model/GameProfile.h>
+#include <model/Account.h>
 #include <AUI/Platform/AProcess.h>
 
 class Launcher: public AObject {

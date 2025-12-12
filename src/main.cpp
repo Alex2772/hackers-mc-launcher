@@ -5,11 +5,11 @@
 #include "MyUpdater.h"
 
 #include <AUI/Platform/Entry.h>
-#include <Window/MainWindow.h>
+#include <window/MainWindow.h>
 #include <AUI/Common/Plugin.h>
-#include <Source/LegacyLauncherJsonSource.h>
+#include <source/LegacyLauncherJsonSource.h>
 #include <AUI/Util/ARandom.h>
-#include <Model/Settings.h>
+#include <model/Settings.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
 #include "Util.h"

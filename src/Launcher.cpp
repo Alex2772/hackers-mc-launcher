@@ -4,7 +4,7 @@
 
 #include <range/v3/algorithm/find_if.hpp>
 #include <AUI/Logging/ALogger.h>
-#include <Model/Settings.h>
+#include <model/Settings.h>
 #include <AUI/Crypt/AHash.h>
 #include <AUI/Traits/iterators.h>
 #include <AUI/Platform/AWindow.h>
@@ -12,7 +12,7 @@
 #include <AUI/Curl/ACurl.h>
 #include <AUI/Platform/AProcess.h>
 #include <AUI/Platform/AProgramModule.h>
-#include <Util/VariableHelper.h>
+#include <util/VariableHelper.h>
 #include "Launcher.h"
 #include "AUI/Common/AException.h"
 #include "Util.h"

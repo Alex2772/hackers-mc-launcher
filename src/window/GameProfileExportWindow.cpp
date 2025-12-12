@@ -22,7 +22,7 @@
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASpinnerV2.h"
 #include "AUI/View/AText.h"
-#include "Model/Settings.h"
+#include "model/Settings.h"
 
 #include <range/v3/algorithm/contains.hpp>
 #include <range/v3/range/conversion.hpp>

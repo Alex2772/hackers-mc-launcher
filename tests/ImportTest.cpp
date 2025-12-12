@@ -7,8 +7,8 @@
 #include <gtest/gtest.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Util/kAUI.h>
-#include "Import/IImporter.h"
-#include "Import/ModrinthV1.h"
+#include "import/IImporter.h"
+#include "import/ModrinthV1.h"
 
 class Import : public ::testing::Test {
 protected:

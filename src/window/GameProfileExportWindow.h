@@ -1,6 +1,6 @@
 #pragma once
 #include "AUI/Platform/AWindow.h"
-#include "Model/GameProfile.h"
+#include "model/GameProfile.h"
 
 class GameProfileExportWindow: public AWindow {
 public:

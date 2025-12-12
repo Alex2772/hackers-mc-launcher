@@ -15,7 +15,7 @@
 #include <AUI/View/AText.h>
 #include <AUI/View/APathChooserView.h>
 #include <AUI/Json/AJson.h>
-#include <Model/Settings.h>
+#include <model/Settings.h>
 #include <AUI/View/ARadioButton.h>
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>

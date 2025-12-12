@@ -5,7 +5,7 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Traits/platform.h>
 #include <AUI/Traits/strings.h>
-#include <Model/Settings.h>
+#include <model/Settings.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/Logging/ALogger.h>
