@@ -10,12 +10,12 @@ public:
     explicit GameProfileWindow(_<GameProfile> targetGameProfile);
 private:
     _<AButton> mResetButton;
-    GameProfile mProfile;
+    _<GameProfile> mProfile;
     _<GameProfile> mTargetGameProfile;
     _<AViewContainer> mPageRoot;
 
     AProperty<_<AView>> mPage;
 
-    _<AView> tab(AString name, _<AView> contents);
+    _<AView> tab(AString name, std::function<_<AView>()> contents);
 };
 

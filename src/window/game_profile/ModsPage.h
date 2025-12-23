@@ -7,5 +7,5 @@ namespace declarative::game_profile {
 /**
  * @brief Deep profile json editor view.
  */
-_<AView> detailsPage(_<GameProfile> profile);
+_<AView> modsPage(_<GameProfile> profile);
 }

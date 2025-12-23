@@ -9,40 +9,45 @@
 #include <AUI/Platform/AMessageBox.h>
 #include "GameProfileWindow.h"
 
+#include "ModsPage.h"
 #include "../GameProfileExportWindow.h"
 #include "../MainWindow.h"
+#include "AUI/View/ASpacerFixed.h"
 #include "window/game_profile/DetailsPage.h"
 
 using namespace declarative;
 
 GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
     AWindow("Game profile", 500_dp, 300_dp, &MainWindow::inst(), WindowStyle::MODAL),
-    mProfile(*targetGameProfile),
+    mProfile(_new<GameProfile>(*targetGameProfile)),
     mTargetGameProfile(targetGameProfile),
     mPageRoot(_new<AViewContainer>())
 {
     using namespace declarative;
+    mPageRoot->setExpanding();
 
 
     setContents(
         Vertical {
             Horizontal::Expanding {
                 Vertical {
-                    tab("Version", _new<DetailsPage>(mProfile)) AUI_LET { mPage = it; },
-                    tab("Mods", Centered { Label { "TODO. Sorry!" } }),
-                    tab("Notes", Centered { Label { "TODO. Sorry!" } }),
-                    tab("Servers", Centered { Label { "TODO. Sorry!" } }),
-                    tab("Resource packs", Centered { Label { "TODO. Sorry!" } }),
-                    tab("Shader packs", Centered { Label { "TODO. Sorry!" } }),
-                    tab("Worlds", Centered { Label { "TODO. Sorry!" } }),
+                    tab("Version", [&] { return game_profile::detailsPage(mProfile); }) AUI_LET { mPage = it; },
+                    tab("Mods", [&] { return game_profile::modsPage(mProfile); }),
+                    tab("Notes", [] { return Centered { Label { "TODO. Sorry!" } }; }),
+                    tab("Servers", [] { return Centered { Label { "TODO. Sorry!" } }; }),
+                    tab("Resource packs", [] { return Centered { Label { "TODO. Sorry!" } }; }),
+                    tab("Shader packs", [] { return Centered { Label { "TODO. Sorry!" } }; }),
+                    tab("Worlds", [] { return Centered { Label { "TODO. Sorry!" } }; }),
                 } AUI_OVERRIDE_STYLE { Padding{1_px}, LayoutSpacing { 1_px } },
+                SpacerFixed { 8_dp },
                 Vertical::Expanding {
                     mPageRoot,
                 },
             },
+            SpacerFixed { 8_dp },
             Horizontal {
                 mResetButton = _new<AButton>("Reset").connect(&AButton::clicked, this, [this] {
-                    mProfile = *mTargetGameProfile;
+                    *mProfile = *mTargetGameProfile;
                     mResetButton->setDisabled();
                 }),
                 _new<AButton>("Delete").connect(&AButton::clicked, this, [this] {
@@ -64,7 +69,7 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
                 },
                 SpacerExpanding{},
                 _new<AButton>("OK").connect(&AButton::clicked, this, [this] {
-                    *mTargetGameProfile = std::move(mProfile);
+                    *mTargetGameProfile = std::move(*mProfile);
                     mTargetGameProfile->save();
                     close();
                 }) AUI_LET { it->setDefault(); },
@@ -87,15 +92,15 @@ GameProfileWindow::GameProfileWindow(_<GameProfile> targetGameProfile):
     );
 }
 
-_<AView> GameProfileWindow::tab(AString name, _<AView> contents) {
+_<AView> GameProfileWindow::tab(AString name, std::function<_<AView>()> contents) {
     return Label { std::move(name) } AUI_OVERRIDE_STYLE { Padding { 8_dp, 16_dp }, Margin { 0 } } AUI_LET {
         connect(it->clicked, [this, it] {
             mPage = it;
         });
-        connect(mPage, [this, it, contents = std::move(contents)] {
+        connect(mPage, [this, it, contents = aui::lazy<_<AView>>(std::move(contents))]() mutable  {
             it->setAssName(".background_accent", mPage == it);
             if (mPage == it) {
-                ALayoutInflater::inflate(mPageRoot, contents);
+                ALayoutInflater::inflate(mPageRoot, *contents);
             }
         });
     };

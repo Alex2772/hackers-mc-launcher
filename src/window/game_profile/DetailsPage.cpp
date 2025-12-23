@@ -21,8 +21,8 @@ static void stubButton(const _<AView>& button) {
     AObject::connect(button->clicked, AObject::GENERIC_OBSERVER, [] { stubAction(); });
 }
 
-DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
-    setContents(Vertical {
+_<AView> game_profile::detailsPage(_<GameProfile> profile) {
+    return Vertical {
       _form(
           { {
               Centered {
@@ -31,24 +31,24 @@ DetailsPage::DetailsPage(GameProfile& profile) : mProfile(profile) {
                   },
               },
               Vertical {
-                _new<ATextField>() && profile.displayName,
+                _new<ATextField>() && profile->displayName,
                 description("Display name. You can use whatever symbols you want."),
               } },
         { "Original name:",
           Vertical {
             _new<ATextField>() AUI_LET {
-                    it->setText(profile.name);
+                    it->setText(profile->name);
                     it->setEditable(false);
                 },
             description("Contains version and mod loader name.") } },
         { "UUID:",
               Vertical {
                 _new<ATextField>() AUI_LET {
-                        it->setText(profile.getUuid().toString());
+                        it->setText(profile->getUuid().toString());
                         it->setEditable(false);
                     },
                 description("Identifies profile within this launcher and potentially in others.") } },
           }) AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
 
-    });
+    };
 }

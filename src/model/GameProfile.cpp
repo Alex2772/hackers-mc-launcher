@@ -531,6 +531,19 @@ AJson GameProfile::toJson() {
     return object;
 }
 
+Modloader GameProfile::detectModloader() const noexcept {
+    if (getMainClass().startsWith("net.fabricmc.")) {
+        return Modloader::FABRIC;
+    }
+    if (getMainClass().startsWith("net.minecraftforge.")) {
+        return Modloader::FORGE;
+    }
+    if (getMainClass().startsWith("org.spongepowered.asm.")) {
+        return Modloader::SPONGE;
+    }
+    return Modloader::NONE;
+}
+
 void GameProfile::fromName(GameProfile& dst, const AUuid& uuid, const AString& name) {
     auto pathToConfig = Settings::inst().gameDir->file("versions").file(name).file(name + ".hackers.json");
     try {
