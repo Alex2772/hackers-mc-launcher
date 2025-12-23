@@ -3,7 +3,7 @@ project(hackers-mc-launcher
         VERSION 0.9.0 # CI_PROJECT_VERSION
 )
 
-set(AUI_VERSION 1b81e7d176e4ac5988834d6358b8f809e5523623)
+set(AUI_VERSION v8.0.0-rc.16)
 
 option(BUILD_SHARED_LIBS "Build shared libs" OFF) # there's no reason to use dll build
 
