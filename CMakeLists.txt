@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(hackers-mc-launcher
-        VERSION 0.9.0 # CI_PROJECT_VERSION
+        VERSION 0.10.0 # CI_PROJECT_VERSION
 )
 
 set(AUI_VERSION v8.0.0-rc.16)
