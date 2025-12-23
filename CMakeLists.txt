@@ -35,3 +35,6 @@ aui_enable_tests(${CMAKE_PROJECT_NAME})
 aui_app(TARGET ${CMAKE_PROJECT_NAME}
         NAME "Hacker's MC Launcher"
         ICON icon.svg)
+
+# flatten portables on linux
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES AUI_INSTALL_RUNTIME_DIR ".")
