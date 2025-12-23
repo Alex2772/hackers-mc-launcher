@@ -6,6 +6,7 @@
 #include <AUI/Common/AUuid.h>
 #include <AUI/Common/AProperty.h>
 #include "DownloadEntry.h"
+#include "Modloader.h"
 
 class GameProfile {
     friend class GameProfileWindow;
@@ -108,6 +109,8 @@ public:
     void save();
 
     AJson toJson();
+
+    Modloader detectModloader() const noexcept;
 
     static void fromName(GameProfile& dst, const AUuid& uuid, const AString& name);
 };
